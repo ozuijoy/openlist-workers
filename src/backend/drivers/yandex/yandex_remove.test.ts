@@ -3,23 +3,23 @@ import { test } from "node:test"
 import { YandexDriver } from "./driver"
 
 /**
- * 调用约定（src/backend/internal/op/storage.ts 的 removeItems/moveItems）：
+ * 調用約定（src/backend/internal/op/storage.ts 的 removeItems/moveItems）：
  *
  *   const resolved = await resolvePath(`${dir}/${name}`)
  *   await driver.remove(virtualPath, resolved.physical, [name])
  *
- * physicalPath/srcPhys/dstPhys 是【目标项自身】的物理路径（已含文件名），
- * 调用方恒传单元素 names。driver 不得再把 name 拼到该路径后面，否则
- * `?path=<item>/<name>` 指向不存在的对象 → DELETE 404 报错，
- * move 的 from/path 源/目标错位。
+ * physicalPath/srcPhys/dstPhys 是【目標項自身】的物理路徑（已含文件名），
+ * 調用方恆傳單元素 names。driver 不得再把 name 拼到該路徑後面，否則
+ * `?path=<item>/<name>` 指向不存在的對象 → DELETE 404 報錯，
+ * move 的 from/path 源/目標錯位。
  *
- * 注意：路径在 query 参数里（不在 pathname），断言必须读 searchParams。
+ * 注意：路徑在 query 參數裡（不在 pathname），斷言必須讀 searchParams。
  */
 
 type Call = { method: string; url: string }
 
-/** 记录请求，恒返回 2xx + application/json：
- *  401 会触发 refreshToken() 联网，content-type 决定 util 的解析分支 */
+/** 記錄請求，恆返回 2xx + application/json：
+ *  401 會觸發 refreshToken() 聯網，content-type 決定 util 的解析分支 */
 function mockYandex(calls: Call[]) {
   return async (input: any, init: any = {}) => {
     const url = String(typeof input === "string" ? input : input.url)
@@ -43,15 +43,15 @@ function withMock<T>(calls: Call[], fn: () => Promise<T>): Promise<T> {
 }
 
 function makeDriver() {
-  // 测试不调用 init()，client 的 accessToken 为空；只要 mock 返回 2xx 就不会
-  // 触发 401 → refreshToken() 联网。
+  // 測試不調用 init()，client 的 accessToken 為空；只要 mock 返回 2xx 就不會
+  // 觸發 401 → refreshToken() 聯網。
   return new YandexDriver({
     refresh_token: "r",
     use_online_api: true,
   })
 }
 
-test("Yandex remove() 的 path query 为项自身路径，不再拼一次 name", async () => {
+test("Yandex remove() 的 path query 為項自身路徑，不再拼一次 name", async () => {
   const calls: Call[] = []
 
   await withMock(calls, () =>
@@ -62,31 +62,31 @@ test("Yandex remove() 的 path query 为项自身路径，不再拼一次 name",
   assert.equal(
     deletes.length,
     1,
-    `应恰好发出 1 次 DELETE 请求，实际 ${deletes.length}`,
+    `應恰好發出 1 次 DELETE 請求，實際 ${deletes.length}`,
   )
   const url = new URL(deletes[0].url)
   assert.equal(
     url.origin + url.pathname,
     "https://cloud-api.yandex.net/v1/disk/resources",
-    `DELETE 应打到 /v1/disk/resources，实际 ${url.origin}${url.pathname}`,
+    `DELETE 應打到 /v1/disk/resources，實際 ${url.origin}${url.pathname}`,
   )
   const path = url.searchParams.get("path")
   assert.equal(
     path,
     "/d/a.txt",
-    `path query 应为项自身路径 /d/a.txt，实际 ${path}`,
+    `path query 應為項自身路徑 /d/a.txt，實際 ${path}`,
   )
   assert.ok(
     !String(path).endsWith("/a.txt/a.txt"),
-    "path query 不得出现二次拼接的 <item>/<name>",
+    "path query 不得出現二次拼接的 <item>/<name>",
   )
   assert.ok(
     calls.every((c) => !c.url.includes("api.oplist.org")),
-    "不应触发在线 renewapi 的 token 刷新请求",
+    "不應觸發在線 renewapi 的 token 刷新請求",
   )
 })
 
-test("Yandex move() 的 from/path query 分别为源/目标项自身路径", async () => {
+test("Yandex move() 的 from/path query 分別為源/目標項自身路徑", async () => {
   const calls: Call[] = []
 
   await withMock(calls, () =>
@@ -97,36 +97,36 @@ test("Yandex move() 的 from/path query 分别为源/目标项自身路径", asy
   assert.equal(
     moves.length,
     1,
-    `应恰好发出 1 次 POST move 请求，实际 ${moves.length}`,
+    `應恰好發出 1 次 POST move 請求，實際 ${moves.length}`,
   )
   const url = new URL(moves[0].url)
   assert.equal(
     url.origin + url.pathname,
     "https://cloud-api.yandex.net/v1/disk/resources/move",
-    `move 应打到 /v1/disk/resources/move，实际 ${url.origin}${url.pathname}`,
+    `move 應打到 /v1/disk/resources/move，實際 ${url.origin}${url.pathname}`,
   )
   const from = url.searchParams.get("from")
   const path = url.searchParams.get("path")
   assert.equal(
     from,
     "/d/a.txt",
-    `from query 应为源项自身路径 /d/a.txt，实际 ${from}`,
+    `from query 應為源項自身路徑 /d/a.txt，實際 ${from}`,
   )
   assert.equal(
     path,
     "/d/dst/a.txt",
-    `path query 应为目标项自身路径 /d/dst/a.txt，实际 ${path}`,
+    `path query 應為目標項自身路徑 /d/dst/a.txt，實際 ${path}`,
   )
   assert.ok(
     !String(from).endsWith("/a.txt/a.txt"),
-    "from query 不得出现二次拼接的 <item>/<name>",
+    "from query 不得出現二次拼接的 <item>/<name>",
   )
   assert.ok(
     !String(path).endsWith("/a.txt/a.txt"),
-    "path query 不得出现二次拼接的 <item>/<name>",
+    "path query 不得出現二次拼接的 <item>/<name>",
   )
   assert.ok(
     calls.every((c) => !c.url.includes("api.oplist.org")),
-    "不应触发在线 renewapi 的 token 刷新请求",
+    "不應觸發在線 renewapi 的 token 刷新請求",
   )
 })

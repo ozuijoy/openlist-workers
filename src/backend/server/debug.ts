@@ -11,7 +11,7 @@ debugRouter.get("/info", async (c) => {
   const responseData: any = {
     runtime: "Cloudflare Workers / Edge",
     timestamp: new Date().toISOString(),
-    // 后端驱动信息非敏感，未登录也返回，便于确认 D1/KV/MySQL 是否生效
+    // 後端驅動信息非敏感，未登入也返回，便於確認 D1/KV/MySQL 是否生效
     store: await getStoreStatus(c.env),
   }
 

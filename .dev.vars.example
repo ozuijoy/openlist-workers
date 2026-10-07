@@ -2,63 +2,63 @@
 # OpenList-TSWorker · 需要配置的 Secret（模板）
 # =============================================================================
 #
-# 用途：Cloudflare「Deploy to Cloudflare」按钮会读取本文件，识别出部署时需要
-#       用户填写的 Secret，并在部署页生成对应的输入项。用户填入真实值后，
-#       Cloudflare 会把它保存为该 Worker 的 Secret（加密环境变量）。
+# 用途：Cloudflare「Deploy to Cloudflare」按鈕會讀取本文件，識別出部署時需要
+#       用戶填寫的 Secret，並在部署頁生成對應的輸入項。用戶填入真實值後，
+#       Cloudflare 會把它保存為該 Worker 的 Secret（加密環境變量）。
 #
-# 为什么值留空：本文件会提交到公开仓库，绝不能包含真实密钥。
-# 更新 Worker 时：Secrets 不会被 wrangler deploy 覆盖或删除，
-#                 只有显式执行 `wrangler secret delete <name>` 才会移除。
+# 為什麼值留空：本文件會提交到公開倉庫，絕不能包含真實密鑰。
+# 更新 Worker 時：Secrets 不會被 wrangler deploy 覆蓋或刪除，
+#                 只有顯式執行 `wrangler secret delete <name>` 才會移除。
 #
-# 本地开发：复制为 `.dev.vars`（已被 .gitignore 忽略）并填入真实值。
+# 本地開發：複製為 `.dev.vars`（已被 .gitignore 忽略）並填入真實值。
 #
-# 完整变量说明见：
+# 完整變量說明見：
 #   https://doc.oplist.org/ecosystem/official_worker/guide_env
 # =============================================================================
 
 # ── 必填 ────────────────────────────────────────────────────────────────────
 
-# JWT 签名密钥，同时用作可选的字段加密密钥（DB_CIPHER 非 none 时，见 wrangler.jsonc）
-# 与定时任务鉴权。要求 >=16 字符；推荐用 `openssl rand -hex 32` 生成。
+# JWT 簽名密鑰，同時用作可選的欄位加密密鑰（DB_CIPHER 非 none 時，見 wrangler.jsonc）
+# 與定時任務鑑權。要求 >=16 字符；推薦用 `openssl rand -hex 32` 生成。
 JWT_SECRET=
 
-# ── 选填 ────────────────────────────────────────────────────────────────────
+# ── 選填 ────────────────────────────────────────────────────────────────────
 
-# 跳过安装向导，直接用此密码初始化 admin 账号。留空则由浏览器向导设置。
+# 跳過安裝嚮導，直接用此密碼初始化 admin 賬號。留空則由瀏覽器嚮導設置。
 ADMIN_PASS=
 
-# CORS 允许来源白名单，逗号分隔，如 https://yourdomain.com,https://www.yourdomain.com
-# 留空表示仅允许同源请求。
+# CORS 允許來源白名單，逗號分隔，如 https://yourdomain.com,https://www.yourdomain.com
+# 留空表示僅允許同源請求。
 ALLOW_URLS=
 
-# 前端静态资源 CDN 地址（可选）。需指向包含完整前端 dist 的目录（含 index.html）。
-# 配置后浏览器直连 CDN 加载 JS/CSS/图片等资源，不再经 Worker 中转。
-# 注入自动在两条路径中选择：
-#   A. CDN 上存在本地构建引用的哈希资产 → 直接下发本地 index.html 并注入 cdn
-#      （不要求 CDN 能返回 HTML —— npmmirror 等禁止访问 .html 的 CDN 靠这条工作，
-#       等价 Go Release 版行为）
-#   B. 否则改用 CDN 自己的 index.html，保证 HTML 与哈希资产同源一致
-#   A、B 都不可用 → 不注入，资源回退源站加载（不会白屏）
-#   A 要求 CDN 上的产物与本次部署的 dist 是同一份构建（哈希逐字节相同）。默认
-#   `pnpm run build` 会从 npm 拉取【已发布】的前端 dist（scripts/fetch-frontend.mjs），
-#   与 CDN 内容天然同源，故 A 会命中 —— npmmirror 这类禁止访问 .html 的 CDN 只能
-#   靠 A 工作；若用 FRONTEND_BUILD_FROM_SOURCE=1 从 main 现构建，哈希与 CDN 不一致，
-#   A 必然落空（只能退化到 B，而 B 对 npmmirror 不可用）。
-# 支持 $version 占位符，替换为本构建的前端版本号（构建期写入，解析失败回退 latest）。
-# 注意：Cloudflare 默认「资源优先」，/ 与 /index.html 会被静态层直接返回而绕过
-# Worker，注入不会生效；本仓库 wrangler.jsonc 已用 assets.run_worker_first 放行
-# 这两个 HTML 入口（带 hash 的 JS/CSS 仍由静态层直出，不经 Worker）。
+# 前端靜態資源 CDN 地址（可選）。需指向包含完整前端 dist 的目錄（含 index.html）。
+# 配置後瀏覽器直連 CDN 加載 JS/CSS/圖片等資源，不再經 Worker 中轉。
+# 注入自動在兩條路徑中選擇：
+#   A. CDN 上存在本地構建引用的哈希資產 → 直接下發本地 index.html 並注入 cdn
+#      （不要求 CDN 能返回 HTML —— npmmirror 等禁止訪問 .html 的 CDN 靠這條工作，
+#       等價 Go Release 版行為）
+#   B. 否則改用 CDN 自己的 index.html，保證 HTML 與哈希資產同源一致
+#   A、B 都不可用 → 不注入，資源回退源站加載（不會白屏）
+#   A 要求 CDN 上的產物與本次部署的 dist 是同一份構建（哈希逐字節相同）。默認
+#   `pnpm run build` 會從 npm 拉取【已發佈】的前端 dist（scripts/fetch-frontend.mjs），
+#   與 CDN 內容天然同源，故 A 會命中 —— npmmirror 這類禁止訪問 .html 的 CDN 只能
+#   靠 A 工作；若用 FRONTEND_BUILD_FROM_SOURCE=1 從 main 現構建，哈希與 CDN 不一致，
+#   A 必然落空（只能退化到 B，而 B 對 npmmirror 不可用）。
+# 支持 $version 佔位符，替換為本構建的前端版本號（構建期寫入，解析失敗回退 latest）。
+# 注意：Cloudflare 默認「資源優先」，/ 與 /index.html 會被靜態層直接返回而繞過
+# Worker，注入不會生效；本倉庫 wrangler.jsonc 已用 assets.run_worker_first 放行
+# 這兩個 HTML 入口（帶 hash 的 JS/CSS 仍由靜態層直出，不經 Worker）。
 #
-# ⚠️ 资源由浏览器直接加载，CDN 必须对 .js/.css/字体返回 Access-Control-Allow-Origin
-#    （前端产物以 crossorigin 加载 module script / stylesheet）。
-#    jsdelivr、unpkg 固定返回 *；npmmirror 在请求带 Origin 时回显该头，同样可用。
+# ⚠️ 資源由瀏覽器直接加載，CDN 必須對 .js/.css/字體返回 Access-Control-Allow-Origin
+#    （前端產物以 crossorigin 加載 module script / stylesheet）。
+#    jsdelivr、unpkg 固定返回 *；npmmirror 在請求帶 Origin 時回顯該頭，同樣可用。
 #
-# ⚠️ 行为变更（迁移说明）：旧实现是 assetsRouter 的 /:folder/:filepath* 路由，把
-#    每个静态资源请求都 302 重定向到 CDN。该路由已移除 —— 它取不到 filepath，
-#    且在静态层优先的平台上根本不会进 Worker；现在统一改为上面的 HTML 注入，
-#    由浏览器直连 CDN。未配置 ASSET_URLS 时静态资源一律由源站提供。
-#    另：/assets、/images、/streamer、/static 下的文件若在源站确实缺失，仍会 302
-#    到 CDN（对齐 Go 版 static.go 的 folders），避免 SPA 兜底把 index.html 当作
+# ⚠️ 行為變更（遷移說明）：舊實現是 assetsRouter 的 /:folder/:filepath* 路由，把
+#    每個靜態資源請求都 302 重定向到 CDN。該路由已移除 —— 它取不到 filepath，
+#    且在靜態層優先的平台上根本不會進 Worker；現在統一改為上面的 HTML 注入，
+#    由瀏覽器直連 CDN。未配置 ASSET_URLS 時靜態資源一律由源站提供。
+#    另：/assets、/images、/streamer、/static 下的文件若在源站確實缺失，仍會 302
+#    到 CDN（對齊 Go 版 static.go 的 folders），避免 SPA 兜底把 index.html 當作
 #    .js/.css 返回。
 # 例：
 #   https://registry.npmmirror.com/@openlist-frontend/openlist-frontend/$version/files/dist
@@ -66,20 +66,20 @@ ALLOW_URLS=
 #   https://unpkg.com/@openlist-frontend/openlist-frontend@$version/dist
 ASSET_URLS=
 
-# MySQL 连接串（DB_DRIVER=mysql 时必填），如 mysql://user:pass@host:3306/db
-# 也可改用 wrangler.jsonc 中注释的 MYSQL_HOST / MYSQL_PORT / MYSQL_USER / MYSQL_PASS / MYSQL_NAME 分项。
+# MySQL 連接串（DB_DRIVER=mysql 時必填），如 mysql://user:pass@host:3306/db
+# 也可改用 wrangler.jsonc 中註釋的 MYSQL_HOST / MYSQL_PORT / MYSQL_USER / MYSQL_PASS / MYSQL_NAME 分項。
 MYSQL_URLS=
 
-# EdgeOne Node 云函数专用：KV 代理地址（DB_DRIVER=kv 且运行在 EdgeOne Node 云函数时必填）。
-# EdgeOne 的 KV 绑定不会注入 Node 云函数，必须经同部署的 Edge Functions 代理访问，
-# 此处填写部署的 origin，如 https://your-project.edgeone.app
-# 留空时自动使用当前请求的 origin（同一部署自调用）；跨域或本地调试才需显式设置。
+# EdgeOne Node 雲函數專用：KV 代理地址（DB_DRIVER=kv 且運行在 EdgeOne Node 雲函數時必填）。
+# EdgeOne 的 KV 綁定不會注入 Node 雲函數，必須經同部署的 Edge Functions 代理訪問，
+# 此處填寫部署的 origin，如 https://your-project.edgeone.app
+# 留空時自動使用當前請求的 origin（同一部署自調用）；跨域或本地調試才需顯式設置。
 EO_KV_URLS=
 
-# Cloudflare KV REST API 凭据（DB_DRIVER=cfkv 时三项均必填）。
-# 账户 ID
+# Cloudflare KV REST API 憑據（DB_DRIVER=cfkv 時三項均必填）。
+# 賬戶 ID
 CF_ACCOUNT=
 # KV namespace ID
 CF_KV_UUID=
-# 具有 KV 读写权限的 API Token
+# 具有 KV 讀寫權限的 API Token
 CF_API_KEY=

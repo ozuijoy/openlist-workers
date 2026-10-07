@@ -10,22 +10,22 @@ import { saveDb } from "../internal/model/db"
 import { verifyDownloadSign } from "../pkg/sign"
 
 /**
- * Issue #66 回归测试：[BUG] sign verify failed（下载 401，预览正常）。
+ * Issue #66 迴歸測試：[BUG] sign verify failed（下載 401，預覽正常）。
  *
- * 现象（issue 原文）：
- *   GET https://xxx/api/p/存储1/7z2602-x64.exe → HTTP/2 401
- *   「下载文件出现 sign verify failed，不下载文件直接预览是正常的」
+ * 現象（issue 原文）：
+ *   GET https://xxx/api/p/儲存1/7z2602-x64.exe → HTTP/2 401
+ *   「下載文件出現 sign verify failed，不下載文件直接預覽是正常的」
  *
- * 根因：/fs/get 返回的 raw_url 形如 `/api/p/<path>`，指向的正是需要验签的
- * /p 端点，但**从来没带 ?sign=**；而前端把 raw_url 直接当下载地址用
- *   - 预览页的下载按钮：<a href={objStore.raw_url}>（previews/download.tsx）
- *   - 图片/视频预览：<img src={objStore.raw_url}> / <video src={...}>
- * 不会再自己拼签名（只有文件列表里的 /d、/p 链接才会用 fs/list 返回的 sign）。
+ * 根因：/fs/get 返回的 raw_url 形如 `/api/p/<path>`，指向的正是需要驗籤的
+ * /p 端點，但**從來沒帶 ?sign=**；而前端把 raw_url 直接當下載地址用
+ *   - 預覽頁的下載按鈕：<a href={objStore.raw_url}>（previews/download.tsx）
+ *   - 圖片/視頻預覽：<img src={objStore.raw_url}> / <video src={...}>
+ * 不會再自己拼簽名（只有文件列表裡的 /d、/p 鏈接才會用 fs/list 返回的 sign）。
  *
- * 于是 sign_all / 存储级 enable_sign / 密码 meta 覆盖时：
- *   - .exe 这类「预览页只是元信息 + 下载按钮」的文件，页面能正常打开，
- *     一点下载就 401 —— 正是 issue 描述的现象；
- * 而 Go 版 server/handles/fsread.go FsGet 会显式补上：
+ * 於是 sign_all / 儲存級 enable_sign / 密碼 meta 覆蓋時：
+ *   - .exe 這類「預覽頁只是元信息 + 下載按鈕」的文件，頁面能正常打開，
+ *     一點下載就 401 —— 正是 issue 描述的現象；
+ * 而 Go 版 server/handles/fsread.go FsGet 會顯式補上：
  *   if isEncrypt(meta, reqPath) || setting.GetBool(conf.SignAll) {
  *       query = "?sign=" + sign.Sign(reqPath)
  *   }
@@ -33,7 +33,7 @@ import { verifyDownloadSign } from "../pkg/sign"
 
 const tmpRoots: string[] = []
 
-/** 建一个临时目录并放入一个真实文件，挂成 Local 存储的根。 */
+/** 建一個臨時目錄並放入一個真實文件，掛成 Local 儲存的根。 */
 function makeLocalRoot(): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "openlist-rawurl-sign-"))
   fs.writeFileSync(path.join(root, "a.exe"), "MZ")
@@ -81,7 +81,7 @@ const appOf = () => {
 const signOf = (rawUrl: string) =>
   new URL(rawUrl, "http://localhost").searchParams.get("sign") || ""
 
-test("fs/get: raw_url 自带签名，且该签名能通过 /p 验签（Issue #66）", async () => {
+test("fs/get: raw_url 自帶簽名，且該簽名能通過 /p 驗籤（Issue #66）", async () => {
   const env: any = {}
   const root = makeLocalRoot()
   await saveDb(dbWith(root, [{ key: "sign_all", value: "true" }]), env)
@@ -100,16 +100,16 @@ test("fs/get: raw_url 自带签名，且该签名能通过 /p 验签（Issue #66
     rawUrl.startsWith("/api/p/local/a.exe"),
     `raw_url should stay a proxy url, got ${rawUrl}`,
   )
-  // 缺这一条就是 bug 本体：前端直接跳 raw_url，服务器却没拿到签名
+  // 缺這一條就是 bug 本體：前端直接跳 raw_url，伺服器卻沒拿到簽名
   assert.ok(
     /[?&]sign=/.test(rawUrl),
     `raw_url must carry the download sign, got ${rawUrl}`,
   )
-  // 客户端用的 sign 字段与 raw_url 里的必须一致（前端另一处用它拼 /d 链接）
+  // 客戶端用的 sign 欄位與 raw_url 裡的必須一致（前端另一處用它拼 /d 鏈接）
   assert.equal(signOf(rawUrl), body.data.sign)
   assert.equal(await verifyDownloadSign(env, "/local/a.exe", body.data.sign), true)
 
-  // 端到端：浏览器直接打开 raw_url 不能再 401（issue 里就是这一步）
+  // 端到端：瀏覽器直接打開 raw_url 不能再 401（issue 裡就是這一步）
   const hit = await app.request(rawUrl, { method: "GET" })
   assert.notEqual(
     hit.status,
@@ -118,7 +118,7 @@ test("fs/get: raw_url 自带签名，且该签名能通过 /p 验签（Issue #66
   )
 })
 
-test("fs/get: 不需要签名时不追加 sign（保持公开直链语义）", async () => {
+test("fs/get: 不需要簽名時不追加 sign（保持公開直鏈語義）", async () => {
   const env: any = {}
   const root = makeLocalRoot()
   await saveDb(dbWith(root), env)
@@ -138,7 +138,7 @@ test("fs/get: 不需要签名时不追加 sign（保持公开直链语义）", a
   )
 })
 
-test("/p 幂等：raw_url 中的签名被篡改即 401（对照，证明断言有效）", async () => {
+test("/p 冪等：raw_url 中的簽名被篡改即 401（對照，證明斷言有效）", async () => {
   const env: any = {}
   const root = makeLocalRoot()
   await saveDb(dbWith(root, [{ key: "sign_all", value: "true" }]), env)

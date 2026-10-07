@@ -32,7 +32,7 @@ const currentAdmin = async (context = env) => {
 }
 
 test("Initialization: a fresh deployment stays uninitialized without ADMIN_PASS", async () => {
-  // 隔离 CI/宿主机环境变量，避免影响“未初始化”断言
+  // 隔離 CI/宿主機環境變量，避免影響“未初始化”斷言
   delete process.env.ADMIN_PASS
   await seed([])
   await getOrInitUsers(env)

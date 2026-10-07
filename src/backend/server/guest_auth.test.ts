@@ -187,7 +187,7 @@ test("/raw/* is a public download endpoint when no sign is required (parity with
   const env: any = {}
   await saveDb(
     {
-      // sign_all 关闭、link_expiration 未配置、无 metas → needSign() == false
+      // sign_all 關閉、link_expiration 未配置、無 metas → needSign() == false
       settings: [],
       users: [
         {
@@ -213,13 +213,13 @@ test("/raw/* is a public download endpoint when no sign is required (parity with
     method: "GET",
   })
 
-  // 对齐 Go server/router.go：/d/*path 与 /p/*path 只挂了
-  // PathParse + Down(sign.Verify) + downloadLimiter，没有 Auth 中间件。
-  // 因此在「无需签名」的默认配置下，匿名请求不应被 401 拦截；
-  // 由于测试库中没有该存储，预期是路径解析失败（4xx/5xx，非 401）。
+  // 對齊 Go server/router.go：/d/*path 與 /p/*path 只掛了
+  // PathParse + Down(sign.Verify) + downloadLimiter，沒有 Auth 中間件。
+  // 因此在「無需簽名」的默認配置下，匿名請求不應被 401 攔截；
+  // 由於測試庫中沒有該儲存，預期是路徑解析失敗（4xx/5xx，非 401）。
   //
-  // 此前这里断言 401，编码了与 Go 相反的行为：guest 存在时靠 guest 兜底
-  // 掩盖，guest 一禁用就导致列目录/播放视频全部 401。
+  // 此前這裡斷言 401，編碼了與 Go 相反的行為：guest 存在時靠 guest 兜底
+  // 掩蓋，guest 一禁用就導致列目錄/播放視頻全部 401。
   assert.notEqual(
     res.status,
     401,

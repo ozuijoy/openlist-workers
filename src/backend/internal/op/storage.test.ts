@@ -58,7 +58,7 @@ test("Node persistence is awaited without waitUntil", async () => {
 })
 
 test("mounted storage roots return without initializing the remote driver", async () => {
-  // 通过公开 API 写入内存库（无持久化后端时 getDb 使用模块级 memoryDb）
+  // 通過公開 API 寫入記憶體庫（無持久化後端時 getDb 使用模塊級 memoryDb）
   const db: any = await getDb()
   db.storages = [
     {

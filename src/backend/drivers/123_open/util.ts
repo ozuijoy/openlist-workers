@@ -1,4 +1,4 @@
-// 123云盘开放平台 API 客户端
+// 123雲盤開放平台 API 客戶端
 import {
   Driver123OpenAddition,
   File123,
@@ -26,7 +26,7 @@ export class Client123Open {
   }
 
   private async getAccessToken(): Promise<void> {
-    // 1. 在线 API 刷新 refresh_token
+    // 1. 在線 API 刷新 refresh_token
     if (
       this.addition.use_online_api !== false &&
       this.addition.refresh_token &&

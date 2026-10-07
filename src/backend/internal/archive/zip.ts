@@ -1,23 +1,23 @@
 /**
- * 轻量 ZIP 解析器（无外部依赖，兼容 Cloudflare Workers）。
- * 仅支持 ZIP 格式（Deflate/Store）；rar/7z 等格式由上层明确返回「不支持」。
+ * 輕量 ZIP 解析器（無外部依賴，相容 Cloudflare Workers）。
+ * 僅支持 ZIP 格式（Deflate/Store）；rar/7z 等格式由上層明確返回「不支持」。
  *
- * 参考：插件 zip 包的解析逻辑（src/utils/zip_plugin.ts 的 extractZipNative）。
+ * 參考：插件 zip 包的解析邏輯（src/utils/zip_plugin.ts 的 extractZipNative）。
  */
 
 export interface ZipEntry {
-  /** 归档内路径（目录以 / 结尾） */
+  /** 歸檔內路徑（目錄以 / 結尾） */
   name: string
   isDir: boolean
-  /** 解压后大小 */
+  /** 解壓後大小 */
   size: number
-  /** 压缩后大小 */
+  /** 壓縮後大小 */
   compressedSize: number
-  /** 压缩方式：0=Store, 8=Deflate */
+  /** 壓縮方式：0=Store, 8=Deflate */
   compressionMethod: number
-  /** 数据在 buffer 中的偏移 */
+  /** 資料在 buffer 中的偏移 */
   dataOffset: number
-  /** 修改时间 */
+  /** 修改時間 */
   modified: string
 }
 
@@ -25,7 +25,7 @@ export interface ZipArchive {
   entries: ZipEntry[]
 }
 
-/** 解析 ZIP 的中央目录，返回条目列表（不包含目录条目，只返回文件） */
+/** 解析 ZIP 的中央目錄，返回條目列表（不包含目錄條目，只返回文件） */
 export function parseZip(buffer: ArrayBuffer): ZipArchive {
   const view = new DataView(buffer)
   const length = buffer.byteLength
@@ -74,10 +74,10 @@ export function parseZip(buffer: ArrayBuffer): ZipArchive {
     currentCdOffset +=
       46 + fileNameLength + extraFieldLength + fileCommentLength
 
-    // 跳过目录条目
+    // 跳過目錄條目
     if (fileName.endsWith("/")) continue
 
-    // 读 local header 获取数据偏移
+    // 讀 local header 獲取資料偏移
     if (view.getUint32(localHeaderOffset, true) !== 0x04034b50) continue
     const localFileNameLen = view.getUint16(localHeaderOffset + 26, true)
     const localExtraLen = view.getUint16(localHeaderOffset + 28, true)
@@ -97,7 +97,7 @@ export function parseZip(buffer: ArrayBuffer): ZipArchive {
   return { entries }
 }
 
-/** 解压单个条目，返回其内容 */
+/** 解壓單個條目，返回其內容 */
 export async function extractZipEntry(
   buffer: ArrayBuffer,
   entry: ZipEntry,
@@ -109,7 +109,7 @@ export async function extractZipEntry(
   )
 
   if (entry.compressionMethod === 0) {
-    // Store（未压缩）
+    // Store（未壓縮）
     return new Uint8Array(compressed)
   }
 

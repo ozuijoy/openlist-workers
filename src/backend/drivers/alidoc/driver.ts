@@ -1,4 +1,4 @@
-// AliDoc (钉钉文档) driver
+// AliDoc (釘釘文件) driver
 // Ported from: OpenList-Backends/drivers/alidoc
 import {
   StorageDriver,
@@ -34,7 +34,7 @@ function dentryToFileItem(d: AliDocDentry): FileItem {
 export class AliDocDriver implements StorageDriver {
   private addition: AliDocAddition
   private client: AliDocClient
-  // 路径 → dentryUuid 缓存（ID 型网盘驱动需要把名称路径解析成 ID）
+  // 路徑 → dentryUuid 快取（ID 型網盤驅動需要把名稱路徑解析成 ID）
   private idCache = new Map<string, string>()
 
   constructor(addition: any) {
@@ -80,7 +80,7 @@ export class AliDocDriver implements StorageDriver {
     return curId
   }
 
-  /** 解析任意条目（文件或文件夹）的 dentryUuid，末段不限定为文件夹 */
+  /** 解析任意條目（文件或文件夾）的 dentryUuid，末段不限定為文件夾 */
   private async resolveItemId(path: string): Promise<string> {
     const clean = this.cleanPath(path)
     if (clean === "/") return this.addition.root_folder_id

@@ -1,18 +1,18 @@
-// github_releases (GitHub Releases 发布源) - REST API
+// github_releases (GitHub Releases 發佈源) - REST API
 // API reference: Go drivers/github_releases
 
 export interface DriverGithubReleasesAddition {
-  /** 仓库结构：[path:]org/repo，多个用分号分隔 */
+  /** 倉庫結構：[path:]org/repo，多個用分號分隔 */
   repo_structure?: string
-  /** 显示 README/LICENSE */
+  /** 顯示 README/LICENSE */
   show_readme?: boolean
-  /** GitHub token（访问私有仓库或提高限流） */
+  /** GitHub token（訪問私有倉庫或提高限流） */
   token?: string
-  /** 显示 Source code (zip/tar.gz) */
+  /** 顯示 Source code (zip/tar.gz) */
   show_source_code?: boolean
-  /** 显示所有版本 */
+  /** 顯示所有版本 */
   show_all_version?: boolean
-  /** GitHub 代理前缀 */
+  /** GitHub 代理前綴 */
   gh_proxy?: string
 }
 

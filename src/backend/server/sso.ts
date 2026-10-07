@@ -6,16 +6,16 @@ import { generateRandomPassword } from "./auth"
 import { setUserPassword } from "../pkg/password"
 
 /**
- * SSO 登录（OAuth2 授权码流 + OIDC）。
+ * SSO 登入（OAuth2 授權碼流 + OIDC）。
  *
  * 支持平台：Github / Microsoft / Google / Dingtalk / Casdoor / OIDC。
- * 纯 fetch + Web Crypto 实现，无外部依赖（OIDC discovery 手写，不验证
- * id_token 签名——code 已通过 client_secret 交换，且走 userinfo 端点，
+ * 純 fetch + Web Crypto 實現，無外部依賴（OIDC discovery 手寫，不驗證
+ * id_token 簽名——code 已通過 client_secret 交換，且走 userinfo 端點，
  * 身份可信）。
  *
- * 两种模式：
- *  - 默认（弹窗）：回调后 postMessage 回传 { token | sso_id } 给 opener 并关闭。
- *  - 兼容模式：redirect 到 /@login?token=... 或 /@manage?sso_id=...。
+ * 兩種模式：
+ *  - 默認（彈窗）：回調後 postMessage 回傳 { token | sso_id } 給 opener 並關閉。
+ *  - 相容模式：redirect 到 /@login?token=... 或 /@manage?sso_id=...。
  */
 
 export const ssoRouter = new Hono()
@@ -67,7 +67,7 @@ function verifyState(clientId: string, ip: string, state: string): boolean {
   return rec.ip === ip && rec.exp > Date.now()
 }
 
-/** 平台预设端点 */
+/** 平台預設端點 */
 interface PlatformDef {
   authUrl: string
   tokenUrl: string
@@ -140,13 +140,13 @@ function platformDef(platform: string, ssoLoginUrl: string, ssoTokenUrl: string,
         extraForm: { grant_type: "authorization_code" },
       }
     case "OIDC":
-      return null // 走 discovery，单独处理
+      return null // 走 discovery，單獨處理
     default:
       return null
   }
 }
 
-/** OIDC discovery：获取授权/令牌/userinfo 端点 */
+/** OIDC discovery：獲取授權/令牌/userinfo 端點 */
 async function oidcDiscovery(discoveryUrl: string): Promise<{
   authUrl: string
   tokenUrl: string
@@ -168,7 +168,7 @@ async function oidcDiscovery(discoveryUrl: string): Promise<{
   }
 }
 
-/** 生成 JWT token（与 /auth/login 一致） */
+/** 生成 JWT token（與 /auth/login 一致） */
 async function generateToken(user: any, c: any): Promise<string> {
   const payload = {
     id: user.id,
@@ -184,7 +184,7 @@ async function generateToken(user: any, c: any): Promise<string> {
   return await sign(payload, secret)
 }
 
-/** SSO 自动注册 */
+/** SSO 自動註冊 */
 async function autoRegister(db: any, username: string, ssoId: string): Promise<any> {
   let uname = username || ssoId
   if (db.users.some((u: any) => u.username === uname)) {
@@ -205,7 +205,7 @@ async function autoRegister(db: any, username: string, ssoId: string): Promise<a
     allow_ldap: false,
     pwd_update_at: new Date().toISOString(),
   }
-  // SSO 用户不通过本地口令登录，但仍以双层哈希存储随机口令，避免存明文
+  // SSO 用戶不通過本地口令登入，但仍以雙層哈希儲存隨機口令，避免存明文
   await setUserPassword(user, generateRandomPassword())
   db.users.push(user)
   await saveDb(db, db.env)
@@ -344,7 +344,7 @@ ssoRouter.get("/sso_callback", async (c) => {
         userInfo = await uResp.json().catch(() => ({}))
         const name = userInfo?.preferred_username || userInfo?.name || userInfo?.nickname || ""
         if (!userInfo?.sub && !name) {
-          // 回退：解析 id_token payload 的 name 字段
+          // 回退：解析 id_token payload 的 name 欄位
           const idToken = tokenData.id_token
           if (idToken) {
             const payload = parseJwtPayload(idToken)
@@ -448,7 +448,7 @@ ssoRouter.get("/sso_callback", async (c) => {
   }
 })
 
-/** 解析 JWT payload（仅解码，不验证签名——OIDC 下 code 已交换） */
+/** 解析 JWT payload（僅解碼，不驗證簽名——OIDC 下 code 已交換） */
 function parseJwtPayload(token: string): any {
   try {
     const parts = token.split(".")

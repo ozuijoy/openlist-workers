@@ -152,7 +152,7 @@ export class DriverFebBox implements StorageDriver {
     return { id: String(target.fid), isDir: target.is_dir === 1 }
   }
 
-  /** 物理路径 → 目录 ID（根目录返回 "0"） */
+  /** 物理路徑 → 目錄 ID（根目錄返回 "0"） */
   private async pathToId(physicalPath: string): Promise<string> {
     const clean = physicalPath.split("/").filter(Boolean).join("/")
     if (!clean) return "0"

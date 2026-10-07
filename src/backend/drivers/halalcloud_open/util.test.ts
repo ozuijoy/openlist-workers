@@ -29,12 +29,12 @@ test("halalcloud HL6-HMAC-SHA256 signature matches Go SDK", async () => {
     now,
   })
 
-  // 提取签名
+  // 提取簽名
   const sigMatch = /Signature=([0-9a-f]+)$/.exec(sign.headers.authorization)
   assert.ok(sigMatch, "authorization should contain Signature")
   const actualSig = sigMatch![1]
 
-  // 独立用 Node crypto 复现签名链
+  // 獨立用 Node crypto 復現簽名鏈
   const dateString = "2026-09-05"
   const timestamp = "2026-09-05T10:30:00.000Z"
   const canonicalHeaders = "content-type:application/json; charset=utf-8\n"
@@ -79,12 +79,12 @@ test("halalcloud signature with query params", async () => {
     now,
   })
 
-  // query 应排序 + RFC3986 编码（空格 → %20）
+  // query 應排序 + RFC3986 編碼（空格 → %20）
   const url = sign.url
   assert.ok(url.includes("a=1%202"))
   assert.ok(url.includes("b=2"))
   assert.ok(url.indexOf("a=1%202") < url.indexOf("b=2"))
 
-  // 无 body 时 SignedHeaders 应为空
+  // 無 body 時 SignedHeaders 應為空
   assert.ok(!sign.headers.authorization.includes("SignedHeaders=content-type"))
 })

@@ -15,10 +15,10 @@ import { safeErrorMessage } from "../pkg/errs"
 import { encodeDownloadPath } from "../pkg/path"
 
 /**
- * WebDAV 协议服务（挂载于 /dav/*）。
+ * WebDAV 協議服務（掛載於 /dav/*）。
  *
- * 认证：Basic Auth（用户名/密码）或 Bearer token（全局 token）。
- * 权限：WEBDAV_READ（读/列目录）与 WEBDAV_MANAGE（写/删/移动/复制）按位校验。
+ * 認證：Basic Auth（用戶名/密碼）或 Bearer token（全局 token）。
+ * 權限：WEBDAV_READ（讀/列目錄）與 WEBDAV_MANAGE（寫/刪/移動/複製）按位校驗。
  * 支持方法：OPTIONS / PROPFIND / GET / HEAD / PUT / MKCOL / DELETE / MOVE / COPY。
  */
 
@@ -32,14 +32,14 @@ const getStorageRequestContext = (c: any) => {
     }
     return {
       waitUntil: (p: Promise<unknown>) => executionCtx.waitUntil(p),
-      env: c.env, // 传递 env 用于请求级 KV 缓存复用
+      env: c.env, // 傳遞 env 用於請求級 KV 快取複用
     }
   } catch {
     return undefined
   }
 }
 
-/** Basic Auth 或 Bearer token 认证，返回用户对象（未认证返回 null） */
+/** Basic Auth 或 Bearer token 認證，返回用戶對象（未認證返回 null） */
 async function webdavAuth(c: any): Promise<any> {
   const authHeader = c.req.header("Authorization") || ""
   if (authHeader.startsWith("Basic ")) {
@@ -54,7 +54,7 @@ async function webdavAuth(c: any): Promise<any> {
         (u: any) => u.username === username && !u.disabled,
       )
       if (!user) return null
-      // 空密码用户（guest）：Basic Auth 下若未提供密码则允许（与 AList 一致）
+      // 空密碼用戶（guest）：Basic Auth 下若未提供密碼則允許（與 AList 一致）
       if (!user.password) {
         return password === "" ? user : null
       }
@@ -71,7 +71,7 @@ async function webdavAuth(c: any): Promise<any> {
   return null
 }
 
-/** 从 URL pathname 中剥离 /dav 前缀，得到虚拟文件路径 */
+/** 從 URL pathname 中剝離 /dav 前綴，得到虛擬文件路徑 */
 function davPathOf(c: any): string {
   const pathname = new URL(c.req.url).pathname
   let p = pathname.replace(/^\/dav/, "")
@@ -83,7 +83,7 @@ function davPathOf(c: any): string {
   }
 }
 
-/** 拆分虚拟路径为 { dir, name } */
+/** 拆分虛擬路徑為 { dir, name } */
 function splitPath(p: string): { dir: string; name: string } {
   const clean = p.startsWith("/") ? p : "/" + p
   const parts = clean.split("/").filter(Boolean)
@@ -149,12 +149,12 @@ webdavRouter.all("/*", async (c) => {
         const { item, rawUrl } = await getItem(davPath, ctx)
         if (!item) return c.text("Not found", 404)
         if (item.is_dir) return c.text("Is a directory", 400)
-        // 重定向到 rawRouter 实际下载；rawRouter 已处理所有驱动的下载协议
-        // （proxy/redirect/stream + Range + SSRF 防护）。
+        // 重定向到 rawRouter 實際下載；rawRouter 已處理所有驅動的下載協議
+        // （proxy/redirect/stream + Range + SSRF 防護）。
         //
-        // 端点前缀（/p 还是 /d）与路径编码都由 getItem 决定（见
-        // op/storage.ts resolveRawUrlPrefix）：/p 受 Go canProxy() 限制，未开启
-        // 代理的存储会 403 proxy not allowed，因此不能在这里硬编码 /p。
+        // 端點前綴（/p 還是 /d）與路徑編碼都由 getItem 決定（見
+        // op/storage.ts resolveRawUrlPrefix）：/p 受 Go canProxy() 限制，未開啟
+        // 代理的儲存會 403 proxy not allowed，因此不能在這裡硬編碼 /p。
         return c.redirect(
           rawUrl || `/api/d${encodeDownloadPath(davPath)}`,
           302,
@@ -213,7 +213,7 @@ webdavRouter.all("/*", async (c) => {
 
       case "LOCK":
       case "UNLOCK":
-        // 简化实现：声明不支持锁，客户端通常可继续无锁操作
+        // 簡化實現：聲明不支持鎖，客戶端通常可繼續無鎖操作
         return c.text("Locking not supported", 405)
 
       default:

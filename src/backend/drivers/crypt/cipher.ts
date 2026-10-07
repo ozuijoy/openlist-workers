@@ -1,14 +1,14 @@
-// rclone crypt v1 兼容的加密实现（内容加密，AES-CTR）
-// 移植自 OpenList Go 版 drivers/crypt（其底层使用 rclone/backend/crypt）。
+// rclone crypt v1 相容的加密實現（內容加密，AES-CTR）
+// 移植自 OpenList Go 版 drivers/crypt（其底層使用 rclone/backend/crypt）。
 //
 // 文件格式（v1）：
-//   [nonce: 16 bytes][reserved: 16 bytes][AES-256-CTR 加密数据]
-//   即 32 字节文件头 + 密文。EncryptedSize = plainSize + 32。
+//   [nonce: 16 bytes][reserved: 16 bytes][AES-256-CTR 加密資料]
+//   即 32 字節文件頭 + 密文。EncryptedSize = plainSize + 32。
 //
-// 密钥派生（scrypt，与 rclone crypt 完全一致）：
+// 密鑰派生（scrypt，與 rclone crypt 完全一致）：
 //   scrypt(password, salt, N=16384, r=8, p=1, dkLen=64)
-//   dataKey = dk[0:32]（数据加密密钥）
-//   nameKey = dk[32:64]（文件名加密密钥，off 模式下未使用）
+//   dataKey = dk[0:32]（資料加密密鑰）
+//   nameKey = dk[32:64]（文件名加密密鑰，off 模式下未使用）
 import { scrypt } from "hash-wasm"
 
 const FILE_HEADER_SIZE = 32
@@ -23,12 +23,12 @@ export class CryptCipher {
 
   static async create(password: string, salt: string): Promise<CryptCipher> {
     if (!password) {
-      throw new Error("[Crypt] password 不能为空")
+      throw new Error("[Crypt] password 不能為空")
     }
     const dk = (await scrypt({
       password,
       salt: salt || "",
-      costFactor: 16384, // N = 2^14，必须是 2 的幂
+      costFactor: 16384, // N = 2^14，必須是 2 的冪
       blockSize: 8, // r
       parallelism: 1, // p
       hashLength: 64, // dkLen
@@ -52,7 +52,7 @@ export class CryptCipher {
     return Math.max(0, encryptedSize - FILE_HEADER_SIZE)
   }
 
-  /** 加密明文，返回 32 字节头 + 密文 */
+  /** 加密明文，返回 32 字節頭 + 密文 */
   async encrypt(plain: Uint8Array): Promise<Uint8Array> {
     const nonce = crypto.getRandomValues(new Uint8Array(NONCE_SIZE))
     const header = new Uint8Array(FILE_HEADER_SIZE)
@@ -71,10 +71,10 @@ export class CryptCipher {
     return out
   }
 
-  /** 解密（data 必须包含 32 字节头） */
+  /** 解密（data 必須包含 32 字節頭） */
   async decrypt(data: Uint8Array): Promise<Uint8Array> {
     if (data.length < FILE_HEADER_SIZE) {
-      throw new Error("[Crypt] 加密文件过短（缺少文件头）")
+      throw new Error("[Crypt] 加密文件過短（缺少文件頭）")
     }
     const nonce = data.slice(0, NONCE_SIZE)
     const ciphertext = data.slice(FILE_HEADER_SIZE)

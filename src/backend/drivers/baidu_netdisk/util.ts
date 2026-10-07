@@ -32,7 +32,7 @@ export const UPLOAD_RETRY_COUNT = 3
 export const UPLOAD_RETRY_WAIT_MS = 1000
 export const UPLOAD_RETRY_MAX_WAIT_MS = 5000
 
-// 百度 access_token 无效/过期的错误码（实测：uinfo 假 token → 20016；list/filemetas 空或假 token → -6；111 为文档标准）
+// 百度 access_token 無效/過期的錯誤碼（實測：uinfo 假 token → 20016；list/filemetas 空或假 token → -6；111 為文件標準）
 const TOKEN_ERRORS = new Set([111, -6, 20016])
 
 function sleep(ms: number): Promise<void> {
@@ -164,14 +164,14 @@ export class BaiduClient {
       } catch {
         // Non-JSON error page — surface the raw body for diagnosis
         throw new Error(
-          `在线 API 刷新失败 (HTTP ${res.status})：${rawText.slice(0, 300) || "非 JSON 响应"}。请确认 refresh_token 是通过 https://api.oplist.org/ 获取的有效令牌。`,
+          `在線 API 刷新失敗 (HTTP ${res.status})：${rawText.slice(0, 300) || "非 JSON 響應"}。請確認 refresh_token 是通過 https://api.oplist.org/ 獲取的有效令牌。`,
         )
       }
       if (!data.refresh_token || !data.access_token) {
         throw new Error(
           data.text ||
             (res.status !== 200
-              ? `在线 API 返回 HTTP ${res.status}`
+              ? `在線 API 返回 HTTP ${res.status}`
               : "empty token returned from official API, a wrong refresh token may have been used"),
         )
       }
@@ -281,7 +281,7 @@ export class BaiduClient {
         const base = `req: [${fullUrl}] ,errno: ${errno}, refer to https://pan.baidu.com/union/doc/`
         if (errno === 31023) {
           throw new Error(
-            `${base} 百度网盘风控 (Trigger security policy: Please try again later) — 触发原因通常是：① 当前部署环境的出口 IP（如 Cloudflare Workers 数据中心 IP）被百度安全策略拦截；② refresh_token 无效或从非官方渠道获取，导致账号被风控。请确认：refresh_token 必须通过 https://api.oplist.org/ 获取（本驱动默认已开启"使用在线 API"）；风控为临时性，等待数分钟至数小时后自动解除；长期使用请将后端部署到境内服务器（或配置 HTTPS_PROXY 境内代理）。`,
+            `${base} 百度網盤風控 (Trigger security policy: Please try again later) — 觸發原因通常是：① 當前部署環境的出口 IP（如 Cloudflare Workers 資料中心 IP）被百度安全策略攔截；② refresh_token 無效或從非官方渠道獲取，導致賬號被風控。請確認：refresh_token 必須通過 https://api.oplist.org/ 獲取（本驅動默認已開啟"使用在線 API"）；風控為臨時性，等待數分鐘至數小時後自動解除；長期使用請將後端部署到境內伺服器（或配置 HTTPS_PROXY 境內代理）。`,
           )
         }
         throw new Error(base)

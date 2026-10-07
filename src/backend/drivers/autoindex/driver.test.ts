@@ -25,7 +25,7 @@ test("parseSize handles empty / dash / invalid", () => {
 
 test("parseTime parses ISO-like datetime", () => {
   const iso = parseTime("2026-01-02 10:30", "")
-  // toISOString 输出 UTC，本地时区差异下仅断言日期部分稳定
+  // toISOString 輸出 UTC，本地時區差異下僅斷言日期部分穩定
   assert.match(iso, /^2026-01-02T\d{2}:\d{2}/)
 })
 
@@ -55,8 +55,8 @@ test("parseAutoIndexHTML extracts files, dirs, size and modified", () => {
 })
 
 test("parseAutoIndexHTML tolerates malformed Apache directory HTML", () => {
-  // archive.apache.org/dist/tomcat/ 实际返回过这种重复 html/body/pre、只关闭一层
-  // pre 的页面。浏览器与 Go htmlquery 都能解析，AutoIndex 也不能按严格 XML 拒绝。
+  // archive.apache.org/dist/tomcat/ 實際返回過這種重複 html/body/pre、只關閉一層
+  // pre 的頁面。瀏覽器與 Go htmlquery 都能解析，AutoIndex 也不能按嚴格 XML 拒絕。
   const html = `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <html><head><title>Index</title></head><body>
 <html><head><title>Index</title></head><body><pre>

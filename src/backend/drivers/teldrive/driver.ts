@@ -53,7 +53,7 @@ export class DriverTeldrive implements StorageDriver {
       }
     } catch {}
 
-    // Fallback: 目录
+    // Fallback: 目錄
     try {
       await this.client.listFiles(physicalPath)
       return {

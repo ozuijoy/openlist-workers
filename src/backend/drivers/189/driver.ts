@@ -1,4 +1,4 @@
-// 189 Cloud Drive (天翼云盘) driver
+// 189 Cloud Drive (天翼雲盤) driver
 // Re-ported from: https://github.com/OpenListTeam/OpenList/tree/main/drivers/189
 import {
   StorageDriver,
@@ -45,7 +45,7 @@ function decodeUploadSession(token: string): Cloud189UploadSession {
     }
     return session
   } catch {
-    throw new Error("[189Cloud] 上传会话无效或已损坏")
+    throw new Error("[189Cloud] 上傳會話無效或已損壞")
   }
 }
 
@@ -125,8 +125,8 @@ export class Cloud189Driver implements StorageDriver {
   }
 
   /**
-   * 将 physicalPath 解析为对应的 folderId。
-   * 逐级向下解析并缓存路径 ID 映射。
+   * 將 physicalPath 解析為對應的 folderId。
+   * 逐級向下解析並快取路徑 ID 映射。
    */
   private async resolveFolderId(physicalPath: string): Promise<string> {
     const rootId = this.client.getRootId()
@@ -182,7 +182,7 @@ export class Cloud189Driver implements StorageDriver {
           String(f.id) === decodedName,
       )
       if (!folder) {
-        throw new Error(`[189Cloud] 目录未找到: ${rawName}`)
+        throw new Error(`[189Cloud] 目錄未找到: ${rawName}`)
       }
 
       parentId = String(folder.id)
@@ -194,7 +194,7 @@ export class Cloud189Driver implements StorageDriver {
   }
 
   /**
-   * 将 physicalPath 解析为对应的文件对象及其父目录 ID
+   * 將 physicalPath 解析為對應的文件對象及其父目錄 ID
    */
   private async resolveFile(physicalPath: string): Promise<{
     file: FileItem189 | FolderItem189
@@ -204,7 +204,7 @@ export class Cloud189Driver implements StorageDriver {
     const segs = String(physicalPath || "")
       .split("/")
       .filter(Boolean)
-    if (segs.length === 0) throw new Error("[189Cloud] 路径无效")
+    if (segs.length === 0) throw new Error("[189Cloud] 路徑無效")
 
     const rawName = segs[segs.length - 1]
     const decodedName = (() => {
@@ -244,7 +244,7 @@ export class Cloud189Driver implements StorageDriver {
       return { file: folder, parentId, isDir: true }
     }
 
-    throw new Error(`[189Cloud] 文件或目录未找到: ${rawName}`)
+    throw new Error(`[189Cloud] 文件或目錄未找到: ${rawName}`)
   }
 
   async list(_virtualPath: string, physicalPath: string): Promise<FileItem[]> {
@@ -302,7 +302,7 @@ export class Cloud189Driver implements StorageDriver {
       item.raw_url = await this.client.getDownloadUrl(String(file.id))
       item.raw_url_headers = this.client.getDownloadHeaders()
     } catch (e: any) {
-      console.warn(`[189Cloud] 获取 ${file.name} 下载地址失败:`, e.message)
+      console.warn(`[189Cloud] 獲取 ${file.name} 下載地址失敗:`, e.message)
     }
     return item
   }
@@ -312,7 +312,7 @@ export class Cloud189Driver implements StorageDriver {
     const segs = String(physicalPath || "")
       .split("/")
       .filter(Boolean)
-    const dirName = segs.pop() || "新文件夹"
+    const dirName = segs.pop() || "新文件夾"
     const parentPath = "/" + segs.join("/")
     const parentId = await this.resolveFolderId(parentPath)
     await this.client.mkdir(parentId, dirName)
@@ -375,7 +375,7 @@ export class Cloud189Driver implements StorageDriver {
       .split("/")
       .filter(Boolean)
     const fileName = parts.pop()
-    if (!fileName) throw new Error("[189Cloud] 上传路径无效")
+    if (!fileName) throw new Error("[189Cloud] 上傳路徑無效")
     const parentPath = "/" + parts.join("/")
     const info = await this.createUploadSession(
       parentPath,
@@ -399,7 +399,7 @@ export class Cloud189Driver implements StorageDriver {
     await this.completeUploadSession(info.session, partMd5s)
   }
 
-  // ---- 分片会话上传（与 OpenList 原 189Cloud 驱动一致）----
+  // ---- 分片會話上傳（與 OpenList 原 189Cloud 驅動一致）----
 
   async createUploadSession(
     _virtualDir: string,
@@ -477,7 +477,7 @@ export class Cloud189Driver implements StorageDriver {
       partNumber < 1 ||
       partNumber > session.partCount
     ) {
-      throw new Error(`[189Cloud] 分片序号无效: ${partNumber}`)
+      throw new Error(`[189Cloud] 分片序號無效: ${partNumber}`)
     }
     this.client.setSessionKey(session.sessionKey)
     const uploadData = await this.client.getMultiUploadUrls(
@@ -505,7 +505,7 @@ export class Cloud189Driver implements StorageDriver {
     if (!response.ok) {
       const body = await response.text().catch(() => "")
       throw new Error(
-        `[189Cloud] 上传第 ${partNumber}/${session.partCount} 分片失败: HTTP ${response.status} ${body}`,
+        `[189Cloud] 上傳第 ${partNumber}/${session.partCount} 分片失敗: HTTP ${response.status} ${body}`,
       )
     }
     return { partMd5: md5Hex(content) }
@@ -525,7 +525,7 @@ export class Cloud189Driver implements StorageDriver {
       )
       .filter((part) => /^[a-f0-9]{32}$/.test(part))
     if (normalizedParts.length !== session.partCount) {
-      throw new Error("[189Cloud] 分片校验信息不完整，无法提交上传")
+      throw new Error("[189Cloud] 分片校驗信息不完整，無法提交上傳")
     }
     const sliceMd5 =
       session.partCount === 1

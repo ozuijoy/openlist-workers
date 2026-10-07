@@ -1,4 +1,4 @@
-// aliyundrive_open (阿里云盘 OAuth2 OpenAPI) - 支持在线 API 中转或直接 OAuth
+// aliyundrive_open (阿里雲盤 OAuth2 OpenAPI) - 支持在線 API 中轉或直接 OAuth
 export interface AliyundriveOpenAddition {
   drive_type: "default" | "resource" | "backup"
   drive_id?: string
@@ -8,16 +8,16 @@ export interface AliyundriveOpenAddition {
   order_direction?: string
   remove_way?: "trash" | "delete"
   chunk_size?: number
-  // 在线 API 模式
+  // 在線 API 模式
   use_online_api?: boolean
   api_url_address?: string
   alipan_type?: "alipanQR" | "alipanTV"
-  // 直接 OAuth 模式（使用自己的应用）
+  // 直接 OAuth 模式（使用自己的應用）
   client_id?: string
   client_secret?: string
 }
 
-// Token 响应结构
+// Token 響應結構
 export interface AliyunTokenResp {
   access_token: string
   refresh_token?: string
@@ -29,7 +29,7 @@ export interface AliyunTokenResp {
   backup_drive_id?: string
 }
 
-// 阿里云盘文件对象
+// 阿里雲盤文件對象
 export interface AliyunFileItem {
   file_id: string
   name: string

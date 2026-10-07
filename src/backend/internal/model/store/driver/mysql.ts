@@ -1,10 +1,10 @@
 /**
- * MySQL 驱动（Node.js 容器模式）
+ * MySQL 驅動（Node.js 容器模式）
  * 
- * 通过 mysql2/promise 动态加载，仅在 Node.js 运行时可用。
+ * 通過 mysql2/promise 動態加載，僅在 Node.js 運行時可用。
  * 
- * 环境变量：
- * - MYSQL_URLS（优先，连接串）
+ * 環境變量：
+ * - MYSQL_URLS（優先，連接串）
  * - MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASS, MYSQL_NAME
  */
 import type { Driver } from "../types"
@@ -39,7 +39,7 @@ async function getPool(env: any): Promise<any | null> {
   const key = JSON.stringify(config)
   if (_pool && _poolKey === key) return _pool
   
-  // 动态 import，避免打包到 Workers
+  // 動態 import，避免打包到 Workers
   const specifier = "mysql2/promise"
   const { createPool } = await import(specifier)
   _pool = createPool(config)
@@ -52,7 +52,7 @@ let _schemaInitedPrefix: string | null = null
 async function ensureSchema(pool: any, env?: any): Promise<void> {
   const prefix = getTablePrefix(env)
   if (_schemaInitedPrefix === prefix) return
-  // KV 表（map/key 格式）+ 列式表（sql 格式）一并创建
+  // KV 表（map/key 格式）+ 列式表（sql 格式）一併創建
   for (const ddl of [...KV_SCHEMA_MYSQL, ...buildDdl("mysql", env)]) {
     await pool.query(ddl)
   }

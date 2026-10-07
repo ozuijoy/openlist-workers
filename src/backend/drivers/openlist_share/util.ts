@@ -1,4 +1,4 @@
-// OpenList 分享链接 API 客户端
+// OpenList 分享鏈接 API 客戶端
 import {
   DriverOpenlistShareAddition,
   OLShareResp,
@@ -35,7 +35,7 @@ export class ClientOpenlistShare {
     return (await resp.json()) as OLShareResp<T>
   }
 
-  /** 驱动物理路径 → 分享路径（/@s/{sid} + path） */
+  /** 驅動物理路徑 → 分享路徑（/@s/{sid} + path） */
   private sharePath(path: string): string {
     return "/@s/" + this.sid + (path === "/" ? "" : path)
   }

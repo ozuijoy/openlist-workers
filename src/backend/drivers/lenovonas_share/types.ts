@@ -1,4 +1,4 @@
-// lenovonas_share (联想 NAS 分享) - 只读，纯 REST
+// lenovonas_share (聯想 NAS 分享) - 只讀，純 REST
 // API reference: Go drivers/lenovonas_share
 
 export interface DriverLenovoNasShareAddition {

@@ -60,7 +60,7 @@ export function listMcpPrompts(): McpPrompt[] {
   ]
 }
 
-/** 实际执行 MCP 工具调用（与 Go server/mcp 对齐，聚焦 list_files / get_system_info） */
+/** 實際執行 MCP 工具調用（與 Go server/mcp 對齊，聚焦 list_files / get_system_info） */
 async function handleToolCall(
   id: any,
   name: string,

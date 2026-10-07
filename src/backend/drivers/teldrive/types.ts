@@ -1,12 +1,12 @@
-// teldrive (Telegram Drive 自托管) - Bearer token 认证
+// teldrive (Telegram Drive 自託管) - Bearer token 認證
 // API reference: last branch src/drive/teldrive
 
 export interface DriverTeldriveAddition {
-  /** TelDrive 服务地址 */
+  /** TelDrive 服務地址 */
   url: string
-  /** 访问令牌（JWT） */
+  /** 訪問令牌（JWT） */
   access_token: string
-  /** 根路径 */
+  /** 根路徑 */
   root_path?: string
 }
 

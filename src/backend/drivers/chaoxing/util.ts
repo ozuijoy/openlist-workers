@@ -1,4 +1,4 @@
-// ChaoXing (超星小组网盘) API 客户端
+// ChaoXing (超星小組網盤) API 客戶端
 import {
   DriverChaoXingAddition,
   ChaoXingFile,
@@ -143,7 +143,7 @@ export class ClientChaoXing {
       { bbsid: this.addition.bbsid, folderId: parent, recType: "2" },
     )
     for (const file of resps.list || []) {
-      // 手机端超星上传的文件没有 fileId 字段，但 objectId 与 fileId 相同，可代替
+      // 手機端超星上傳的文件沒有 fileId 欄位，但 objectId 與 fileId 相同，可代替
       if (!file.content.fileId) {
         file.content.fileId = file.content.objectId || ""
       }
@@ -219,7 +219,7 @@ export class ClientChaoXing {
     name: string,
     content: Uint8Array,
   ): Promise<void> {
-    // 1. 获取上传配置（token / puid）
+    // 1. 獲取上傳配置（token / puid）
     const cfgResp = await fetch(`${DOWNLOAD_API}/pc/files/getUploadConfig`, {
       method: "GET",
     })
@@ -228,7 +228,7 @@ export class ClientChaoXing {
       throw new Error("[ChaoXing] get upload config failed")
     }
 
-    // 2. multipart 上传文件
+    // 2. multipart 上傳文件
     const fd = new FormData()
     const buf = content.buffer.slice(
       content.byteOffset,
@@ -246,7 +246,7 @@ export class ClientChaoXing {
       throw new Error(`[ChaoXing] upload failed: ${fileRsp.msg}`)
     }
 
-    // 3. 登记文件到小组网盘
+    // 3. 登記文件到小組網盤
     const param = {
       cataid: "100000019",
       key: fileRsp.objectId,

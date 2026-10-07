@@ -1,4 +1,4 @@
-// GuangYaPan (光亚盘) HTTP client + helpers
+// GuangYaPan (光亞盤) HTTP client + helpers
 import { hmacSha1Base64, md5 } from "../../pkg/crypto"
 import {
   GypListResp,
@@ -53,10 +53,10 @@ function isUploadAlreadyDone(msg: string): boolean {
   const m = (msg || "").trim().toLowerCase()
   if (!m) return false
   return (
-    m === "上传已完成" ||
+    m === "上傳已完成" ||
     m === "upload completed" ||
     m === "already uploaded" ||
-    m === "秒传成功"
+    m === "秒傳成功"
   )
 }
 
@@ -235,7 +235,7 @@ export class GuangYaPanClient {
     throw new Error(`upload task ${taskId} timeout`)
   }
 
-  /** 计算文件 MD5（用于秒传） */
+  /** 計算文件 MD5（用於秒傳） */
   static md5(content: Uint8Array): string {
     return md5(content)
   }

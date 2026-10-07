@@ -1,4 +1,4 @@
-// GitHub Releases API 客户端
+// GitHub Releases API 客戶端
 import {
   DriverGithubReleasesAddition,
   GHRMountPoint,
@@ -25,7 +25,7 @@ export class ClientGithubReleases {
       if (!item) continue
       const idx = item.indexOf(":")
       if (idx > 0 && item.slice(0, idx).includes("/")) {
-        // 可能是 [path:]org/repo 或 org/repo（无冒号）
+        // 可能是 [path:]org/repo 或 org/repo（無冒號）
       }
       let point = "/"
       let repo = item
@@ -65,10 +65,10 @@ export class ClientGithubReleases {
     return p + url
   }
 
-  /** 解析挂载点对应的 org/repo */
+  /** 解析掛載點對應的 org/repo */
   private mountForPath(virtualPath: string): GHRMountPoint | null {
     const clean = virtualPath.startsWith("/") ? virtualPath : "/" + virtualPath
-    // 找最长的匹配挂载点
+    // 找最長的匹配掛載點
     let best: GHRMountPoint | null = null
     for (const m of this.mounts) {
       const mp = m.point === "/" ? "/" : m.point
@@ -102,7 +102,7 @@ export class ClientGithubReleases {
 
     const files: GHRFile[] = []
 
-    // 根目录：挂载点列表
+    // 根目錄：掛載點列表
     if (rel === "" && virtualPath === "/") {
       for (const m of this.mounts) {
         files.push({
@@ -120,7 +120,7 @@ export class ClientGithubReleases {
     const isAllVersion = this.addition.show_all_version
 
     if (rel === "") {
-      // 挂载点根：最新版本文件 + 可选源码 + README/LICENSE
+      // 掛載點根：最新版本文件 + 可選源碼 + README/LICENSE
       const release = await this.latestRelease(mount.repo)
       if (release) {
         for (const asset of release.assets) {
@@ -183,7 +183,7 @@ export class ClientGithubReleases {
       return files
     }
 
-    // 版本目录内：该 tag 的 assets + 源码
+    // 版本目錄內：該 tag 的 assets + 源碼
     const releases = await this.allReleases(mount.repo)
     const release = releases.find((r) => r.tag_name === rel.split("/")[0])
     if (release) {
@@ -219,20 +219,20 @@ export class ClientGithubReleases {
     return files
   }
 
-  /** 获取单文件下载链接 */
+  /** 獲取單文件下載鏈接 */
   async getDownloadUrl(virtualPath: string): Promise<string> {
     const mount = this.mountForPath(virtualPath)
     if (!mount) return ""
     const rel = this.relPath(mount, virtualPath)
     const name = rel.split("/").pop() || ""
 
-    // 最新版本资产
+    // 最新版本資產
     const release = await this.latestRelease(mount.repo)
     if (release) {
       const asset = release.assets.find((a) => a.name === name)
       if (asset) return this.proxy(asset.browser_download_url)
     }
-    // 所有版本资产
+    // 所有版本資產
     const releases = await this.allReleases(mount.repo)
     for (const r of releases) {
       const asset = r.assets.find((a) => a.name === name)

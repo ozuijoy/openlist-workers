@@ -1,5 +1,5 @@
-// HalalCloud Open API 客户端（HL6-HMAC-SHA256 签名，AWS SigV4 变体）
-// 签名算法逆向自 github.com/halalcloud/golang-sdk-lite
+// HalalCloud Open API 客戶端（HL6-HMAC-SHA256 簽名，AWS SigV4 變體）
+// 簽名算法逆向自 github.com/halalcloud/golang-sdk-lite
 import {
   DriverHalalCloudOpenAddition,
   HCloudFile,
@@ -131,7 +131,7 @@ export async function hcloudSign(
     await sha256Hex(canonicalRequest),
   ].join("\n")
 
-  // 派生签名密钥
+  // 派生簽名密鑰
   const secretKey = toUtf8(SIGN_PREFIX + input.secretKey)
   const dateKey = await hmacSha256Bytes(toUtf8(dateString), secretKey)
   const tokenKey = await hmacSha256Bytes(toUtf8(input.accessToken), dateKey)
@@ -169,7 +169,7 @@ export class ClientHalalCloudOpen {
     }
     if (!this.addition.refresh_token) {
       throw new Error(
-        "[HalalCloud] refresh_token 为空：请从 HalalCloud 官方获取 refresh_token",
+        "[HalalCloud] refresh_token 為空：請從 HalalCloud 官方獲取 refresh_token",
       )
     }
     await this.refreshToken()
@@ -329,7 +329,7 @@ export class ClientHalalCloudOpen {
       { path, identity },
     )
     if (!resp.download_address) {
-      throw new Error("[HalalCloud] 获取下载地址失败")
+      throw new Error("[HalalCloud] 獲取下載地址失敗")
     }
     return resp.download_address
   }

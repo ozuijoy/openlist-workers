@@ -1,4 +1,4 @@
-// halalcloud_open (HalalCloud Open API) - HL6-HMAC-SHA256 签名 + refresh_token
+// halalcloud_open (HalalCloud Open API) - HL6-HMAC-SHA256 簽名 + refresh_token
 // API reference: Go drivers/halalcloud_open（golang-sdk-lite 逆向）
 
 export interface DriverHalalCloudOpenAddition {

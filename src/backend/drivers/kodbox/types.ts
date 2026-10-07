@@ -1,19 +1,19 @@
-// kodbox (可道云 / KodBox 自建网盘) - form POST + accessToken
+// kodbox (可道雲 / KodBox 自建網盤) - form POST + accessToken
 // API reference: Go drivers/kodbox
 
 export interface DriverKodboxAddition {
-  /** KodBox 站点地址（如 https://kod.example.com） */
+  /** KodBox 站點地址（如 https://kod.example.com） */
   address: string
-  /** 登录用户名 */
+  /** 登入用戶名 */
   username?: string
-  /** 登录密码 */
+  /** 登入密碼 */
   password?: string
-  /** 根目录路径（可选） */
+  /** 根目錄路徑（可選） */
   root_path?: string
 }
 
 export interface KodboxCommonResp {
-  /** true/false（成功）或字符串错误码 */
+  /** true/false（成功）或字符串錯誤碼 */
   code: boolean | string
   info?: string | boolean
   data?: any

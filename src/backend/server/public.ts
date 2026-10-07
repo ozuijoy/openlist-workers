@@ -17,7 +17,7 @@ import {
   readFormat,
 } from "../internal/model/store/backend"
 import { setUserPassword } from "../pkg/password"
-// 脱敏 / 截断 / 摘要 / 建议组装：与全局 503 拦截（index.ts）共用同一套规则
+// 脫敏 / 截斷 / 摘要 / 建議組裝：與全局 503 攔截（index.ts）共用同一套規則
 import {
   reasonLines,
   redact,
@@ -26,14 +26,14 @@ import {
 
 export const publicRouter = new Hono()
 
-/** 文档基址（配置与存储说明） */
+/** 文件基址（配置與儲存說明） */
 const DOC_BASE = "https://doc.oplist.org"
 const DOC_STORAGE = `${DOC_BASE}/ecosystem/official_worker/guide_env`
 const DOC_DRIVER = `${DOC_BASE}/ecosystem/official_worker/guide`
 
 /**
- * 解析值归一：解析失败时内部会用 "none"/空串占位，界面上显示「do → none」
- * 只会造成困惑，因此统一归一为 null（前端只显示配置值）。
+ * 解析值歸一：解析失敗時內部會用 "none"/空串佔位，界面上顯示「do → none」
+ * 只會造成困惑，因此統一歸一為 null（前端只顯示配置值）。
  */
 function resolvedOrNull(value: any): string | null {
   const s = String(value ?? "").trim()
@@ -41,20 +41,20 @@ function resolvedOrNull(value: any): string | null {
 }
 
 /**
- * 「没有可用存储后端」时的统一建议（单一来源）。
+ * 「沒有可用儲存後端」時的統一建議（單一來源）。
  *
- * ## 为什么不再提 `set DB_DRIVER=auto`
+ * ## 為什麼不再提 `set DB_DRIVER=auto`
  *
- * 旧文案是「Bind a storage backend (D1 / KV / Blob) **or set DB_DRIVER=auto**」。
- * 后半句在**绝大多数真实场景下是循环建议**：用户看到这条 issue 时，`DB_DRIVER`
- * 往往**本来就是 auto**（CF / EdgeOne 部署的默认形态）。让他「去设置 auto」等于
- * 让他改一个已经正确的值，改完照旧报错，只会加深「这软件坏了」的印象。
+ * 舊文案是「Bind a storage backend (D1 / KV / Blob) **or set DB_DRIVER=auto**」。
+ * 後半句在**絕大多數真實場景下是循環建議**：用戶看到這條 issue 時，`DB_DRIVER`
+ * 往往**本來就是 auto**（CF / EdgeOne 部署的默認形態）。讓他「去設置 auto」等於
+ * 讓他改一個已經正確的值，改完照舊報錯，只會加深「這軟件壞了」的印象。
  *
- * 准确的表述是：auto **已经把所有候选驱动探测过一遍且都不可用**，因此缺的是
- * **平台侧的绑定**，不是配置值。这里只说这件事。
+ * 準確的表述是：auto **已經把所有候選驅動探測過一遍且都不可用**，因此缺的是
+ * **平台側的綁定**，不是配置值。這裡只說這件事。
  *
- * 若驱动解析器给出了更精确的 hint（如 `noStorageHint` 的逐平台文案），调用方
- * 会优先使用它，本函数只是兜底。
+ * 若驅動解析器給出了更精確的 hint（如 `noStorageHint` 的逐平台文案），調用方
+ * 會優先使用它，本函數只是兜底。
  */
 function bindBackendSuggestion(): string {
   return (
@@ -65,27 +65,27 @@ function bindBackendSuggestion(): string {
 }
 
 /**
- * 初始化前的环境自检。
+ * 初始化前的環境自檢。
  *
- * 该接口**无需鉴权**（初始化页在未登录时就需要它），且**不泄露任何敏感值**：
- * 只报告「配置了什么」「是否就绪」「哪里不对」，绝不回显密钥或 DSN 原文。
+ * 該介面**無需鑑權**（初始化頁在未登入時就需要它），且**不洩露任何敏感值**：
+ * 只報告「配置了什麼」「是否就緒」「哪裡不對」，絕不回顯密鑰或 DSN 原文。
  *
  * 返回：
- *   - config：DB_FORMAT / DB_DRIVER / DB_CIPHER 的配置值与实际解析值
- *   - storage：驱动可用性、健康状态、连接错误
- *   - jwt：签名/加密密钥是否就绪
- *   - ready：综合就绪判定（数据库 + 密钥都就绪）
- *   - issues：问题清单，每项含 code / level / message / docUrl
+ *   - config：DB_FORMAT / DB_DRIVER / DB_CIPHER 的配置值與實際解析值
+ *   - storage：驅動可用性、健康狀態、連接錯誤
+ *   - jwt：簽名/加密密鑰是否就緒
+ *   - ready：綜合就緒判定（資料庫 + 密鑰都就緒）
+ *   - issues：問題清單，每項含 code / level / message / docUrl
  */
 publicRouter.get("/env_check", async (c) => {
   const env = c.env as any
   const driverCfg = readDriver(env)
   const formatCfg = readFormat(env)
-  // 字段加密算法（none = 不加密，默认）。只报告配置，不回显任何密钥。
+  // 欄位加密算法（none = 不加密，默認）。只報告配置，不回顯任何密鑰。
   const cipherCfg = readCipher(env)
   const serverless = isServerlessRuntime(env)
 
-  // ── 存储状态（不抛错，内部已做容错）──
+  // ── 儲存狀態（不拋錯，內部已做容錯）──
   const storage: any = await getStoreStatus(env).catch((err: any) => ({
     driver: "none",
     format: "none",
@@ -93,49 +93,49 @@ publicRouter.get("/env_check", async (c) => {
     configError: String(err?.message || err),
   }))
 
-  // ── 可用性判定：**复用** isPersistentStorageAvailable（单一来源）──
+  // ── 可用性判定：**複用** isPersistentStorageAvailable（單一來源）──
   //
-  // 以前这里把判定公式（有驱动 && 非内存 && 无配置错误 && 驱动自报可用）
-  // 在本文件里重抄了一遍，与 store/backend.ts 的 isPersistentStatus 逐条等价。
-  // 两处独立维护意味着任何一方新增条件（例如将来加「驱动已废弃」）都会造成
-  // 「503 拦截层」与「安装向导是否放行」判定不一致，且症状极难定位。
+  // 以前這裡把判定公式（有驅動 && 非記憶體 && 無配置錯誤 && 驅動自報可用）
+  // 在本文件裡重抄了一遍，與 store/backend.ts 的 isPersistentStatus 逐條等價。
+  // 兩處獨立維護意味著任何一方新增條件（例如將來加「驅動已廢棄」）都會造成
+  // 「503 攔截層」與「安裝嚮導是否放行」判定不一致，且症狀極難定位。
   //
-  // isPersistentStorageAvailable 内部就是 getStoreStatus + isPersistentStatus，
-  // 因此这里复用不会多一次探测（getStorageBackend 内部已按 env 指纹缓存）。
+  // isPersistentStorageAvailable 內部就是 getStoreStatus + isPersistentStatus，
+  // 因此這裡複用不會多一次探測（getStorageBackend 內部已按 env 指紋快取）。
   const storageAvailable = await isPersistentStorageAvailable(env)
 
-  // 以下中间量仅用于**挑选 issue 文案**（哪个 code / 哪句话），不再参与可用性计算。
-  // 内存模式在 serverless 下不可接受（实例短暂、多租户，写入会静默丢失）。
+  // 以下中間量僅用於**挑選 issue 文案**（哪個 code / 哪句話），不再參與可用性計算。
+  // 記憶體模式在 serverless 下不可接受（實例短暫、多租戶，寫入會靜默丟失）。
   const resolvedDriver = String(storage?.driver ?? "none")
   const isMemory = resolvedDriver === "memory"
   const hasDriver = resolvedDriver !== "none" && resolvedDriver !== ""
   const hasConfigError = Boolean(storage?.configError)
 
-  // 配置齐全但驱动自检失败（如 KV 代理 401、数据库连不上）。
-  // 注意：storageAvailable 为 false 且并无上述三类原因时，就落在这里。
+  // 配置齊全但驅動自檢失敗（如 KV 代理 401、資料庫連不上）。
+  // 注意：storageAvailable 為 false 且並無上述三類原因時，就落在這裡。
   const driverHealthy = storage?.available !== false
 
-  // ── JWT 密钥就绪（真实来源，绕过缓存）──
+  // ── JWT 密鑰就緒（真實來源，繞過快取）──
   const jwtReady = await isEncryptionReady(env).catch(() => false)
 
-  // ── 问题清单（可操作提示 + 文档链接）──
+  // ── 問題清單（可操作提示 + 文件鏈接）──
   const issues: {
     code: string
     level: "error" | "warning"
     /**
-     * 给界面的一行短原因（**应为完整的一句话**）。
+     * 給界面的一行短原因（**應為完整的一句話**）。
      *
-     * 界面只展示这一行 + suggestion，开发者排查用的长篇说明放在 message 里，
-     * 避免出现「半句话 + 省略号」这种读不懂的提示。
+     * 界面只展示這一行 + suggestion，開發者排查用的長篇說明放在 message 裡，
+     * 避免出現「半句話 + 省略號」這種讀不懂的提示。
      */
     summary: string
-    /** 完整说明（多行、已脱敏）：只给日志/工具用，界面不展示 */
+    /** 完整說明（多行、已脫敏）：只給日誌/工具用，界面不展示 */
     message: string
     docUrl: string
-    /** 一句话修复建议（「改什么」） */
+    /** 一句話修復建議（「改什麼」） */
     suggestion?: string | null
   }[] = []
-  /** 配置错误的分类码 + 短摘要 + 完整说明 + 修复建议（均脱敏） */
+  /** 配置錯誤的分類碼 + 短摘要 + 完整說明 + 修復建議（均脫敏） */
   let storageDetail: {
     code: string | null
     summary: string | null
@@ -159,9 +159,9 @@ publicRouter.get("/env_check", async (c) => {
   }
 
   if (hasConfigError && storageDetail.code === "NO_STORAGE") {
-    // 一个可选后端都没有：这类错误本身就是「没有可用的存储」，用一条通用提示
-    // 说清即可，不必再叠一条内容相同的配置错误（两条 issue 说同一件事只会让
-    // 用户以为出了两个问题）。
+    // 一個可選後端都沒有：這類錯誤本身就是「沒有可用的儲存」，用一條通用提示
+    // 說清即可，不必再疊一條內容相同的配置錯誤（兩條 issue 說同一件事只會讓
+    // 用戶以為出了兩個問題）。
     issues.push({
       code: "STORAGE_UNAVAILABLE",
       level: "error",
@@ -171,8 +171,8 @@ publicRouter.get("/env_check", async (c) => {
       suggestion: storageDetail.suggestion || bindBackendSuggestion(),
     })
   } else if (hasConfigError) {
-    // 配置错误：界面只给「一行短原因 + 一行怎么改」；完整排查说明留在 message /
-    // storage.error_message 里，由日志与工具消费。
+    // 配置錯誤：界面只給「一行短原因 + 一行怎麼改」；完整排查說明留在 message /
+    // storage.error_message 裡，由日誌與工具消費。
     const isInvalidCombination = storageDetail.code === "INVALID_COMBINATION"
     const reason = redact(
       storageDetail.message || storage?.configError,
@@ -218,7 +218,7 @@ publicRouter.get("/env_check", async (c) => {
     })
   }
 
-  // 配置齐全但驱动自检失败（如 KV 代理 401、数据库连不上）
+  // 配置齊全但驅動自檢失敗（如 KV 代理 401、資料庫連不上）
   if (hasDriver && !isMemory && !hasConfigError && !driverHealthy) {
     const unreachable =
       `Storage driver "${resolvedDriver}" is configured but not reachable` +
@@ -229,10 +229,10 @@ publicRouter.get("/env_check", async (c) => {
       summary: unreachable,
       message: unreachable,
       docUrl: DOC_DRIVER,
-      // 注意：这里**不**再建议「set DB_DRIVER=auto」。
-      // 能走到这里说明驱动已成功解析（binding/凭据都齐），只是自检不通
-      // （如 KV 代理 401）。此时改回 auto 没有任何帮助 —— auto 会解析出同一个
-      // 驱动、撞上同一个错误，属于把用户支去绕圈。真正要做的是修凭据/绑定。
+      // 注意：這裡**不**再建議「set DB_DRIVER=auto」。
+      // 能走到這裡說明驅動已成功解析（binding/憑據都齊），只是自檢不通
+      // （如 KV 代理 401）。此時改回 auto 沒有任何幫助 —— auto 會解析出同一個
+      // 驅動、撞上同一個錯誤，屬於把用戶支去繞圈。真正要做的是修憑據/綁定。
       suggestion:
         `Check the credentials/bindings for "${resolvedDriver}" ` +
         "(it resolved, but its health check failed).",
@@ -242,13 +242,13 @@ publicRouter.get("/env_check", async (c) => {
   if (!jwtReady) {
     issues.push({
       code: "JWT_SECRET_MISSING",
-      // 一律 warning：存储可用时 setup 会自动生成并持久化密钥，缺它不是
-      // 「装不了」，只是「少了一层显式配置的确定性」。不再升级为 error，
-      // 否则会出现「报错说缺密钥 → 但生成密钥只能靠安装 → 安装又被报错拦住」。
+      // 一律 warning：儲存可用時 setup 會自動生成並持久化密鑰，缺它不是
+      // 「裝不了」，只是「少了一層顯式配置的確定性」。不再升級為 error，
+      // 否則會出現「報錯說缺密鑰 → 但生成密鑰只能靠安裝 → 安裝又被報錯攔住」。
       level: "warning",
-      // 密钥支持**自动生成 + 持久化**（见 ensureEncryptionSecret），所以文案
-      // 不说「必须手动配置」，而是同时给出「也可留空让 setup 自动生成」这条路，
-      // 避免用户以为这是个必填项而无谓地卡在向导里。
+      // 密鑰支持**自動生成 + 持久化**（見 ensureEncryptionSecret），所以文案
+      // 不說「必須手動配置」，而是同時給出「也可留空讓 setup 自動生成」這條路，
+      // 避免用戶以為這是個必填項而無謂地卡在嚮導裡。
       summary: "JWT_SECRET is not set.",
       message:
         "JWT_SECRET is not set. If storage is available, a secret is generated " +
@@ -262,21 +262,21 @@ publicRouter.get("/env_check", async (c) => {
     })
   }
 
-  // ── 综合就绪：只取决于「存储可用」──
+  // ── 綜合就緒：只取決於「儲存可用」──
   //
-  // 这里曾写成 `storageAvailable && jwtReady`，会造成**自死锁**：
-  //   1. 未配置 JWT_SECRET 时 jwtReady=false → ready=false；
-  //   2. 前端 `canProceed()` 依赖 ready，于是初始化向导卡在第 1 步；
-  //   3. 而密钥的自动生成 `ensureEncryptionSecret()` 恰恰只在**提交初始化
-  //      （/public/init）时**才会执行（见下方 init 路由）。
-  //   4. 结果：向导永远进不到能触发自动生成的那一步 → 「自动生成 JWT 未生效」。
+  // 這裡曾寫成 `storageAvailable && jwtReady`，會造成**自死鎖**：
+  //   1. 未配置 JWT_SECRET 時 jwtReady=false → ready=false；
+  //   2. 前端 `canProceed()` 依賴 ready，於是初始化嚮導卡在第 1 步；
+  //   3. 而密鑰的自動生成 `ensureEncryptionSecret()` 恰恰只在**提交初始化
+  //      （/public/init）時**才會執行（見下方 init 路由）。
+  //   4. 結果：嚮導永遠進不到能觸發自動生成的那一步 → 「自動生成 JWT 未生效」。
   //
-  // 语义上二者本就该分开：
-  //   - `ready` 表示「存储就绪、可以开始安装」——这是**能否初始化**的前提；
-  //   - `jwtReady` 表示「密钥已就绪」——它可以是安装的**结果**（自动生成），
-  //     而不是安装的前提。
-  // 前端仍会把 jwt.ready=false 作为提示展示（并允许用户选择手动配置），
-  // 但不再因此阻断向导。
+  // 語義上二者本就該分開：
+  //   - `ready` 表示「儲存就緒、可以開始安裝」——這是**能否初始化**的前提；
+  //   - `jwtReady` 表示「密鑰已就緒」——它可以是安裝的**結果**（自動生成），
+  //     而不是安裝的前提。
+  // 前端仍會把 jwt.ready=false 作為提示展示（並允許用戶選擇手動配置），
+  // 但不再因此阻斷嚮導。
   const ready = storageAvailable
 
   return c.json({
@@ -288,15 +288,15 @@ publicRouter.get("/env_check", async (c) => {
         platform: storage?.platform ?? null,
       },
       config: {
-        // 配置值（用户显式设置，或默认值）
+        // 配置值（用戶顯式設置，或默認值）
         db_format: formatCfg,
         db_driver: driverCfg,
-        // 敏感字段落盘算法：none（默认，不加密）/ aes-256-gcm /
-        // aes-256-gcm-sha256 / aes-256-cbc-hmac。历史密文带 enc:vN: 前缀，
-        // 读取时自动识别，因此该项只影响**新写入**。
+        // 敏感欄位落盤算法：none（默認，不加密）/ aes-256-gcm /
+        // aes-256-gcm-sha256 / aes-256-cbc-hmac。歷史密文帶 enc:vN: 前綴，
+        // 讀取時自動識別，因此該項隻影響**新寫入**。
         db_cipher: cipherCfg,
-        // 实际解析值（auto 探测后的结果）；解析失败时后端内部是 "none"，
-        // 对界面没有意义且会显示成「do → none」，这里统一归一为 null。
+        // 實際解析值（auto 探測後的結果）；解析失敗時後端內部是 "none"，
+        // 對界面沒有意義且會顯示成「do → none」，這裡統一歸一為 null。
         resolved_driver: resolvedOrNull(storage?.driver),
         resolved_format: resolvedOrNull(storage?.format),
       },
@@ -305,31 +305,31 @@ publicRouter.get("/env_check", async (c) => {
         configured: storage?.configured ?? null,
         connected: storage?.connected ?? null,
         platform: storage?.platform ?? null,
-        /** 是否处于内存兜底模式（重启即失，serverless 下不可接受） */
+        /** 是否處於記憶體兜底模式（重啟即失，serverless 下不可接受） */
         memory: isMemory,
         /**
-         * 配置错误的机器可读分类（无错误时为 null）：
+         * 配置錯誤的機器可讀分類（無錯誤時為 null）：
          * INVALID_COMBINATION / DRIVER_UNAVAILABLE / NO_STORAGE /
          * PROXY_CONFIG / UNKNOWN_DRIVER / HEALTH_ERROR / DRIVER_ERROR
          */
         error_code: storageDetail.code,
-        /** 一行短原因（界面展示这个） */
+        /** 一行短原因（界面展示這個） */
         summary: storageDetail.summary,
         /**
-         * 完整原因（已脱敏、按分类限行）。
+         * 完整原因（已脫敏、按分類限行）。
          *
-         * 只给日志与工具用：界面展示它会出现「半句话 + 省略号」。
+         * 只給日誌與工具用：界面展示它會出現「半句話 + 省略號」。
          */
         error_message:
           storageDetail.message !== null
             ? redact(storageDetail.message, reasonLines(storageDetail.code))
             : null,
-        /** 一句话修复建议（「改什么」），无错误时为 null */
+        /** 一句話修復建議（「改什麼」），無錯誤時為 null */
         suggestion: storageDetail.suggestion,
       },
       jwt: {
         ready: jwtReady,
-        // 仅告知来源类型，不回显任何值
+        // 僅告知來源類型，不回顯任何值
         source: jwtReady ? "env-or-persisted" : "none",
       },
       ready,
@@ -349,8 +349,8 @@ publicRouter.get("/settings", async (c) => {
     title: "OpenList",
     site_title: "OpenList",
     version: "v4.2.3",
-    // 后端类型标识：前端据此在 GO / TS 模式间切换功能开关。
-    // Go 版 OpenList 后端不返回此字段，前端缺省视为 "go"。
+    // 後端類型標識：前端據此在 GO / TS 模式間切換功能開關。
+    // Go 版 OpenList 後端不返回此欄位，前端缺省視為 "go"。
     backend: "ts-worker",
     announcement: "",
     pagination_type: "pagination",
@@ -398,9 +398,9 @@ publicRouter.get("/settings", async (c) => {
     // IMPORTANT: share_preview must be "true" — frontend blocks ALL previews when false
     share_preview: "true",
     share_archive_preview: "true",
-    // 「复制链接」渲染的模板。缺失或为空时会渲染成空串，
-    // `navigator.clipboard.writeText("")` 会清空剪贴板，按钮照常弹「已复制」
-    // 但粘贴出来是空的。默认输出纯分享 URL，与按钮文案一致。
+    // 「複製鏈接」渲染的模板。缺失或為空時會渲染成空串，
+    // `navigator.clipboard.writeText("")` 會清空剪貼板，按鈕照常彈「已複製」
+    // 但粘貼出來是空的。默認輸出純分享 URL，與按鈕文案一致。
     share_summary_content: "{{base_url}}/@s/{{id}}",
 
     // --- Global ---
@@ -483,7 +483,7 @@ publicRouter.get("/settings", async (c) => {
     }
   })
 
-  // 动态检查是否存在且启用了 guest 账号
+  // 動態檢查是否存在且啟用了 guest 賬號
   const guest = (db.users || []).find((u: any) => u.username === "guest")
   const isGuestActive = Boolean(guest && !guest.disabled)
   if (!isGuestActive || settingsObj.allow_guest === "false") {
@@ -537,10 +537,10 @@ publicRouter.get("/plugins", async (c) => {
   })
 })
 
-// 是否配置了 ADMIN_PASS（跳过安装向导、自动初始化 admin）。
+// 是否配置了 ADMIN_PASS（跳過安裝嚮導、自動初始化 admin）。
 //
-// 注意 env 与 process.env 都要看：Cloudflare Workers 走 env，本地/容器走
-// process.env；两者优先级与 auth.ts 的 getOrInitUsers 保持一致。
+// 注意 env 與 process.env 都要看：Cloudflare Workers 走 env，本地/容器走
+// process.env；兩者優先級與 auth.ts 的 getOrInitUsers 保持一致。
 function adminPassConfigured(env: any): boolean {
   const fromEnv = env?.ADMIN_PASS
   const fromProc =
@@ -548,32 +548,32 @@ function adminPassConfigured(env: any): boolean {
   return String(fromEnv || fromProc || "").trim() !== ""
 }
 
-// 系统是否已初始化：存在已设置密码的管理员账号即为已初始化。
+// 系統是否已初始化：存在已設置密碼的管理員賬號即為已初始化。
 //
-// 「可持久化存储可用」是「已初始化」的前提，而不是并列的另一个检查：
-// 初始化结果必须能被持久化才算真正完成。若存储不可用，getDb() 只能退回
-// 内存，此刻即便读到了管理员账号，也无法证明它会被保存下来 —— 重启即丢。
-// 因此这里把存储不可用直接判为 initialized=false，让前端停留在初始化向导
-// （那是唯一能提示用户去修配置的地方），而不是欢快地跳去登录页。
+// 「可持久化儲存可用」是「已初始化」的前提，而不是並列的另一個檢查：
+// 初始化結果必須能被持久化才算真正完成。若儲存不可用，getDb() 只能退回
+// 記憶體，此刻即便讀到了管理員賬號，也無法證明它會被保存下來 —— 重啟即丟。
+// 因此這裡把儲存不可用直接判為 initialized=false，讓前端停留在初始化嚮導
+// （那是唯一能提示用戶去修配置的地方），而不是歡快地跳去登入頁。
 //
-// 本接口已在 index.ts 的诊断豁免名单中，不会被存储配置错误中间件拦截，
-// 否则它在最需要报告问题的场景下反而拿不到任何信息。
+// 本介面已在 index.ts 的診斷豁免名單中，不會被儲存配置錯誤中間件攔截，
+// 否則它在最需要報告問題的場景下反而拿不到任何信息。
 
 publicRouter.get("/init_status", async (c) => {
   const storageReady = await isPersistentStorageAvailable(c.env)
 
-  // 存储不可用时不再尝试读库：此时 getDb() 只会返回内存副本，
-  // 据此得出的 initialized=true 是假象。
+  // 儲存不可用時不再嘗試讀庫：此時 getDb() 只會返回記憶體副本，
+  // 據此得出的 initialized=true 是假象。
   let initialized = false
   if (storageReady) {
-    // ADMIN_PASS 自动初始化：安装页只轮询本接口，从不调用登录接口。
-    // 若只把 getOrInitUsers() 挂在登录路径上，配置了 ADMIN_PASS 的新部署会
-    // 永远停在「未初始化 → 跳 /@init → 永远不初始化」的死循环里。
+    // ADMIN_PASS 自動初始化：安裝頁只輪詢本介面，從不調用登入介面。
+    // 若只把 getOrInitUsers() 掛在登入路徑上，配置了 ADMIN_PASS 的新部署會
+    // 永遠停在「未初始化 → 跳 /@init → 永遠不初始化」的死循環裡。
     //
-    // 仅当运维显式配置了 ADMIN_PASS 时才触发（那是「请自动初始化」的明确
-    // 意图）：未配置时不调用，避免每次轮询都尝试写入一份未初始化的占位库。
-    // getOrInitUsers 本身是幂等的：已初始化（admin 密码已是合法哈希）时
-    // 不做任何写入。
+    // 僅當運維顯式配置了 ADMIN_PASS 時才觸發（那是「請自動初始化」的明確
+    // 意圖）：未配置時不調用，避免每次輪詢都嘗試寫入一份未初始化的佔位庫。
+    // getOrInitUsers 本身是冪等的：已初始化（admin 密碼已是合法哈希）時
+    // 不做任何寫入。
     if (adminPassConfigured(c.env)) {
       try {
         const { getOrInitUsers } = await import("./auth")
@@ -591,18 +591,18 @@ publicRouter.get("/init_status", async (c) => {
     initialized = Boolean(admin && String(admin.password || "").trim() !== "")
   }
 
-  // 就绪判定：加密密钥在**真实来源**（env 或 KV）可读。
-  // 前端据此轮询等待，避免 KV 最终一致性导致的「刚初始化完登录失败」。
+  // 就緒判定：加密密鑰在**真實來源**（env 或 KV）可讀。
+  // 前端據此輪詢等待，避免 KV 最終一致性導致的「剛初始化完登入失敗」。
   const ready = initialized ? await isEncryptionReady(c.env) : false
 
-  // ── 把「为什么不能初始化」透给前端 ──
+  // ── 把「為什麼不能初始化」透給前端 ──
   //
-  // 安装向导只能看到本接口，因此这里必须给出可展示的原因，否则用户只会拿到
-  // 一个 500 或一句「未初始化」，无从判断是绑定缺失、组合写错还是密钥缺失。
-  // 两类原因都返回（已脱敏）：
+  // 安裝嚮導只能看到本介面，因此這裡必須給出可展示的原因，否則用戶只會拿到
+  // 一個 500 或一句「未初始化」，無從判斷是綁定缺失、組合寫錯還是密鑰缺失。
+  // 兩類原因都返回（已脫敏）：
   //   storage_error      一行短原因（界面直接展示，故取首行摘要）
-  //   storage_suggestion 一句话修复建议（「改什么」）
-  //   db_load_error      上一次从持久化后端读取失败的原因（运行期故障）
+  //   storage_suggestion 一句話修復建議（「改什麼」）
+  //   db_load_error      上一次從持久化後端讀取失敗的原因（運行期故障）
   let storageError: string | null = null
   let storageSuggestion: string | null = null
   if (!storageReady) {
@@ -626,7 +626,7 @@ publicRouter.get("/init_status", async (c) => {
   })
 })
 
-// 执行系统初始化：创建管理员账号并设置站点名称等初始参数。
+// 執行系統初始化：創建管理員賬號並設置站點名稱等初始參數。
 publicRouter.post("/init/setup", async (c) => {
   const body = await c.req.json().catch(() => ({}))
   const username = String(body.username || "admin").trim()
@@ -648,24 +648,24 @@ publicRouter.post("/init/setup", async (c) => {
 
   const db = await getDb(c.env)
   if (!db.users) db.users = []
-  // 安全护栏：只在「读取持久化后端**失败**」时拒绝初始化。
+  // 安全護欄：只在「讀取持久化後端**失敗**」時拒絕初始化。
   //
-  // loadDb() 对两种「db 不可信」给出了不同信号，必须分别对待：
-  //   1. getDbLoadError() !== null —— 读取抛错（binding 未注入、后端不可达、
-  //      鉴权失败等）。此时内存里只是兜底空壳，继续初始化会把空库写回存储、
-  //      覆盖真实配置（即「数据库被清空」的根因）→ 必须拒绝。
-  //   2. getDbLoadError() === null 且 !isDbTrusted() —— 读取**成功但后端为空**，
-  //      即全新部署 / 换到新库后的首次初始化。这正是 setup 存在的意义。
-  //      若也一并拒绝，就会出现「读不到 → 不许初始化 → 永远读不到」的死锁，
-  //      让全新空存储永远无法安装（issue #62 现象 3）。
+  // loadDb() 對兩種「db 不可信」給出了不同信號，必須分別對待：
+  //   1. getDbLoadError() !== null —— 讀取拋錯（binding 未注入、後端不可達、
+  //      鑑權失敗等）。此時記憶體裡只是兜底空殼，繼續初始化會把空庫寫回儲存、
+  //      覆蓋真實配置（即「資料庫被清空」的根因）→ 必須拒絕。
+  //   2. getDbLoadError() === null 且 !isDbTrusted() —— 讀取**成功但後端為空**，
+  //      即全新部署 / 換到新庫後的首次初始化。這正是 setup 存在的意義。
+  //      若也一併拒絕，就會出現「讀不到 → 不許初始化 → 永遠讀不到」的死鎖，
+  //      讓全新空儲存永遠無法安裝（issue #62 現象 3）。
   const loadError = getDbLoadError()
   if (loadError) {
     console.error(
       "[DB] init/setup rejected: database could not be loaded from the persistence backend: " +
         loadError,
     )
-    // 对外文案保持不变（兼容既有前端/客户端），但把「具体原因 + 分类码」放进
-    // data，让安装向导能直接展示，而不是只给用户一个通用 500。
+    // 對外文案保持不變（相容既有前端/客戶端），但把「具體原因 + 分類碼」放進
+    // data，讓安裝嚮導能直接展示，而不是隻給用戶一個通用 500。
     const detail = await getStoreConfigErrorDetail(c.env, { silent: true })
     const code = detail.code || "STORAGE_READ_FAILED"
     return c.json(
@@ -675,11 +675,11 @@ publicRouter.post("/init/setup", async (c) => {
           "database is not readable; refusing to initialize to avoid overwriting existing config",
         data: {
           code,
-          // 界面展示 summary（完整一句）；reason 保留给工具/日志阅读
+          // 界面展示 summary（完整一句）；reason 保留給工具/日誌閱讀
           summary: storageErrorSummary(loadError),
           reason: redact(loadError, reasonLines(code)),
-          // 一句话修复建议：有配置原因时优先用它（如「改成 DB_DRIVER=d1」），
-          // 否则向导只能展示一段原因，用户仍不知道下一步做什么。
+          // 一句話修復建議：有配置原因時優先用它（如「改成 DB_DRIVER=d1」），
+          // 否則嚮導只能展示一段原因，用戶仍不知道下一步做什麼。
           suggestion: detail.suggestion,
         },
       },
@@ -696,23 +696,23 @@ publicRouter.post("/init/setup", async (c) => {
     )
   }
 
-  // 初始化阶段：确保**共享密钥**存在（JWT 签名 + DB_CIPHER 启用时的字段加密）。
+  // 初始化階段：確保**共享密鑰**存在（JWT 簽名 + DB_CIPHER 啟用時的欄位加密）。
   //
-  // 只在 setup 中生成 —— 且仅当持久化键不存在时。一旦写入永不覆盖，
-  // 否则既有加密数据将无法解密。其他任何阶段都只读不生成。
+  // 只在 setup 中生成 —— 且僅當持久化鍵不存在時。一旦寫入永不覆蓋，
+  // 否則既有加密資料將無法解密。其他任何階段都只讀不生成。
   //
-  // 注意：**与 DB_CIPHER 无关**。DB_CIPHER=none 仅表示「不加密数据库字段」，
-  // JWT 令牌签名仍然需要一把跨实例/跨冷启动一致的密钥：如果运维没有通过环境
-  // 变量 JWT_SECRET 提供，就必须在这里生成并持久化，否则每个实例/每次冷启动
-  // 都会各生成一把随机密钥，导致令牌随机失效。因此这里无条件调用。
+  // 注意：**與 DB_CIPHER 無關**。DB_CIPHER=none 僅表示「不加密資料庫欄位」，
+  // JWT 令牌簽名仍然需要一把跨實例/跨冷啟動一致的密鑰：如果運維沒有通過環境
+  // 變量 JWT_SECRET 提供，就必須在這裡生成並持久化，否則每個實例/每次冷啟動
+  // 都會各生成一把隨機密鑰，導致令牌隨機失效。因此這裡無條件調用。
   await ensureEncryptionSecret(c.env)
 
   if (existing) {
-    // admin 账号已存在但尚未设置密码（未初始化）：直接更新
+    // admin 賬號已存在但尚未設置密碼（未初始化）：直接更新
     existing.username = username
     await setUserPassword(existing, password)
   } else {
-    // 首次创建 admin 账号（Go User.SetPassword 双层哈希）
+    // 首次創建 admin 賬號（Go User.SetPassword 雙層哈希）
     const admin: any = {
       id: 1,
       username,
@@ -746,8 +746,8 @@ publicRouter.post("/init/setup", async (c) => {
     }
   }
 
-  // 初始化是唯一允许「在一次成功读取（确认存储为空）之后写入空壳」的场景，
-  // 因此显式 force；此时 db 已包含新建的管理员用户，本身也不再是空壳。
+  // 初始化是唯一允許「在一次成功讀取（確認儲存為空）之後寫入空殼」的場景，
+  // 因此顯式 force；此時 db 已包含新建的管理員用戶，本身也不再是空殼。
   await saveDb(db, c.env, { force: true })
   return c.json({ code: 200, message: "success", data: null })
 })

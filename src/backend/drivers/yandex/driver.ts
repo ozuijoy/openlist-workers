@@ -136,8 +136,8 @@ export class YandexDriver implements StorageDriver {
     physicalPath: string,
     names: string[],
   ): Promise<void> {
-    // physicalPath 是目标项自身的物理路径（op/storage.ts removeItems 逐项调用），
-    // 参数即项路径，直接删除它即可；再拼 name 会指向 <item>/<name>，DELETE 404 报错。
+    // physicalPath 是目標項自身的物理路徑（op/storage.ts removeItems 逐項調用），
+    // 參數即項路徑，直接刪除它即可；再拼 name 會指向 <item>/<name>，DELETE 404 報錯。
     await this.client.request("", {
       method: "DELETE",
       params: { path: this.cleanPath(physicalPath) },
@@ -151,8 +151,8 @@ export class YandexDriver implements StorageDriver {
     srcPhys: string,
     dstPhys: string,
   ): Promise<void> {
-    // srcPhys/dstPhys 已是源/目标项自身的物理路径（op/storage.ts moveItems 逐项调用），
-    // 参数即项路径，直接作为 from/path 使用；再拼 name 会指向 <item>/<name>，源/目标错位。
+    // srcPhys/dstPhys 已是源/目標項自身的物理路徑（op/storage.ts moveItems 逐項調用），
+    // 參數即項路徑，直接作為 from/path 使用；再拼 name 會指向 <item>/<name>，源/目標錯位。
     await this.client.request("/move", {
       method: "POST",
       params: {
@@ -170,8 +170,8 @@ export class YandexDriver implements StorageDriver {
     srcPhys: string,
     dstPhys: string,
   ): Promise<void> {
-    // srcPhys/dstPhys 已是源/目标项自身的物理路径（op/storage.ts copyItems 逐项调用），
-    // 参数即项路径，直接作为 from/path 使用；再拼 name 会指向 <item>/<name>，源/目标错位。
+    // srcPhys/dstPhys 已是源/目標項自身的物理路徑（op/storage.ts copyItems 逐項調用），
+    // 參數即項路徑，直接作為 from/path 使用；再拼 name 會指向 <item>/<name>，源/目標錯位。
     await this.client.request("/copy", {
       method: "POST",
       params: {

@@ -23,8 +23,8 @@ export const UPLOAD_TYPE_RESUMABLE = "UPLOAD_TYPE_RESUMABLE"
 export const UPLOAD_TYPE_URL = "UPLOAD_TYPE_URL"
 
 export const SignProvider = "access_end_point_token"
-// 协议级固定签名密钥：从迅雷官方客户端逆向得到，服务端固定校验、全网共享，
-// 并非可申请替换的 OAuth 凭据，删除会导致设备签名校验失败、驱动不可用。
+// 協議級固定簽名密鑰：從迅雷官方客戶端逆向得到，服務端固定校驗、全網共享，
+// 並非可申請替換的 OAuth 憑據，刪除會導致設備簽名校驗失敗、驅動不可用。
 export const APPID = "40"
 export const APPKey = "34a062aaa22f906fca4fefe9fb3a3021"
 
@@ -213,10 +213,10 @@ export class ThunderClient {
     const html = `
 <div style="font-family: Arial, sans-serif; padding: 15px; border-radius: 5px; border: 1px solid #e0e0e0;">
     <h3 style="color: #d9534f; margin-top: 0;">
-        <span style="font-size: 16px;">🔒 本次登录需要验证</span><br>
+        <span style="font-size: 16px;">🔒 本次登入需要驗證</span><br>
         <span style="font-size: 14px; font-weight: normal; color: #666;">This login requires verification</span>
     </h3>
-    <p style="font-size: 14px; margin-bottom: 15px;">下面是验证所需要的数据，具体使用方法请参照对应的驱动文档<br>
+    <p style="font-size: 14px; margin-bottom: 15px;">下面是驗證所需要的資料，具體使用方法請參照對應的驅動文件<br>
     <span style="color: #666; font-size: 13px;">Below are the relevant verification data. For specific usage methods, please refer to the corresponding driver documentation.</span></p>
     <div style="border: 1px solid #ddd; border-radius: 4px; padding: 10px; overflow-x: auto; font-family: 'Courier New', monospace; font-size: 13px;">
         <pre style="margin: 0; white-space: pre-wrap;"><code>${jsonStr}</code></pre>

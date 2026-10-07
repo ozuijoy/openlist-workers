@@ -64,11 +64,11 @@ const getStorageRequestContext = (c: any) => {
   }
 }
 
-// 安全代理下载：手动跟随重定向并逐跳做 SSRF 校验。
-// 关键修复：默认 fetch 会自动跟随 3xx，导致攻击者先让 raw_url 指向一个
-// 通过 isSafeUrl 校验的公网域名，再用 302 跳到内网/云元数据端点，绕过 SSRF。
-// 这里禁用自动重定向，对每一跳的 Location 重新断言安全，并在跨域重定向时
-// 剥离 Cookie/Authorization 等敏感头，防止认证信息泄露给第三方。
+// 安全代理下載：手動跟隨重定向並逐跳做 SSRF 校驗。
+// 關鍵修復：默認 fetch 會自動跟隨 3xx，導致攻擊者先讓 raw_url 指向一個
+// 通過 isSafeUrl 校驗的公網域名，再用 302 跳到內網/雲元資料端點，繞過 SSRF。
+// 這裡禁用自動重定向，對每一跳的 Location 重新斷言安全，並在跨域重定向時
+// 剝離 Cookie/Authorization 等敏感頭，防止認證信息洩露給第三方。
 const SAFE_REDIRECT_HEADER_KEYS = new Set([
   "range",
   "user-agent",
@@ -113,52 +113,52 @@ async function safeProxyFetch(
 }
 
 /**
- * 平台上限导致的 413 文案。
+ * 平台上限導致的 413 文案。
  *
- * 说明「为什么代理不了」与「有哪些替代路径」，避免用户只看到平台自带的
- * CLOUD_FUNCTION_PAYLOAD_TOO_LARGE 错误页（那里没有任何可操作信息）。
- * 措辞不写死平台：限制可能来自 EdgeOne 的自动判定，也可能来自管理员配置的
- * RAW_PROXY_MAX_BYTES（例如 Vercel / 阿里云 ESA 上的同类限制）。
+ * 說明「為什麼代理不了」與「有哪些替代路徑」，避免用戶只看到平台自帶的
+ * CLOUD_FUNCTION_PAYLOAD_TOO_LARGE 錯誤頁（那裡沒有任何可操作信息）。
+ * 措辭不寫死平台：限制可能來自 EdgeOne 的自動判定，也可能來自管理員配置的
+ * RAW_PROXY_MAX_BYTES（例如 Vercel / 阿里雲 ESA 上的同類限制）。
  */
 function payloadLimitMessage(c: any, label: string, size: number): string {
   const limit = getProxyPayloadLimit(c)
   const mib = (bytes: number) => Math.floor(bytes / 1024 / 1024)
   return (
-    `文件过大，当前部署平台无法代理下载（${size} 字节 > 上限 ${limit} 字节 ≈ ${mib(limit)} MiB）。` +
-    `当前运行环境对函数单次请求/响应 body 有硬上限（EdgeOne 云函数为 6 MiB，错误码 ` +
+    `文件過大，當前部署平台無法代理下載（${size} 字節 > 上限 ${limit} 字節 ≈ ${mib(limit)} MiB）。` +
+    `當前運行環境對函數單次請求/響應 body 有硬上限（EdgeOne 雲函數為 6 MiB，錯誤碼 ` +
     `CLOUD_FUNCTION_PAYLOAD_TOO_LARGE / HTTP 413），` +
-    `${label} 无法提供可直连的下载链接（或直链必须携带私有鉴权头），只能经服务端转发，` +
-    `因此无法绕过该上限。` +
-    `建议：改用返回公开直链的存储、或在自托管环境（Docker / Node）部署；` +
-    `确需放开限制可设置 RAW_PROXY_MAX_BYTES=0（或按平台实际上限调整该值）。`
+    `${label} 無法提供可直連的下載鏈接（或直鏈必須攜帶私有鑑權頭），只能經服務端轉發，` +
+    `因此無法繞過該上限。` +
+    `建議：改用返回公開直鏈的儲存、或在自託管環境（Docker / Node）部署；` +
+    `確需放開限制可設置 RAW_PROXY_MAX_BYTES=0（或按平台實際上限調整該值）。`
   )
 }
 
-// 原生代理：拉取上游直链并回传字节流（含 Range、缓存头、CORS）。
-// 抽成独立函数是因为「webdav_policy=use_proxy_url 但未配置 down_proxy_url」
-// 与「驱动强制代理」两种情况都需要走同一套实现。
+// 原生代理：拉取上游直鏈並回傳字節流（含 Range、快取頭、CORS）。
+// 抽成獨立函數是因為「webdav_policy=use_proxy_url 但未配置 down_proxy_url」
+// 與「驅動強制代理」兩種情況都需要走同一套實現。
 async function proxyUpstream(
   c: any,
   fileItem: any,
   reqPath: string,
   trustedHosts?: ReadonlySet<string> | string[],
   opts: {
-    /** 存储的 proxy_range（是否透传客户端 Range） */
+    /** 儲存的 proxy_range（是否透傳客戶端 Range） */
     proxyRange?: boolean
-    /** 驱动名（用于强制代理判定与日志） */
+    /** 驅動名（用於強制代理判定與日誌） */
     driver?: string
-    /** 存储行（bunny_storage 等条件能力需要） */
+    /** 儲存行（bunny_storage 等條件能力需要） */
     storage?: any
-    /** 全局设置 proxy_ignore_headers */
+    /** 全局設置 proxy_ignore_headers */
     ignoreHeaders?: unknown
   } = {},
 ) {
   const proxyRange = opts.proxyRange ?? false
   const driver = opts.driver ?? ""
-  // ---- 平台载荷上限保护 ----
-  // native_proxy 会把整份文件当作云函数响应体回传，超过平台上限时请求根本到不了
-  // 本函数（平台直接返回 413 错误页），因此在这里提前决策：能直连就降级 302，
-  // 不能直连则返回可读的 413。详见 server/proxy_request.ts 顶部说明。
+  // ---- 平台載荷上限保護 ----
+  // native_proxy 會把整份文件當作雲函數響應體回傳，超過平台上限時請求根本到不了
+  // 本函數（平台直接返回 413 錯誤頁），因此在這裡提前決策：能直連就降級 302，
+  // 不能直連則返回可讀的 413。詳見 server/proxy_request.ts 頂部說明。
   const authBound = isAuthBoundDownload(
     driver,
     fileItem.raw_url_headers,
@@ -166,7 +166,7 @@ async function proxyUpstream(
   )
   const payloadAction = decideProxyPayloadAction({
     size: Number(fileItem.size) || 0,
-    // proxy_range 关闭时不透传 Range，上游返回的是完整文件
+    // proxy_range 關閉時不透傳 Range，上游返回的是完整文件
     range: proxyRange ? c.req.header("Range") : undefined,
     payloadLimit: getProxyPayloadLimit(c),
     authBound,
@@ -197,7 +197,7 @@ async function proxyUpstream(
         code: 413,
         message: payloadLimitMessage(
           c,
-          driver || "该存储",
+          driver || "該儲存",
           Number(fileItem.size) || 0,
         ),
         data: null,
@@ -206,7 +206,7 @@ async function proxyUpstream(
     )
   }
 
-  // 构造上游请求头（含 proxy_range 的 Range 透传决策 + proxy_ignore_headers）
+  // 構造上游請求頭（含 proxy_range 的 Range 透傳決策 + proxy_ignore_headers）
   const headers: Record<string, string> = buildUpstreamHeaders({
     rawUrlHeaders: fileItem.raw_url_headers,
     rangeHeader: c.req.header("Range"),
@@ -221,9 +221,9 @@ async function proxyUpstream(
     return c.text(ssrfErr.message || "SSRF blocked", 403)
   }
 
-  // 上游不支持 Range 的兜底：412（严格 OSS 校验）或「带 Range 却回了 200」
-  // 时去掉 Range 重试一次，保证请求最终能成功。
-  // 注意：签名绑定 URL 中的路径与过期时间、与请求头无关，故重试无需重新签名。
+  // 上游不支持 Range 的兜底：412（嚴格 OSS 校驗）或「帶 Range 卻回了 200」
+  // 時去掉 Range 重試一次，保證請求最終能成功。
+  // 注意：簽名綁定 URL 中的路徑與過期時間、與請求頭無關，故重試無需重新簽名。
   if (shouldRetryWithoutRange(headers, upstreamRes)) {
     console.warn(
       `[rawRouter] Upstream ignored/refused Range (status=${upstreamRes.status}) for '${reqPath}', retrying without Range header...`,
@@ -232,11 +232,11 @@ async function proxyUpstream(
     upstreamRes = await safeProxyFetch(fileItem.raw_url, headers, trustedHosts)
   }
 
-  // ---- 二次校验：按上游实际回传的大小再判一次 ----
-  // 前面的检查按「客户端请求的分片」估算，但 Range 兜底重试（删掉 Range 重试）
-  // 或上游忽略 Range 直接回 200 时，回传的是整份文件，可能远超该估算值。
-  // 这里用上游的 Content-Length / Content-Range 复核，避免小分片请求把整份文件
-  // 塞进云函数响应体（EdgeOne 6 MiB → CLOUD_FUNCTION_PAYLOAD_TOO_LARGE）。
+  // ---- 二次校驗：按上游實際回傳的大小再判一次 ----
+  // 前面的檢查按「客戶端請求的分片」估算，但 Range 兜底重試（刪掉 Range 重試）
+  // 或上游忽略 Range 直接回 200 時，回傳的是整份文件，可能遠超該估算值。
+  // 這裡用上游的 Content-Length / Content-Range 複核，避免小分片請求把整份文件
+  // 塞進雲函數響應體（EdgeOne 6 MiB → CLOUD_FUNCTION_PAYLOAD_TOO_LARGE）。
   const actualBodySize = upstreamBodySize(upstreamRes.headers)
   const secondCheck = decideProxyPayloadAction({
     size: actualBodySize,
@@ -244,7 +244,7 @@ async function proxyUpstream(
     authBound,
   })
   if (secondCheck !== "proxy") {
-    // 只拿到了响应头，先把上游 body 取消，避免继续下载整份文件
+    // 只拿到了響應頭，先把上游 body 取消，避免繼續下載整份文件
     try {
       await upstreamRes.body?.cancel()
     } catch {}
@@ -265,7 +265,7 @@ async function proxyUpstream(
     return c.json(
       {
         code: 413,
-        message: payloadLimitMessage(c, driver || "该存储", actualBodySize),
+        message: payloadLimitMessage(c, driver || "該儲存", actualBodySize),
         data: null,
       },
       413,
@@ -301,8 +301,8 @@ async function proxyUpstream(
   if (lastModified) c.header("Last-Modified", lastModified)
   const cacheControl = upstreamRes.headers.get("cache-control")
   if (cacheControl) c.header("Cache-Control", cacheControl)
-  // FIX(H-3): 上游响应头已按白名单回显，但对 Content-Disposition 额外
-  // 清洗 CR/LF 与控制字符，防止恶意上游注入额外响应头（Set-Cookie/Location）。
+  // FIX(H-3): 上游響應頭已按白名單回顯，但對 Content-Disposition 額外
+  // 清洗 CR/LF 與控制字符，防止惡意上游注入額外響應頭（Set-Cookie/Location）。
   const contentDisposition = upstreamRes.headers.get("content-disposition")
   if (contentDisposition) {
     c.header(
@@ -315,20 +315,20 @@ async function proxyUpstream(
 }
 
 /**
- * 构造 down_proxy_url 形式的下载地址（对齐 Go common.GenerateDownProxyURL）。
+ * 構造 down_proxy_url 形式的下載地址（對齊 Go common.GenerateDownProxyURL）。
  *
- * Go 的实现是：
+ * Go 的實現是：
  *   fmt.Sprintf("%s%s%s", strings.Split(DownProxyURL, "\n")[0],
  *                        utils.EncodePath(reqPath, true), query)
- * 即**总是**把编码后的真实路径拼在模板之后、并在未禁用时补上 `?sign=`：
- *   - 模板里没有 `$path` 概念（全仓库搜不到该占位符）；TS 额外支持 `$path`
- *     替换，属于向后兼容的超集，无 `$path` 的模板行为与 Go 完全一致。
- *   - 补签只看 `disable_proxy_sign`，**不限定同源**：down_proxy_url 的典型
- *     用法正是指向另一个域名（CDN / 前置代理 / 同实例的另一域名），此前
- *     只在"与请求同 host"时才补签，会让这类配置重定向到一个必然 401 的地址。
+ * 即**總是**把編碼後的真實路徑拼在模板之後、並在未禁用時補上 `?sign=`：
+ *   - 模板裡沒有 `$path` 概念（全倉庫搜不到該佔位符）；TS 額外支持 `$path`
+ *     替換，屬於向後相容的超集，無 `$path` 的模板行為與 Go 完全一致。
+ *   - 補籤只看 `disable_proxy_sign`，**不限定同源**：down_proxy_url 的典型
+ *     用法正是指向另一個域名（CDN / 前置代理 / 同實例的另一域名），此前
+ *     只在"與請求同 host"時才補籤，會讓這類配置重定向到一個必然 401 的地址。
  *
- * 注意：模板不携带本服务实例的密钥，因此 worker 场景下无法预先把签名写进模板，
- * 只能在运行时补签。
+ * 注意：模板不攜帶本服務實例的密鑰，因此 worker 場景下無法預先把簽名寫進模板，
+ * 只能在運行時補籤。
  */
 async function buildDownProxyUrl(
   c: any,
@@ -370,8 +370,8 @@ rawRouter.get("/*", async (c) => {
     c.req.path.startsWith("/sd") ||
     c.req.path.startsWith("/api/sd")
 
-  // /p 是「公开代理端点」：Go 会对它做 canProxy() 检查，不通过直接 403。
-  // /d、/sd 不做该检查（Go 里它们走 ShouldProxy），因此这里单独判定。
+  // /p 是「公開代理端點」：Go 會對它做 canProxy() 檢查，不通過直接 403。
+  // /d、/sd 不做該檢查（Go 裡它們走 ShouldProxy），因此這裡單獨判定。
   const isProxyEndpoint =
     c.req.path.startsWith("/p") || c.req.path.startsWith("/api/p")
 
@@ -381,9 +381,9 @@ rawRouter.get("/*", async (c) => {
     "",
   )
 
-  // 非法百分号转义（如手工拼出的 `/api/p/100%.txt`）会让 decodeURIComponent
-  // 抛 URIError。Go 侧因为 raw_url 走 EncodePath 编码过 `%`，正常流程不会出现；
-  // 但外部/手工 URL 仍可能出现，这里按 400 处理而不是冒泡成 500。
+  // 非法百分號轉義（如手工拼出的 `/api/p/100%.txt`）會讓 decodeURIComponent
+  // 拋 URIError。Go 側因為 raw_url 走 EncodePath 編碼過 `%`，正常流程不會出現；
+  // 但外部/手工 URL 仍可能出現，這裡按 400 處理而不是冒泡成 500。
   let reqPath0: string
   try {
     reqPath0 = decodeURIComponent(rawPath)
@@ -397,8 +397,8 @@ rawRouter.get("/*", async (c) => {
     const isSharePath =
       c.req.path.startsWith("/api/sd") || c.req.path.startsWith("/sd")
     if (isSharePath) {
-      // 分享密码优先从 cookie（browser-password）读取，避免密码出现在 URL 中；
-      // 兼容旧版 ?pwd= 参数（已有分享链接/收藏夹里的旧链接仍可用）。
+      // 分享密碼優先從 cookie（browser-password）讀取，避免密碼出現在 URL 中；
+      // 相容舊版 ?pwd= 參數（已有分享鏈接/收藏夾裡的舊鏈接仍可用）。
       const cookieHeader = c.req.header("Cookie") || ""
       const cookiePwdRaw =
         cookieHeader
@@ -424,17 +424,17 @@ rawRouter.get("/*", async (c) => {
       }
       reqPath = shareRes.realPath
     } else {
-      // 对齐 Go server/router.go：
+      // 對齊 Go server/router.go：
       //   r.GET("/d/*path", middlewares.PathParse, middlewares.Down(sign.Verify), ...)
       //   r.GET("/p/*path", middlewares.PathParse, middlewares.Down(sign.Verify), ...)
       //
-      // 这两个端点**没有 Auth 中间件**，是设计上的「公开下载端点」——
-      // 直链要能被 <video src>、<img src>、播放器、下载器直接消费，而这些
-      // 客户端无法携带 Authorization 头。访问控制完全由 needSign 决定：
-      // 需要签名时校验签名，不需要时公开放行。
+      // 這兩個端點**沒有 Auth 中間件**，是設計上的「公開下載端點」——
+      // 直鏈要能被 <video src>、<img src>、播放器、下載器直接消費，而這些
+      // 客戶端無法攜帶 Authorization 頭。訪問控制完全由 needSign 決定：
+      // 需要簽名時校驗簽名，不需要時公開放行。
       //
-      // 此前 TS 版在此处强制要求登录用户，与 Go 不符：guest 存在时靠 guest
-      // 兜底看不出问题，guest 一被禁用，列目录/播放视频就全部 401。
+      // 此前 TS 版在此處強制要求登入用戶，與 Go 不符：guest 存在時靠 guest
+      // 兜底看不出問題，guest 一被禁用，列目錄/播放視頻就全部 401。
       if (await needDownloadSign(c, reqPath)) {
         const sign = c.req.query("sign") || ""
         const ok = await verifyDownloadSign(c, reqPath, sign)
@@ -455,9 +455,9 @@ rawRouter.get("/*", async (c) => {
         .toLowerCase()
         .replace(/[^a-z0-9]/g, "")
 
-      // 全局代理相关设置（对齐 Go：proxy_types / text_types / proxy_ignore_headers）。
-      // 读失败时按空列表处理：proxy_types/text_types 为空只会让扩展名规则不生效，
-      // 不会误拦既有请求。
+      // 全局代理相關設置（對齊 Go：proxy_types / text_types / proxy_ignore_headers）。
+      // 讀失敗時按空列表處理：proxy_types/text_types 為空只會讓擴展名規則不生效，
+      // 不會誤攔既有請求。
       const settings: Record<string, any> = await getSettings().catch(
         () => ({}) as Record<string, any>,
       )
@@ -470,9 +470,9 @@ rawRouter.get("/*", async (c) => {
         ignoreHeaders: settings.proxy_ignore_headers,
       }
 
-      // /p 是公开代理端点，对齐 Go handles.Proxy() 的 canProxy() 检查：
-      // 未开启代理、且扩展名也不在 proxy_types / text_types 里 → 403 proxy not allowed。
-      // （Go 只对 /p 与归档 /ap 做此限制，/d、/sd 不做，故这里仅判 /p 端点。）
+      // /p 是公開代理端點，對齊 Go handles.Proxy() 的 canProxy() 檢查：
+      // 未開啟代理、且擴展名也不在 proxy_types / text_types 裡 → 403 proxy not allowed。
+      // （Go 只對 /p 與歸檔 /ap 做此限制，/d、/sd 不做，故這裡僅判 /p 端點。）
       if (
         isProxyEndpoint &&
         !canUseProxyEndpoint({
@@ -493,8 +493,8 @@ rawRouter.get("/*", async (c) => {
       // Remote cloud drivers: fetch download link via driver.get()
       if (normDriver !== "local") {
         try {
-          // 管理员配置的受信存储 endpoint host（可能是内网自建 S3/WebDAV/MinIO），
-          // 加上全局环境变量 SSRF_ALLOWED_HOSTS，合并为 SSRF 白名单，避免被误拦截。
+          // 管理員配置的受信儲存 endpoint host（可能是內網自建 S3/WebDAV/MinIO），
+          // 加上全局環境變量 SSRF_ALLOWED_HOSTS，合併為 SSRF 白名單，避免被誤攔截。
           const trustedHosts = getTrustedHosts(resolved.storage.addition, c.env)
           const driver = await getDriver(
             resolved.storage.driver,
@@ -513,10 +513,10 @@ rawRouter.get("/*", async (c) => {
           }
 
           if (fileItem && fileItem.raw_url) {
-            // 下载模式决策：对齐 Go 的 ShouldProxy()/canProxy() + webdav_policy。
-            //   - 驱动强制代理（MustProxy）> 存储 web_proxy > /p、/sd 路径 >
-            //     存储 webdav_policy > 驱动默认（PreferProxy）> 302_redirect
-            // 存储级 webdav_policy 从此真正生效（此前该字段仅有表单、无逻辑）。
+            // 下載模式決策：對齊 Go 的 ShouldProxy()/canProxy() + webdav_policy。
+            //   - 驅動強制代理（MustProxy）> 儲存 web_proxy > /p、/sd 路徑 >
+            //     儲存 webdav_policy > 驅動默認（PreferProxy）> 302_redirect
+            // 儲存級 webdav_policy 從此真正生效（此前該欄位僅有表單、無邏輯）。
             const decision = resolveProxyDecision(
               resolved.storage,
               normDriver,
@@ -524,8 +524,8 @@ rawRouter.get("/*", async (c) => {
               { filename: reqPath, proxyTypes },
             )
 
-            // use_proxy_url：重定向到管理员配置的下载代理地址（注意与真实的
-            // 代理模式区分，后者用 needsProxy 表达，避免误落入 native_proxy）
+            // use_proxy_url：重定向到管理員配置的下載代理地址（注意與真實的
+            // 代理模式區分，後者用 needsProxy 表達，避免誤落入 native_proxy）
             if (decision.mode === "use_proxy_url") {
               const downProxy = getDownProxyUrl(resolved.storage)
               if (downProxy) {
@@ -583,8 +583,8 @@ rawRouter.get("/*", async (c) => {
             fileItem &&
             !fileItem.is_dir
           ) {
-            // 服务端回传字节流（此分支没有 raw_url，无法降级为直链）
-            // → 同样受平台响应体上限约束，超限时直接给出可读的 413。
+            // 服務端回傳字節流（此分支沒有 raw_url，無法降級為直鏈）
+            // → 同樣受平台響應體上限約束，超限時直接給出可讀的 413。
             const streamSize = Number(fileItem.size) || 0
             if (
               exceedsProxyPayloadLimit(
@@ -640,8 +640,8 @@ rawRouter.get("/*", async (c) => {
             const detail =
               fileItem?.raw_url_error ||
               (fileItem?.is_dir
-                ? "该条目是文件夹，不可作为文件下载。"
-                : "该存储驱动未返回下载链接（raw_url 为空）。")
+                ? "該條目是文件夾，不可作為文件下載。"
+                : "該儲存驅動未返回下載鏈接（raw_url 為空）。")
             return c.text(
               `File not found or no download link available: ${reqPath}\n${detail}`,
               404,
@@ -667,7 +667,7 @@ rawRouter.get("/*", async (c) => {
       return c.text("Cannot download directory", 400)
     }
 
-    // 本地文件直读同样受平台响应体上限约束（EdgeOne / Vercel 等 Serverless）
+    // 本地文件直讀同樣受平台響應體上限約束（EdgeOne / Vercel 等 Serverless）
     if (
       exceedsProxyPayloadLimit(
         Number(stat.size) || 0,

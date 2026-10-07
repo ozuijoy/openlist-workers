@@ -1,30 +1,30 @@
 /**
- * TOTP (Time-based One-Time Password) 双因素认证模块
+ * TOTP (Time-based One-Time Password) 雙因素認證模塊
  * 添加日期: 2026-09-05
  * 
- * 基于 RFC 6238 标准实现，支持 Google Authenticator、Microsoft Authenticator 等 TOTP 应用
+ * 基於 RFC 6238 標準實現，支持 Google Authenticator、Microsoft Authenticator 等 TOTP 應用
  */
 
 import { authenticator } from "otplib"
 import QRCode from "qrcode"
 
 /**
- * 生成 TOTP 密钥和 QR 码
- * @param username 用户名
- * @param issuer 发行者名称（应用名称）
- * @returns { secret, qrcode } 密钥和 QR 码数据 URL
+ * 生成 TOTP 密鑰和 QR 碼
+ * @param username 用戶名
+ * @param issuer 發行者名稱（應用名稱）
+ * @returns { secret, qrcode } 密鑰和 QR 碼資料 URL
  */
 export async function generateTOTPSecret(
   username: string,
   issuer: string = "OpenList",
 ): Promise<{ secret: string; qrcode: string; otpauth_url: string }> {
-  // 生成 32 字符的 Base32 密钥
+  // 生成 32 字符的 Base32 密鑰
   const secret = authenticator.generateSecret()
 
-  // 生成 otpauth URL（标准格式）
+  // 生成 otpauth URL（標準格式）
   const otpauth_url = authenticator.keyuri(username, issuer, secret)
 
-  // 生成 QR 码（Data URL 格式，可直接在前端显示）
+  // 生成 QR 碼（Data URL 格式，可直接在前端顯示）
   const qrcode = await QRCode.toDataURL(otpauth_url)
 
   return {
@@ -35,16 +35,16 @@ export async function generateTOTPSecret(
 }
 
 /**
- * 验证 TOTP 令牌
- * @param token 用户输入的 6 位数字令牌
- * @param secret 用户的 TOTP 密钥
- * @returns 是否验证成功
+ * 驗證 TOTP 令牌
+ * @param token 用戶輸入的 6 位數字令牌
+ * @param secret 用戶的 TOTP 密鑰
+ * @returns 是否驗證成功
  */
 export function verifyTOTPToken(token: string, secret: string): boolean {
   try {
-    // 配置容错窗口（允许前后 1 个时间窗口，即 ±30 秒）
+    // 配置容錯窗口（允許前後 1 個時間窗口，即 ±30 秒）
     authenticator.options = {
-      window: 1, // 允许时间偏移
+      window: 1, // 允許時間偏移
     }
 
     return authenticator.verify({ token, secret })
@@ -55,22 +55,22 @@ export function verifyTOTPToken(token: string, secret: string): boolean {
 }
 
 /**
- * 生成当前 TOTP 令牌（用于测试）
- * @param secret TOTP 密钥
- * @returns 6 位数字令牌
+ * 生成當前 TOTP 令牌（用於測試）
+ * @param secret TOTP 密鑰
+ * @returns 6 位數字令牌
  */
 export function generateTOTPToken(secret: string): string {
   return authenticator.generate(secret)
 }
 
 /**
- * 验证 TOTP 密钥格式
- * @param secret TOTP 密钥
+ * 驗證 TOTP 密鑰格式
+ * @param secret TOTP 密鑰
  * @returns 是否有效
  */
 export function isValidTOTPSecret(secret: string): boolean {
   try {
-    // Base32 密钥应该只包含 A-Z 和 2-7
+    // Base32 密鑰應該只包含 A-Z 和 2-7
     const base32Regex = /^[A-Z2-7]+=*$/
     return base32Regex.test(secret) && secret.length >= 16
   } catch {
@@ -79,14 +79,14 @@ export function isValidTOTPSecret(secret: string): boolean {
 }
 
 /**
- * 批量验证备用码（用于紧急登录）
- * 备用码应该由调用方生成并加密存储
+ * 批量驗證備用碼（用於緊急登入）
+ * 備用碼應該由調用方生成並加密儲存
  */
 export function generateBackupCodes(count: number = 10): string[] {
   if (!Number.isInteger(count) || count < 1 || count > 1000) {
     throw new Error("Backup code count must be an integer between 1 and 1000")
   }
-  // 使用 CSPRNG 生成恢复码，避免 Math.random 可预测导致 2FA 被绕过
+  // 使用 CSPRNG 生成恢復碼，避免 Math.random 可預測導致 2FA 被繞過
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789" // 去除易混淆字符 I/O/0/1
   const bytes = new Uint8Array(count * 8)
   crypto.getRandomValues(bytes)
@@ -95,8 +95,8 @@ export function generateBackupCodes(count: number = 10): string[] {
   for (let i = 0; i < count; i++) {
     let code = ""
     for (let j = 0; j < 8; j++) {
-      // 取模会有轻微偏置，但对 32 字符集、8 字节/码的恢复码场景可忽略；
-      // 如需严格无偏可改为拒绝采样。
+      // 取模會有輕微偏置，但對 32 字符集、8 字節/碼的恢復碼場景可忽略；
+      // 如需嚴格無偏可改為拒絕採樣。
       code += alphabet[bytes[i * 8 + j] % alphabet.length]
     }
     codes.push(`${code.slice(0, 4)}-${code.slice(4)}`)
@@ -105,10 +105,10 @@ export function generateBackupCodes(count: number = 10): string[] {
 }
 
 /**
- * 验证备用码（调用方需要实现存储和标记已使用）
- * @param inputCode 用户输入的备用码
- * @param storedCodes 存储的备用码列表
- * @returns 是否匹配（调用方需要在匹配后标记为已使用）
+ * 驗證備用碼（調用方需要實現儲存和標記已使用）
+ * @param inputCode 用戶輸入的備用碼
+ * @param storedCodes 儲存的備用碼列表
+ * @returns 是否匹配（調用方需要在匹配後標記為已使用）
  */
 export function verifyBackupCode(
   inputCode: string,
@@ -120,40 +120,40 @@ export function verifyBackupCode(
   )
 }
 
-// ============ 兼容旧代码的函数别名 ============
+// ============ 相容舊代碼的函數別名 ============
 
 /**
- * 生成 TOTP 密钥（兼容旧代码）
- * @returns Base32 密钥字符串
+ * 生成 TOTP 密鑰（相容舊代碼）
+ * @returns Base32 密鑰字符串
  */
 export function generateTotpSecret(): string {
   return authenticator.generateSecret()
 }
 
 /**
- * 生成当前 TOTP 令牌（兼容旧代码）
- * @param secret TOTP 密钥
- * @returns 6 位数字令牌
+ * 生成當前 TOTP 令牌（相容舊代碼）
+ * @param secret TOTP 密鑰
+ * @returns 6 位數字令牌
  */
 export function generateTotpCode(secret: string): string {
   return authenticator.generate(secret)
 }
 
 /**
- * 验证 TOTP 令牌（兼容旧代码）
- * @param secret TOTP 密钥
- * @param code 用户输入的令牌
- * @returns 是否验证成功
+ * 驗證 TOTP 令牌（相容舊代碼）
+ * @param secret TOTP 密鑰
+ * @param code 用戶輸入的令牌
+ * @returns 是否驗證成功
  */
 export async function verifyTotpCode(secret: string, code: string): Promise<boolean> {
   return verifyTOTPToken(code, secret)
 }
 
 /**
- * 构建 otpauth URL（兼容旧代码）
- * @param secret TOTP 密钥
- * @param username 用户名
- * @param issuer 发行者名称
+ * 構建 otpauth URL（相容舊代碼）
+ * @param secret TOTP 密鑰
+ * @param username 用戶名
+ * @param issuer 發行者名稱
  * @returns otpauth:// URL
  */
 export function buildOtpauthUrl(
@@ -165,9 +165,9 @@ export function buildOtpauthUrl(
 }
 
 /**
- * 构建 QR 码图片 URL（兼容旧代码）
+ * 構建 QR 碼圖片 URL（相容舊代碼）
  * @param otpauthUrl otpauth:// URL
- * @returns Data URL 格式的 QR 码
+ * @returns Data URL 格式的 QR 碼
  */
 export async function buildQrImageUrl(otpauthUrl: string): Promise<string> {
   return QRCode.toDataURL(otpauthUrl)

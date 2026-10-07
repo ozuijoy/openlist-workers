@@ -9,13 +9,13 @@ import {
 import { safeErrorMessage } from "../pkg/errs"
 
 /**
- * S3 网关（简化版，挂载于 /s3/*）。
+ * S3 網關（簡化版，掛載於 /s3/*）。
  *
- * 协议：支持 ListBuckets / GetObject / HeadObject / PutObject / DeleteObject，
- * 认证采用 Bearer token（与全局 token 一致）；完整 AWS SigV4 签名验证作为
- * 后续增强（Worker 环境 S3 网关性能受限，优先保证 API 契约一致）。
+ * 協議：支持 ListBuckets / GetObject / HeadObject / PutObject / DeleteObject，
+ * 認證採用 Bearer token（與全局 token 一致）；完整 AWS SigV4 簽名驗證作為
+ * 後續增強（Worker 環境 S3 網關性能受限，優先保證 API 契約一致）。
  *
- * URL 结构：/s3/{bucket}/{objectKey}，bucket 映射到存储挂载路径。
+ * URL 結構：/s3/{bucket}/{objectKey}，bucket 映射到儲存掛載路徑。
  */
 
 export const s3Router = new Hono()
@@ -37,7 +37,7 @@ function s3Error(code: string, message: string, status: number) {
   })
 }
 
-/** 从 pathname 剥离 /s3 前缀，解析 { bucket, key } */
+/** 從 pathname 剝離 /s3 前綴，解析 { bucket, key } */
 function parseS3Path(c: any): { bucket: string; key: string } {
   const pathname = new URL(c.req.url).pathname
   const p = pathname.replace(/^\/s3\/?/, "")
@@ -47,7 +47,7 @@ function parseS3Path(c: any): { bucket: string; key: string } {
   return { bucket, key }
 }
 
-/** bucket 名 → 挂载路径（bucket 即存储挂载点的首段） */
+/** bucket 名 → 掛載路徑（bucket 即儲存掛載點的首段） */
 function bucketToPath(bucket: string): string {
   if (!bucket) return "/"
   return "/" + bucket

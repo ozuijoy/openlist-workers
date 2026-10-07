@@ -1,25 +1,25 @@
-// 115 Open (115网盘开放平台) driver types
+// 115 Open (115網盤開放平台) driver types
 // Re-ported from: https://github.com/OpenListTeam/OpenList/tree/main/drivers/115_open
 // (meta.go + types.go + 115-sdk-go types)
 
 export interface Pan115Addition {
-  /** 排序字段: file_name / file_size / user_utime / file_type */
+  /** 排序欄位: file_name / file_size / user_utime / file_type */
   order_by?: string
   /** 排序方向: asc / desc */
   order_direction?: string
-  /** 所有 API 请求限速 ([limit]r/1s)，0 表示不限 */
+  /** 所有 API 請求限速 ([limit]r/1s)，0 表示不限 */
   limit_rate?: number
-  /** 列表分页大小（1~1150，默认 200） */
+  /** 列表分頁大小（1~1150，默認 200） */
   page_size?: number
-  /** 访问令牌（必填） */
+  /** 訪問令牌（必填） */
   access_token?: string
   /** 刷新令牌（必填） */
   refresh_token?: string
-  /** 根文件夹 ID，默认 "0" */
+  /** 根文件夾 ID，默認 "0" */
   root_id?: string
 }
 
-// --- API 响应类型（115 开放平台 proapi.115.com） ---
+// --- API 響應類型（115 開放平台 proapi.115.com） ---
 
 export interface Pan115Resp<T> {
   state: boolean
@@ -30,19 +30,19 @@ export interface Pan115Resp<T> {
 
 export interface Pan115File {
   fid: string // 文件ID
-  aid: string // 状态 1 正常 7 回收站 120 彻底删除
-  pid: string // 父文件夹ID
-  fc: string // 文件分类 0 文件夹 1 文件
+  aid: string // 狀態 1 正常 7 回收站 120 徹底刪除
+  pid: string // 父文件夾ID
+  fc: string // 文件分類 0 文件夾 1 文件
   fn: string // 文件名
-  fco: string // 文件夹封面
-  pc: string // 文件提取码
-  upt: number // 修改时间
-  uet: number // 修改时间
-  uppt: number // 上传时间
+  fco: string // 文件夾封面
+  pc: string // 文件提取碼
+  upt: number // 修改時間
+  uet: number // 修改時間
+  uppt: number // 上傳時間
   sha1: string // 文件sha1
   fs: number // 文件大小
-  ico: string // 后缀名
-  thumbnail: string // 缩略图
+  ico: string // 後綴名
+  thumbnail: string // 縮略圖
 }
 
 export interface Pan115GetFilesResp {
@@ -50,7 +50,7 @@ export interface Pan115GetFilesResp {
   code: number
   message: string
   data: Pan115File[]
-  count: number // 当前目录文件数量
+  count: number // 當前目錄文件數量
   offset: number
   limit: number
 }

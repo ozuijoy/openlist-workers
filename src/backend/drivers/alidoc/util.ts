@@ -1,4 +1,4 @@
-// AliDoc (钉钉文档) HTTP client
+// AliDoc (釘釘文件) HTTP client
 import { AliDocApiResp, AliDocDentry, AliDocDownloadResp, AliDocListResp } from "./types"
 
 export const aliDocApiBase = "https://alidocs.dingtalk.com"

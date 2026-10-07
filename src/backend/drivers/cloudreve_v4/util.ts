@@ -1,4 +1,4 @@
-// Cloudreve V4 API 客户端
+// Cloudreve V4 API 客戶端
 import { DriverCloudreveAddition, CloudreveFile, CloudreveListResp, CloudreveUrlResp } from "./types"
 
 export class ClientCloudreve {

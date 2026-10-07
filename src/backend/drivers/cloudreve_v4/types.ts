@@ -1,22 +1,22 @@
-// cloudreve_v4 (Cloudreve V4 自建网盘) - RESTful API
+// cloudreve_v4 (Cloudreve V4 自建網盤) - RESTful API
 // API reference: last branch src/drive/cdrevev4
 
 export interface DriverCloudreveAddition {
-  /** Cloudreve 站点地址（含协议，如 https://cloud.example.com） */
+  /** Cloudreve 站點地址（含協議，如 https://cloud.example.com） */
   address: string
-  /** 登录用户名（可选，提供则密码登录） */
+  /** 登入用戶名（可選，提供則密碼登入） */
   username?: string
-  /** 登录密码（可选） */
+  /** 登入密碼（可選） */
   password?: string
-  /** 访问令牌（可选，直接使用） */
+  /** 訪問令牌（可選，直接使用） */
   access_token?: string
-  /** 刷新令牌（可选） */
+  /** 刷新令牌（可選） */
   refresh_token?: string
-  /** 自定义 User-Agent */
+  /** 自定義 User-Agent */
   custom_ua?: string
-  /** 启用缩略图 */
+  /** 啟用縮略圖 */
   enable_thumb?: boolean
-  /** 排序字段 */
+  /** 排序欄位 */
   order_by?: string
   /** 排序方向 */
   order_direction?: string
@@ -27,7 +27,7 @@ export interface CloudreveFile {
   path: string
   name: string
   size: number
-  /** 0=文件, 1=目录 */
+  /** 0=文件, 1=目錄 */
   type: number
   created_at: string
   updated_at: string

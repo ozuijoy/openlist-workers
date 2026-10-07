@@ -14,8 +14,8 @@ import {
 } from "./store/json"
 import { getStoreBackend, readCipher } from "./store/backend"
 
-// 保持外部（middlewares.ts / router.ts / admin.ts）对 getKvBinding / getKvStatus
-// 的既有引用不变，从 json 后端 re-export。
+// 保持外部（middlewares.ts / router.ts / admin.ts）對 getKvBinding / getKvStatus
+// 的既有引用不變，從 json 後端 re-export。
 export {
   getKvBinding,
   getKvStatus,
@@ -25,37 +25,37 @@ export {
 export { getStoreStatus } from "./store/backend"
 
 /**
- * 预览/代理相关的默认设置，对齐 Go internal/bootstrap/data/setting.go：
- *   - text_types：Go 的默认值为「一大串文本扩展名」，这里取 Go 与 TSWorker 既有
- *     默认值的**并集**（保留 TS 的 python/typescript/bash/css/log 等别名写法），
- *     因为 /p 端点会用该列表判断文本类预览（含字幕 lrc/srt/ass/vtt）能否走代理；
- *   - proxy_types：Go 默认 `m3u8,url` —— 这类文件内部含相对引用，必须经服务端转发；
- *   - proxy_ignore_headers：Go 默认 `authorization,referer` —— 转发客户端头时忽略它们。
+ * 預覽/代理相關的默認設置，對齊 Go internal/bootstrap/data/setting.go：
+ *   - text_types：Go 的默認值為「一大串文本擴展名」，這裡取 Go 與 TSWorker 既有
+ *     默認值的**並集**（保留 TS 的 python/typescript/bash/css/log 等別名寫法），
+ *     因為 /p 端點會用該列表判斷文本類預覽（含字幕 lrc/srt/ass/vtt）能否走代理；
+ *   - proxy_types：Go 默認 `m3u8,url` —— 這類文件內部含相對引用，必須經服務端轉發；
+ *   - proxy_ignore_headers：Go 默認 `authorization,referer` —— 轉發客戶端頭時忽略它們。
  */
 const DEFAULT_TEXT_TYPES =
   "txt,htm,html,xml,java,properties,sql,js,json,c,cpp,python,py,php,go,rst,css,typescript,ts,log,conf,yaml,yml,cmd,bash,sh,vue,ini,md,bat,gitignore,h,hpp,tsx,vtt,srt,ass,rs,lrc,strm"
 const DEFAULT_PROXY_TYPES = "m3u8,url"
 const DEFAULT_PROXY_IGNORE_HEADERS = "authorization,referer"
 
-/** TSWorker 历史上写入 KV 的 text_types 默认值（用于迁移到并集默认值） */
+/** TSWorker 歷史上寫入 KV 的 text_types 默認值（用於遷移到並集默認值） */
 const LEGACY_TEXT_TYPES =
   "txt,htm,html,xml,java,properties,sql,js,json,c,cpp,python,py,php,go,rst,css,typescript,ts,log,conf,yaml,yml,cmd,bash,sh,vue,ini"
 
 /**
- * 分享摘要/「复制链接」默认模板。
+ * 分享摘要/「複製鏈接」默認模板。
  *
- * 前端「复制链接」= matchTemplate(getSetting("share_summary_content"), data)。
- * 模板为空时结果就是空串，`writeText("")` 会清空剪贴板，于是按钮弹出「已复制」
- * 但剪贴板里什么都没有——分享管理页的复制链接因此完全不可用。
+ * 前端「複製鏈接」= matchTemplate(getSetting("share_summary_content"), data)。
+ * 模板為空時結果就是空串，`writeText("")` 會清空剪貼板，於是按鈕彈出「已複製」
+ * 但剪貼板裡什麼都沒有——分享管理頁的複製鏈接因此完全不可用。
  *
- * 这里输出**纯分享 URL**，与按钮文案（Copy link / 复制链接）以及文件工具栏
- * 「分享」对话框里 `copy(link())` 的行为保持一致。上游 Go 的默认值是一整段
- * 社交分享文案（LEGACY_SHARE_SUMMARY_GO），对「复制链接」按钮而言属于误导性
- * 行为，故不采用；已写入该文案的实例由 LEGACY_SETTING_MIGRATIONS 迁移过来。
+ * 這裡輸出**純分享 URL**，與按鈕文案（Copy link / 複製鏈接）以及文件工具欄
+ * 「分享」對話框裡 `copy(link())` 的行為保持一致。上游 Go 的默認值是一整段
+ * 社交分享文案（LEGACY_SHARE_SUMMARY_GO），對「複製鏈接」按鈕而言屬於誤導性
+ * 行為，故不採用；已寫入該文案的實例由 LEGACY_SETTING_MIGRATIONS 遷移過來。
  */
 const DEFAULT_SHARE_SUMMARY_CONTENT = "{{base_url}}/@s/{{id}}"
 
-/** 上一版曾采用的上游 Go 分享摘要文案（仅用于迁移到纯链接） */
+/** 上一版曾採用的上游 Go 分享摘要文案（僅用於遷移到純鏈接） */
 const LEGACY_SHARE_SUMMARY_GO = `@{{creator}} shared {{#each files}}{{#if @first}}"{{filename this}}"{{/if}}{{#if @last}}{{#unless (eq @index 0)}} and {{@index}} more files{{/unless}}{{/if}}{{/each}} from {{site_title}}: {{base_url}}/@s/{{id}}{{#if pwd}} , the share code is {{pwd}}{{/if}}{{#if expires}}, please access before {{dateLocaleString expires}}.{{/if}}`
 
 // Global default configuration payload for Cloudflare Workers
@@ -380,8 +380,8 @@ export const defaultDb = {
       key: "link_expiration",
       value: "0",
       type: "number",
-      // 单位与 Go 一致：小时（Go internal/sign 用 time.Duration(expire)*time.Hour，
-      // 官方文档 configuration/global.md 亦为 "in hours"）。0 = 永不过期。
+      // 單位與 Go 一致：小時（Go internal/sign 用 time.Duration(expire)*time.Hour，
+      // 官方文件 configuration/global.md 亦為 "in hours"）。0 = 永不過期。
       help: "Link Expiration in Hours (0 = never expire)",
       group: 4,
       flag: 0,
@@ -847,45 +847,45 @@ let memoryDb: any = null
 let globalEnvCtx: any = null
 
 /**
- * 数据可信度状态（防止「读失败 → 回退空库 → 落盘覆盖」）。
+ * 資料可信度狀態（防止「讀失敗 → 回退空庫 → 落盤覆蓋」）。
  *
- * - `dbTrusted`: 当前 memoryDb 是否来自一次成功的持久化读取（或已成功写入）。
- *   为 false 时表示 memoryDb 只是空壳兜底/默认值，绝不能写回存储。
- * - `dbLastLoadError`: 最近一次读取失败的原因，用于给出可诊断的拦截日志。
- * - `dbWriteBlocked`: 是否曾拦截过「疑似空数据写回」，供诊断与回归测试使用。
+ * - `dbTrusted`: 當前 memoryDb 是否來自一次成功的持久化讀取（或已成功寫入）。
+ *   為 false 時表示 memoryDb 只是空殼兜底/默認值，絕不能寫回儲存。
+ * - `dbLastLoadError`: 最近一次讀取失敗的原因，用於給出可診斷的攔截日誌。
+ * - `dbWriteBlocked`: 是否曾攔截過「疑似空資料寫回」，供診斷與迴歸測試使用。
  */
 let dbTrusted = false
 let dbWriteBlocked = false
 let dbLastLoadError: string | null = null
 
-/** 当前内存库是否可信（可安全写回持久化存储）。 */
+/** 當前記憶體庫是否可信（可安全寫回持久化儲存）。 */
 export function isDbTrusted(): boolean {
   return dbTrusted
 }
 
-/** 最近一次读取持久化存储失败的错误信息（无错误时为 null）。 */
+/** 最近一次讀取持久化儲存失敗的錯誤信息（無錯誤時為 null）。 */
 export function getDbLoadError(): string | null {
   return dbLastLoadError
 }
 
 /**
- * 是否曾经拦截过一次「疑似空数据写回」。
- * 供诊断接口/日志使用，说明写前守卫已生效。
+ * 是否曾經攔截過一次「疑似空資料寫回」。
+ * 供診斷介面/日誌使用，說明寫前守衛已生效。
  */
 export function isDbWriteBlocked(): boolean {
   return dbWriteBlocked
 }
 
 /**
- * 判断一份数据是否为「疑似空库/空壳」。
+ * 判斷一份資料是否為「疑似空庫/空殼」。
  *
- * 判定顺序：
- *  1) 有任何存储/分享/元数据/插件 → 不是空壳；
- *  2) 有任一「已设置密码」的用户 → 不是空壳（说明已初始化）；
- *     注意 defaultDb 自带的 admin/guest 占位用户密码为空，不算数；
- *  3) 所有设置都等于默认值 → 是空壳。
+ * 判定順序：
+ *  1) 有任何儲存/分享/元資料/插件 → 不是空殼；
+ *  2) 有任一「已設置密碼」的用戶 → 不是空殼（說明已初始化）；
+ *     注意 defaultDb 自帶的 admin/guest 佔位用戶密碼為空，不算數；
+ *  3) 所有設置都等於默認值 → 是空殼。
  *
- * 空壳判定用于 saveDb 的写前守卫：读取失败后得到的默认库不会被写回。
+ * 空殼判定用於 saveDb 的寫前守衛：讀取失敗後得到的默認庫不會被寫回。
  */
 export function isDbShell(data: any): boolean {
   if (!data || typeof data !== "object") return true
@@ -899,9 +899,9 @@ export function isDbShell(data: any): boolean {
     return false
   }
 
-  // 注意：不能以「是否存在用户」判断是否为真实库。
-  // defaultDb 自带 admin/guest 两个占位用户（密码为空），所以空壳里也有用户。
-  // 只有当存在「设置了密码的用户」时，才说明这是一份被初始化过的真实库。
+  // 注意：不能以「是否存在用戶」判斷是否為真實庫。
+  // defaultDb 自帶 admin/guest 兩個佔位用戶（密碼為空），所以空殼裡也有用戶。
+  // 只有當存在「設置了密碼的用戶」時，才說明這是一份被初始化過的真實庫。
   const users = Array.isArray(data.users) ? data.users : []
   const hasInitializedUser = users.some(
     (u: any) => String(u?.password || "").trim() !== "",
@@ -910,7 +910,7 @@ export function isDbShell(data: any): boolean {
     return false
   }
 
-  // 没有任何实体时，只有当设置也全部停留在默认值时，才视作空壳。
+  // 沒有任何實體時，只有當設置也全部停留在默認值時，才視作空殼。
   const settings = Array.isArray(data.settings) ? data.settings : []
   const defaults = Array.isArray(defaultDb.settings) ? defaultDb.settings : []
   const defaultMap = new Map(defaults.map((s: any) => [String(s.key), s.value]))
@@ -922,10 +922,10 @@ export function isDbShell(data: any): boolean {
 }
 
 /**
- * 在请求处理开始时注入当前环境的持久化后端上下文。
- * CF Workers 每个实例的模块级 globalEnvCtx 初始为 null，且请求会被负载均衡到
- * 不同实例——若不设置，getDb()/saveDb() 会退回内存模式，导致配置
- * （含网盘账号密码、access_token）读取/持久化失败。
+ * 在請求處理開始時注入當前環境的持久化後端上下文。
+ * CF Workers 每個實例的模塊級 globalEnvCtx 初始為 null，且請求會被負載均衡到
+ * 不同實例——若不設置，getDb()/saveDb() 會退回記憶體模式，導致配置
+ * （含網盤賬號密碼、access_token）讀取/持久化失敗。
  */
 export function setEnvCtx(env: any) {
   if (env) {
@@ -934,10 +934,10 @@ export function setEnvCtx(env: any) {
   }
 }
 
-// 已知的旧默认值 → 当前默认值迁移表。
-// 修复「开发环境(无 KV，用新默认值)与生产环境(KV 里保存了旧默认值)不一致」：
-// 早期默认 logo/favicon 为空或 res.oplist.org 旧地址，已写入 KV 的旧值不会被
-// ensureDefaultSettings 的「仅补缺失 key」逻辑覆盖，导致 prod 显示旧图标。
+// 已知的舊默認值 → 當前默認值遷移表。
+// 修復「開發環境(無 KV，用新默認值)與生產環境(KV 裡保存了舊默認值)不一致」：
+// 早期默認 logo/favicon 為空或 res.oplist.org 舊地址，已寫入 KV 的舊值不會被
+// ensureDefaultSettings 的「僅補缺失 key」邏輯覆蓋，導致 prod 顯示舊圖標。
 const LEGACY_SETTING_MIGRATIONS: Record<string, { from: any[]; to: string }> = {
   logo: {
     from: ["", "/logo.png", "https://res.oplist.org/logo/logo.png"],
@@ -947,22 +947,22 @@ const LEGACY_SETTING_MIGRATIONS: Record<string, { from: any[]; to: string }> = {
     from: ["", "/favicon.png"],
     to: "https://res.oplist.org/logo/logo.svg",
   },
-  // 上游 OpenList 的 home_container 默认是 max_980px（内容限宽 980px 居中），
-  // 本项目早期误把默认值设为 hope_container（HopeUI Container 无 maxW，流式全宽），
-  // 导致首页文件列表横向铺满整屏。已写入 KV 的旧默认值需要迁移回限宽布局。
+  // 上游 OpenList 的 home_container 默認是 max_980px（內容限寬 980px 居中），
+  // 本項目早期誤把默認值設為 hope_container（HopeUI Container 無 maxW，流式全寬），
+  // 導致首頁文件列表橫向鋪滿整屏。已寫入 KV 的舊默認值需要遷移回限寬佈局。
   home_container: {
     from: ["hope_container"],
     to: "max_980px",
   },
-  // 对齐 Go 的 text_types 默认值：补上 md / vtt / srt / ass / lrc / strm 等。
-  // 这些扩展名会被 /p 端点用来判断「文本类预览能否走代理」，
-  // 缺了它们会让字幕、歌词、README 在未开 web_proxy 的存储上被 403。
+  // 對齊 Go 的 text_types 默認值：補上 md / vtt / srt / ass / lrc / strm 等。
+  // 這些擴展名會被 /p 端點用來判斷「文本類預覽能否走代理」，
+  // 缺了它們會讓字幕、歌詞、README 在未開 web_proxy 的儲存上被 403。
   text_types: {
     from: [LEGACY_TEXT_TYPES],
     to: DEFAULT_TEXT_TYPES,
   },
-  // 「复制链接」：早期 seed 为空串（复制出空白），上一版一度采用上游 Go 的
-  // 整段分享文案（复制出一堆非链接内容）。两种已写入的值都迁移到纯分享 URL。
+  // 「複製鏈接」：早期 seed 為空串（複製出空白），上一版一度採用上游 Go 的
+  // 整段分享文案（複製出一堆非鏈接內容）。兩種已寫入的值都遷移到純分享 URL。
   share_summary_content: {
     from: ["", LEGACY_SHARE_SUMMARY_GO],
     to: DEFAULT_SHARE_SUMMARY_CONTENT,
@@ -1006,7 +1006,7 @@ const ensureDefaultSettings = (db: any) => {
       if (matching.length > 1) {
         modified = true
       }
-      // 旧默认值迁移：KV 中保存的值若等于已知旧默认值，更新为当前默认
+      // 舊默認值遷移：KV 中保存的值若等於已知舊默認值，更新為當前默認
       const migration = LEGACY_SETTING_MIGRATIONS[defSetting.key]
       if (migration && migration.from.includes(chosen.value)) {
         chosen.value = migration.to
@@ -1024,11 +1024,11 @@ const ensureDefaultSettings = (db: any) => {
     }
   }
 
-  // 仅做内存补齐：绝不在这里隐式落盘。
+  // 僅做記憶體補齊：絕不在這裡隱式落盤。
   //
-  // 历史缺陷：此处曾调用 saveDb(db)，导致「读取失败 → 回退默认库 → 立刻把空壳
-  // 写回存储」，从而覆盖真实配置并让系统反复回到未初始化状态。
-  // 缺失的默认项会在下一次显式写入时随之持久化。
+  // 歷史缺陷：此處曾調用 saveDb(db)，導致「讀取失敗 → 回退默認庫 → 立刻把空殼
+  // 寫回儲存」，從而覆蓋真實配置並讓系統反覆回到未初始化狀態。
+  // 缺失的默認項會在下一次顯式寫入時隨之持久化。
   db.settings = newSettings
 }
 
@@ -1066,10 +1066,10 @@ const ensureDefaultPlugins = (db: any) => {
   }
 }
 
-// FIX(备份恢复 / meta 丢失): loadDb 此前对 settings/storages/shares/plugins 都做了
-// 兜底，唯独漏了 metas。旧 KV 数据若不含 metas 字段，getDb() 返回的 db.metas 为
-// undefined，meta/list 会因 db.metas.length 直接 500，meta/create 虽自行兜底，
-// 但列表读取始终失败，表现为「恢复后 metas 一条都看不到」。
+// FIX(備份恢復 / meta 丟失): loadDb 此前對 settings/storages/shares/plugins 都做了
+// 兜底，唯獨漏了 metas。舊 KV 資料若不含 metas 欄位，getDb() 返回的 db.metas 為
+// undefined，meta/list 會因 db.metas.length 直接 500，meta/create 雖自行兜底，
+// 但列表讀取始終失敗，表現為「恢復後 metas 一條都看不到」。
 const ensureDefaultMetas = (db: any) => {
   if (!db) return
   if (!db.metas || !Array.isArray(db.metas)) {
@@ -1103,23 +1103,23 @@ const dbCache = new WeakMap<object, { ts: number; db: any }>()
 const dbInflight = new WeakMap<object, Promise<any>>()
 
 /**
- * 存储后端解析入口。默认直接委托给 store/backend 的 getStoreBackend；
- * 测试可通过 __setStoreBackendLoaderForTest() 注入桩后端，用于统计
- * load/save 次数，锁定 getDb() 的缓存行为（见 db_cache.test.ts）。
+ * 儲存後端解析入口。默認直接委託給 store/backend 的 getStoreBackend；
+ * 測試可通過 __setStoreBackendLoaderForTest() 注入樁後端，用於統計
+ * load/save 次數，鎖定 getDb() 的快取行為（見 db_cache.test.ts）。
  */
 let storeBackendLoader: (env: any) => Promise<any> = (env) =>
   getStoreBackend(env)
 
 /**
- * 仅供测试：重置模块级缓存与内存快照，保证用例相互隔离。
+ * 僅供測試：重置模塊級快取與記憶體快照，保證用例相互隔離。
  *
- * 注意：必须把「写前守卫」的状态（dbTrusted / dbLastLoadError / dbWriteBlocked）
- * 一并复位。它们同样是模块级状态，且 db_write_guard.test.ts 直接断言其取值；
- * 只清缓存会让「reset 后回到初始态」的假设不成立，用例结果将取决于执行顺序。
+ * 注意：必須把「寫前守衛」的狀態（dbTrusted / dbLastLoadError / dbWriteBlocked）
+ * 一併復位。它們同樣是模塊級狀態，且 db_write_guard.test.ts 直接斷言其取值；
+ * 只清快取會讓「reset 後回到初始態」的假設不成立，用例結果將取決於執行順序。
  */
 export const __resetDbCacheForTest = () => {
-  // WeakMap 无法整体清空，但无参调用的缓存键就是 globalEnvCtx 自身
-  // （见 resolveNoArgKey），逐个 delete 即可。
+  // WeakMap 無法整體清空，但無參調用的快取鍵就是 globalEnvCtx 自身
+  // （見 resolveNoArgKey），逐個 delete 即可。
   if (globalEnvCtx && typeof globalEnvCtx === "object") {
     dbCache.delete(globalEnvCtx)
     dbInflight.delete(globalEnvCtx)
@@ -1127,26 +1127,26 @@ export const __resetDbCacheForTest = () => {
   globalEnvCtx = null
   memoryDb = null
   storeBackendLoader = (env: any) => getStoreBackend(env)
-  // 写前守卫状态复位（否则跨用例串味）
+  // 寫前守衛狀態復位（否則跨用例串味）
   dbTrusted = false
   dbLastLoadError = null
   dbWriteBlocked = false
-  // 加密相关的缓存与一次性告警复位：
-  // 用例可能先后使用不同密钥/不同 DB_CIPHER，缓存串味会让「首次告警」「换钥后
-  // 可解」这类断言依赖执行顺序。
+  // 加密相關的快取與一次性告警復位：
+  // 用例可能先後使用不同密鑰/不同 DB_CIPHER，快取串味會讓「首次告警」「換鑰後
+  // 可解」這類斷言依賴執行順序。
   cachedEncryptionKey = null
   cachedFromEnv = false
   encryptionKeyWarned = false
   unsealKeyWarned = false
   sealKeyMissingWarned = false
   plaintextMigrationLogged = false
-  // 密钥派生缓存与「未变化字段跳过加密」缓存同样必须复位：
-  // 用例会切换 DB_CIPHER / 密钥，缓存串味会让断言依赖执行顺序。
+  // 密鑰派生快取與「未變化欄位跳過加密」快取同樣必須復位：
+  // 用例會切換 DB_CIPHER / 密鑰，快取串味會讓斷言依賴執行順序。
   __resetCipherKeyCacheForTest()
   sealedCache.clear()
 }
 
-/** 仅供测试：注入统计型存储后端。 */
+/** 僅供測試：注入統計型儲存後端。 */
 export const __setStoreBackendLoaderForTest = (
   loader: (env: any) => Promise<any>,
 ) => {
@@ -1154,27 +1154,27 @@ export const __setStoreBackendLoaderForTest = (
 }
 
 /**
- * 解析无参 getDb() / saveDb() 应使用的缓存键（即请求级 globalEnvCtx）。
+ * 解析無參 getDb() / saveDb() 應使用的快取鍵（即請求級 globalEnvCtx）。
  *
- * 为什么需要它（这是一次线上性能事故的修复核心）：
+ * 為什麼需要它（這是一次線上性能事故的修復核心）：
  *
- * `dbCache` / `dbInflight` 都以调用方传入的 `envCtx` 对象作为键。但仓库里有
- * 大量内部调用是 **无参** 的（storage.ts 的驱动回调、getSettings/getUsers 等
- * 五个 getter），它们拿不到 request 级 env。此前 getDb() 对无参调用的处理是：
+ * `dbCache` / `dbInflight` 都以調用方傳入的 `envCtx` 對象作為鍵。但倉庫裡有
+ * 大量內部調用是 **無參** 的（storage.ts 的驅動回調、getSettings/getUsers 等
+ * 五個 getter），它們拿不到 request 級 env。此前 getDb() 對無參調用的處理是：
  *
- *     if (!envCtx) return loadDb(envCtx)   // ❌ 直接落盘，两个缓存全部绕过
+ *     if (!envCtx) return loadDb(envCtx)   // ❌ 直接落盤，兩個快取全部繞過
  *
- * 于是「一次无参 getDb()」= 「一次完整的冷加载」：后端全量读 + JSON.parse +
- * 逐字段 AES 解密 + 5 次 ensureDefault*。而一次 WebDAV PROPFIND 或一次页面加载
- * 会触发数十次无参 getDb()，于是 KV 被读数十次、D1 被查数十 × N 张表，
- * 两种后端同时变慢（现象上「cf+kv 和 d1 都慢」）。
+ * 於是「一次無參 getDb()」= 「一次完整的冷加載」：後端全量讀 + JSON.parse +
+ * 逐欄位 AES 解密 + 5 次 ensureDefault*。而一次 WebDAV PROPFIND 或一次頁面加載
+ * 會觸發數十次無參 getDb()，於是 KV 被讀數十次、D1 被查數十 × N 張表，
+ * 兩種後端同時變慢（現象上「cf+kv 和 d1 都慢」）。
  *
- * 修复：无参调用回退到 `globalEnvCtx`（由 setEnvCtx / 传参调用写入的请求级
- * 环境），并以它为键复用同一套缓存。这样同一请求（同一 isolate）内的重复调用
- * 命中缓存，不再重复落盘与解密。
+ * 修復：無參調用回退到 `globalEnvCtx`（由 setEnvCtx / 傳參調用寫入的請求級
+ * 環境），並以它為鍵複用同一套快取。這樣同一請求（同一 isolate）內的重複調用
+ * 命中快取，不再重複落盤與解密。
  *
- * 这是一个**纯函数**（不写入任何模块状态）：无参调用的缓存键始终就是
- * `globalEnvCtx` 本身，saveDb 刷新缓存时用同一个键，天然对称。
+ * 這是一個**純函數**（不寫入任何模塊狀態）：無參調用的快取鍵始終就是
+ * `globalEnvCtx` 本身，saveDb 刷新快取時用同一個鍵，天然對稱。
  */
 const resolveNoArgKey = (): object | null => {
   const ctx = globalEnvCtx
@@ -1186,25 +1186,25 @@ const loadDb = async (envCtx?: any) => {
     globalEnvCtx = envCtx
   }
 
-  // Priority 1: 持久化后端（json/KV/Blob、D1、MySQL）
-  // 注意：envCtx 可能为空（如 resolvePath 等内部调用 getDb() 不传 env）。
-  // 此时必须回退到请求级 globalEnvCtx，否则 readDriver 读不到 DB_DRIVER、
-  // getD1 读不到 DB binding，会错误回退到 json 后端读到旧的 KV 数据。
+  // Priority 1: 持久化後端（json/KV/Blob、D1、MySQL）
+  // 注意：envCtx 可能為空（如 resolvePath 等內部調用 getDb() 不傳 env）。
+  // 此時必須回退到請求級 globalEnvCtx，否則 readDriver 讀不到 DB_DRIVER、
+  // getD1 讀不到 DB binding，會錯誤回退到 json 後端讀到舊的 KV 資料。
   const activeEnv = envCtx || globalEnvCtx
-  // 解析器可被测试注入（__setStoreBackendLoaderForTest），故用 let + 可空：
-  // 解析动作必须在 try 内 —— 配置类错误（驱动缺失、驱动 × 格式非法）要与
-  // 读取错误走同一条降级路径，否则它会以「未捕获异常」的形式抛出，
-  // 让 /init/setup 只给前端一个没有原因的裸 500。
+  // 解析器可被測試注入（__setStoreBackendLoaderForTest），故用 let + 可空：
+  // 解析動作必須在 try 內 —— 配置類錯誤（驅動缺失、驅動 × 格式非法）要與
+  // 讀取錯誤走同一條降級路徑，否則它會以「未捕獲異常」的形式拋出，
+  // 讓 /init/setup 只給前端一個沒有原因的裸 500。
   let backend: Awaited<ReturnType<typeof storeBackendLoader>> | null = null
   try {
     backend = await storeBackendLoader(activeEnv)
     const persisted = await backend.load(activeEnv)
     if (persisted) {
-      // 只在数据里确实存在密文时才构造解密器（才需要解析密钥）：
-      //   - DB_CIPHER=none（默认）且历史数据全为明文 → 完全不需要密钥，
-      //     省掉一次持久化读取，也不会误报「缺少加密密钥」；
-      //   - 存在 enc:vN: 密文（旧部署 / 曾开启加密）→ 仍按前缀解密，
-      //     因此「关掉加密」不会让既有数据读不出来。
+      // 只在資料裡確實存在密文時才構造解密器（才需要解析密鑰）：
+      //   - DB_CIPHER=none（默認）且歷史資料全為明文 → 完全不需要密鑰，
+      //     省掉一次持久化讀取，也不會誤報「缺少加密密鑰」；
+      //   - 存在 enc:vN: 密文（舊部署 / 曾開啟加密）→ 仍按前綴解密，
+      //     因此「關掉加密」不會讓既有資料讀不出來。
       const hadSealed = hasSealedValues(persisted)
       if (
         hadSealed &&
@@ -1228,14 +1228,14 @@ const loadDb = async (envCtx?: any) => {
       ensureDefaultShares(memoryDb)
       ensureDefaultPlugins(memoryDb)
       ensureDefaultMetas(memoryDb)
-      // 读取成功：内存库与持久化存储一致，允许后续写回。
+      // 讀取成功：記憶體庫與持久化儲存一致，允許後續寫回。
       dbTrusted = true
       dbLastLoadError = null
       return memoryDb
     }
-    // 后端读取成功但没有数据：可能是全新部署（首次初始化）。
-    // 但若历史上曾成功读到过数据，则「读到空」极可能是最终一致性/后端切换导致的
-    // 短暂不可见，此时不能把默认库当成事实，更不能让它写回存储。
+    // 後端讀取成功但沒有資料：可能是全新部署（首次初始化）。
+    // 但若歷史上曾成功讀到過資料，則「讀到空」極可能是最終一致性/後端切換導致的
+    // 短暫不可見，此時不能把默認庫當成事實，更不能讓它寫回儲存。
     if (dbTrusted && memoryDb) {
       console.warn(
         `[DB] Backend ${backend?.name ?? "storage"} returned empty while a trusted snapshot exists; ` +
@@ -1251,7 +1251,7 @@ const loadDb = async (envCtx?: any) => {
     dbTrusted = false
     dbLastLoadError = null
   } catch (err: any) {
-    // 读取失败绝不能静默回退到默认库并落盘——这正是「数据库被清空」的根因。
+    // 讀取失敗絕不能靜默回退到默認庫並落盤——這正是「資料庫被清空」的根因。
     console.error(
       `[DB] Error reading config from ${backend?.name ?? "storage"}:`,
       err?.message || err,
@@ -1260,8 +1260,8 @@ const loadDb = async (envCtx?: any) => {
     dbTrusted = false
   }
 
-  // 只有在此前已经成功读取过（同一 isolate 内的可信快照）时，才允许继续使用内存库。
-  // 若从未成功读取过，则返回的只是「不可信空壳」，saveDb 会在落盘前将其拦截。
+  // 只有在此前已經成功讀取過（同一 isolate 內的可信快照）時，才允許繼續使用記憶體庫。
+  // 若從未成功讀取過，則返回的只是「不可信空殼」，saveDb 會在落盤前將其攔截。
   if (memoryDb && dbTrusted) {
     ensureDefaultSettings(memoryDb)
     ensureDefaultStorages(memoryDb)
@@ -1271,8 +1271,8 @@ const loadDb = async (envCtx?: any) => {
     return memoryDb
   }
 
-  // Priority 2: In-Memory DB（模块级，进程内共享；重启即失，仅用于本地调试）
-  // 注意：此分支明确标记为「不可信」，禁止写回持久化存储。
+  // Priority 2: In-Memory DB（模塊級，進程內共享；重啟即失，僅用於本地調試）
+  // 注意：此分支明確標記為「不可信」，禁止寫回持久化儲存。
   memoryDb = JSON.parse(JSON.stringify(defaultDb))
   ensureDefaultStorages(memoryDb)
   ensureDefaultShares(memoryDb)
@@ -1286,14 +1286,14 @@ export const getDb = async (envCtx?: any) => {
     globalEnvCtx = envCtx
   }
 
-  // 缓存键解析（性能关键）：
-  //   有参调用 → 直接用 envCtx；
-  //   无参调用 → 回退到请求级 globalEnvCtx，复用同一套缓存。
+  // 快取鍵解析（性能關鍵）：
+  //   有參調用 → 直接用 envCtx；
+  //   無參調用 → 回退到請求級 globalEnvCtx，複用同一套快取。
   //
-  // 历史缺陷：无参时曾直接 `return loadDb(envCtx)`，绕过下面两个缓存，
-  // 导致每次无参 getDb() 都触发一次完整的后端读取 + 解密，KV 与 D1 同时被
-  // 放大数十倍而变慢。只有当连 globalEnvCtx 都没有（进程刚启动、纯内存调试）
-  // 时才无法缓存，此时退化为直读——不影响数据正确性，仅是性能兜底。
+  // 歷史缺陷：無參時曾直接 `return loadDb(envCtx)`，繞過下面兩個快取，
+  // 導致每次無參 getDb() 都觸發一次完整的後端讀取 + 解密，KV 與 D1 同時被
+  // 放大數十倍而變慢。只有當連 globalEnvCtx 都沒有（進程剛啟動、純記憶體調試）
+  // 時才無法快取，此時退化為直讀——不影響資料正確性，僅是性能兜底。
   const cacheKey = envCtx || resolveNoArgKey()
   if (!cacheKey) return loadDb(envCtx)
 
@@ -1330,22 +1330,22 @@ export const getDb = async (envCtx?: any) => {
  * warn-and-continue behavior, so unpersisted deployments are not broken by it.
  */
 // ============================================================
-// 静态加密（At-rest encryption）—— 可选，由 DB_CIPHER 控制
+// 靜態加密（At-rest encryption）—— 可選，由 DB_CIPHER 控制
 //
-// 修复 H-1：网盘 token/secret/OTP 等敏感字段此前以明文 JSON 落 KV/Blob。
-// 这里在「持久化边界」做字段级加密（落盘前 seal、读盘后 unseal），内存中
-// 始终保持明文，因此 resolvePath / parseAddition / 各驱动 / admin 接口均无需
-// 改动。密钥统一取 JWT_SECRET（签名与加密共用）。
+// 修復 H-1：網盤 token/secret/OTP 等敏感欄位此前以明文 JSON 落 KV/Blob。
+// 這裡在「持久化邊界」做欄位級加密（落盤前 seal、讀盤後 unseal），記憶體中
+// 始終保持明文，因此 resolvePath / parseAddition / 各驅動 / admin 介面均無需
+// 改動。密鑰統一取 JWT_SECRET（簽名與加密共用）。
 //
-// 与历史实现的差别：
-//   - **默认不加密**（DB_CIPHER=none）。加密是可选能力，而不是强制行为。
-//   - 算法由 DB_CIPHER 选择，见 pkg/crypto.ts 的 DbCipher：
-//       aes-256-gcm（HKDF，低成本，推荐） / aes-256-gcm-pbkdf2（历史 envelope）
+// 與歷史實現的差別：
+//   - **默認不加密**（DB_CIPHER=none）。加密是可選能力，而不是強制行為。
+//   - 算法由 DB_CIPHER 選擇，見 pkg/crypto.ts 的 DbCipher：
+//       aes-256-gcm（HKDF，低成本，推薦） / aes-256-gcm-pbkdf2（歷史 envelope）
 //       / aes-256-cbc-hmac（Encrypt-then-MAC）
-//   - **解密永远由密文前缀驱动**（`enc:vN:`），与当前配置无关。于是：
-//       关掉加密 → 既有密文仍能解开，并在下次写入时转为明文（自动迁移）；
-//       换算法   → 既有密文按旧算法解开，下次写入按新算法落盘；
-//       明文数据 → 不带前缀，原样返回，升级不丢数据。
+//   - **解密永遠由密文前綴驅動**（`enc:vN:`），與當前配置無關。於是：
+//       關掉加密 → 既有密文仍能解開，並在下次寫入時轉為明文（自動遷移）；
+//       換算法   → 既有密文按舊算法解開，下次寫入按新算法落盤；
+//       明文資料 → 不帶前綴，原樣返回，升級不丟資料。
 // ============================================================
 const SENSITIVE_SETTING_KEYS = new Set([
   "token",
@@ -1358,56 +1358,56 @@ const SENSITIVE_SETTING_KEYS = new Set([
 ])
 
 let encryptionKeyWarned = false
-/** 一次性告警：数据中存在密文但拿不到密钥（避免每次加载都刷屏） */
+/** 一次性告警：資料中存在密文但拿不到密鑰（避免每次加載都刷屏） */
 let unsealKeyWarned = false
-/** 一次性告警：配置了 DB_CIPHER 却没有密钥，只能明文落盘 */
+/** 一次性告警：配置了 DB_CIPHER 卻沒有密鑰，只能明文落盤 */
 let sealKeyMissingWarned = false
-/** 一次性提示：旧部署的密文在 DB_CIPHER=none 下会被自动迁移为明文 */
+/** 一次性提示：舊部署的密文在 DB_CIPHER=none 下會被自動遷移為明文 */
 let plaintextMigrationLogged = false
 
 /**
- * 字段加密密钥的持久化键名。
+ * 欄位加密密鑰的持久化鍵名。
  *
- * 注意：这是 **KV 存储槽位名**，不是环境变量名。历史部署已用它存过密钥，
- * 改名会导致既有密文无法解密，故保持不变。
+ * 注意：這是 **KV 儲存槽位名**，不是環境變量名。歷史部署已用它存過密鑰，
+ * 改名會導致既有密文無法解密，故保持不變。
  */
 export const ENCRYPTION_SECRET_KV_KEY = "openlist_encryption_secret"
 
 /**
- * 解析「环境变量中显式配置的」字段加密密钥。
+ * 解析「環境變量中顯式配置的」欄位加密密鑰。
  *
- * 约定：字段加密与 JWT 签名都优先使用 JWT_SECRET 环境变量。
- * 但两者在「未配置 env」时的持久化槽位是独立的
- * （加密 → openlist_encryption_secret，签名 → openlist_jwt_secret），
- * 因此未配置 JWT_SECRET 的部署中二者会是不同的随机值——这不影响正确性，
- * 加密与签名本就无需同钥。
+ * 約定：欄位加密與 JWT 簽名都優先使用 JWT_SECRET 環境變量。
+ * 但兩者在「未配置 env」時的持久化槽位是獨立的
+ * （加密 → openlist_encryption_secret，簽名 → openlist_jwt_secret），
+ * 因此未配置 JWT_SECRET 的部署中二者會是不同的隨機值——這不影響正確性，
+ * 加密與簽名本就無需同鑰。
  *
- * 长度不足 16 视为未配置，避免弱密钥。
+ * 長度不足 16 視為未配置，避免弱密鑰。
  *
- * 该来源具有**最高优先级且恒定不变**：只要它存在，seal 与 unseal
- * 都必须使用它，从而保证加解密对称。
+ * 該來源具有**最高優先級且恆定不變**：只要它存在，seal 與 unseal
+ * 都必須使用它，從而保證加解密對稱。
  */
 function readEnvEncryptionKey(env: any): string | null {
   const raw =
     env?.JWT_SECRET ||
     (typeof process !== "undefined" ? process.env?.JWT_SECRET : "")
-  // 只要求「非空」：长度是运维建议（推荐 32+），不是硬门槛。
-  // 强制长度会带来一个很坏的副作用 —— 用户明明配了 JWT_SECRET，却因为
-  // 不足 16/32 字符被判为「未配置」，于是自动生成逻辑又生成一把新密钥，
-  // 造成「环境变量密钥」与「持久化密钥」并存、加解密分裂。
+  // 只要求「非空」：長度是運維建議（推薦 32+），不是硬門檻。
+  // 強制長度會帶來一個很壞的副作用 —— 用戶明明配了 JWT_SECRET，卻因為
+  // 不足 16/32 字符被判為「未配置」，於是自動生成邏輯又生成一把新密鑰，
+  // 造成「環境變量密鑰」與「持久化密鑰」並存、加解密分裂。
   return typeof raw === "string" && raw.trim().length > 0 ? raw : null
 }
 
 /**
- * JWT_SECRET 的推荐长度（仅用于文案与告警，**不做强制校验**）。
+ * JWT_SECRET 的推薦長度（僅用於文案與告警，**不做強制校驗**）。
  *
- * 为什么是 32：`openssl rand -hex 32` 输出 64 个 hex 字符，但 32 字符已是
- * 足够强的 HS256 密钥；这里取 32 作为「推荐值」的下界。
+ * 為什麼是 32：`openssl rand -hex 32` 輸出 64 個 hex 字符，但 32 字符已是
+ * 足夠強的 HS256 密鑰；這裡取 32 作為「推薦值」的下界。
  */
 export const RECOMMENDED_JWT_SECRET_LENGTH = 32
 
 /**
- * 判断某个密钥是否短于推荐长度（用于**提示**，不用于拒绝）。
+ * 判斷某個密鑰是否短於推薦長度（用於**提示**，不用於拒絕）。
  */
 export function isJwtSecretShort(secret: string | null | undefined): boolean {
   return (
@@ -1417,23 +1417,23 @@ export function isJwtSecretShort(secret: string | null | undefined): boolean {
   )
 }
 
-/** 进程内缓存：避免每次 load/save 都读存储 */
+/** 進程內快取：避免每次 load/save 都讀儲存 */
 let cachedEncryptionKey: string | null = null
-/** 缓存值是否来自环境变量（来自 env 的最高优先级，不会被持久化值替换） */
+/** 快取值是否來自環境變量（來自 env 的最高優先級，不會被持久化值替換） */
 let cachedFromEnv = false
 
 /**
- * 获取字段加密密钥（只读，绝不生成）。
+ * 獲取欄位加密密鑰（只讀，絕不生成）。
  *
- * 优先级：
+ * 優先級：
  *   1. env.JWT_SECRET
- *   2. 持久化密钥 openlist_encryption_secret（由 setup 阶段写入）
+ *   2. 持久化密鑰 openlist_encryption_secret（由 setup 階段寫入）
  *
- * 关键约束（保证加解密对称）：
- *   - 生成只发生在 setup，见 ensureEncryptionSecret()。此处绝不生成，
- *     否则一次瞬时读取失败就会换钥，导致既有密文永久无法解密。
- *   - 环境变量一旦配置，就始终优先于持久化密钥，且不会被其覆盖，
- *     这样运维显式指定的密钥总是生效。
+ * 關鍵約束（保證加解密對稱）：
+ *   - 生成只發生在 setup，見 ensureEncryptionSecret()。此處絕不生成，
+ *     否則一次瞬時讀取失敗就會換鑰，導致既有密文永久無法解密。
+ *   - 環境變量一旦配置，就始終優先於持久化密鑰，且不會被其覆蓋，
+ *     這樣運維顯式指定的密鑰總是生效。
  */
 async function getEncryptionKey(envCtx?: any): Promise<string | null> {
   const env =
@@ -1441,7 +1441,7 @@ async function getEncryptionKey(envCtx?: any): Promise<string | null> {
     globalEnvCtx ||
     (typeof process !== "undefined" ? process.env : {})
 
-  // 环境变量优先级最高：每次都要先看，避免被此前的持久化缓存挡住。
+  // 環境變量優先級最高：每次都要先看，避免被此前的持久化快取擋住。
   const envKey = readEnvEncryptionKey(env)
   if (envKey) {
     if (!cachedFromEnv || cachedEncryptionKey !== envKey) {
@@ -1451,10 +1451,10 @@ async function getEncryptionKey(envCtx?: any): Promise<string | null> {
     return envKey
   }
 
-  // 已从持久化解析过则复用
+  // 已從持久化解析過則複用
   if (cachedEncryptionKey && !cachedFromEnv) return cachedEncryptionKey
 
-  // 回退到持久化密钥（仅读取）
+  // 回退到持久化密鑰（僅讀取）
   try {
     const persisted = await readPersistedSecret(env, ENCRYPTION_SECRET_KV_KEY)
     if (persisted && persisted.trim().length > 0) {
@@ -1463,7 +1463,7 @@ async function getEncryptionKey(envCtx?: any): Promise<string | null> {
       return persisted
     }
   } catch {
-    // 读取失败按未配置处理
+    // 讀取失敗按未配置處理
   }
 
   if (!encryptionKeyWarned) {
@@ -1478,15 +1478,15 @@ async function getEncryptionKey(envCtx?: any): Promise<string | null> {
 }
 
 /**
- * 加密密钥是否已就绪（**绕过进程内缓存**，直查真实来源）。
+ * 加密密鑰是否已就緒（**繞過進程內快取**，直查真實來源）。
  *
- * 用途：供 `/public/init_status` 向前端暴露「后端是否已准备好接受登录」。
+ * 用途：供 `/public/init_status` 向前端暴露「後端是否已準備好接受登入」。
  *
- * 为什么需要绕过缓存：setup 完成后，同一实例的缓存里必然有密钥；但
- * 用户实际登录请求很可能落在**另一个实例**（其缓存为空，需重新读 KV）。
- * 只有真实来源（env 或 KV 持久化）可读，才代表**任意实例**都能解密。
+ * 為什麼需要繞過快取：setup 完成後，同一實例的快取裡必然有密鑰；但
+ * 用戶實際登入請求很可能落在**另一個實例**（其快取為空，需重新讀 KV）。
+ * 只有真實來源（env 或 KV 持久化）可讀，才代表**任意實例**都能解密。
  *
- * @returns true 表示任意实例都能取得密钥
+ * @returns true 表示任意實例都能取得密鑰
  */
 export async function isEncryptionReady(envCtx?: any): Promise<boolean> {
   const env =
@@ -1494,10 +1494,10 @@ export async function isEncryptionReady(envCtx?: any): Promise<boolean> {
     globalEnvCtx ||
     (typeof process !== "undefined" ? process.env : {})
 
-  // 环境变量存在即永远就绪
+  // 環境變量存在即永遠就緒
   if (readEnvEncryptionKey(env)) return true
 
-  // 直查持久化（不走缓存）
+  // 直查持久化（不走快取）
   try {
     const persisted = await readPersistedSecret(env, ENCRYPTION_SECRET_KV_KEY)
     return Boolean(persisted && persisted.trim().length > 0)
@@ -1507,42 +1507,42 @@ export async function isEncryptionReady(envCtx?: any): Promise<boolean> {
 }
 
 /**
- * 初始化阶段确保**共享密钥**存在（JWT 签名 + DB_CIPHER 启用时的字段加密）。
- * 只在 setup 中调用。
+ * 初始化階段確保**共享密鑰**存在（JWT 簽名 + DB_CIPHER 啟用時的欄位加密）。
+ * 只在 setup 中調用。
  *
- * 为什么 DB_CIPHER=none 时同样要生成：这把密钥同时充当 JWT 令牌的签名密钥
- * （middlewares.ts 的 getJwtSecret 会复用本槽位）。多实例 / 冷启动必须共用同一把，
- * 否则令牌会随机失效。`none` 只表示「不加密数据库字段」，与密钥是否存在无关。
+ * 為什麼 DB_CIPHER=none 時同樣要生成：這把密鑰同時充當 JWT 令牌的簽名密鑰
+ * （middlewares.ts 的 getJwtSecret 會複用本槽位）。多實例 / 冷啟動必須共用同一把，
+ * 否則令牌會隨機失效。`none` 只表示「不加密資料庫欄位」，與密鑰是否存在無關。
  *
- * 行为（与 getEncryptionKey 使用完全相同的优先级，避免加解密分裂）：
- *   1. 环境变量已配置 → 直接采用，不写持久化（尊重运维配置）
- *   2. 持久化密钥已存在 → 复用（存在性门控，永不覆盖）
- *   3. 都不存在 → 生成 → 写入 → **回读校验（带重试）**
+ * 行為（與 getEncryptionKey 使用完全相同的優先級，避免加解密分裂）：
+ *   1. 環境變量已配置 → 直接採用，不寫持久化（尊重運維配置）
+ *   2. 持久化密鑰已存在 → 複用（存在性門控，永不覆蓋）
+ *   3. 都不存在 → 生成 → 寫入 → **回讀校驗（帶重試）**
  *
- * ## 为什么必须「写后回读校验」
+ * ## 為什麼必須「寫後回讀校驗」
  *
- * Cloudflare KV / EdgeOne KV 等**最终一致**存储存在写入传播延迟：
- * 刚 `put` 的键，紧接着 `get` 可能返回 null（跨隔离实例尤其明显）。
+ * Cloudflare KV / EdgeOne KV 等**最終一致**儲存存在寫入傳播延遲：
+ * 剛 `put` 的鍵，緊接著 `get` 可能返回 null（跨隔離實例尤其明顯）。
  *
- * 若 setup 写入密钥后直接返回，会出现严重故障：
- *   - setup 请求（实例 I₁）生成密钥 A 并写入，用 A 加密密码落盘；
- *   - 紧随其后的登录请求可能落在**另一个实例 I₂**，其缓存为空，
- *     重新读 KV 时 A 尚未传播 → 读到 null → `getEncryptionKey` 返回 null
- *     → `unsealDb` 跳过解密 → `password` 保持 `enc:v1:` 密文
- *     → `verifyUserPassword` 判定非 64 位 hex → **密码认证失败**。
- *   - 等待数十秒后 KV 传播完成，又能登录（「过一会就好了」）。
+ * 若 setup 寫入密鑰後直接返回，會出現嚴重故障：
+ *   - setup 請求（實例 I₁）生成密鑰 A 並寫入，用 A 加密密碼落盤；
+ *   - 緊隨其後的登入請求可能落在**另一個實例 I₂**，其快取為空，
+ *     重新讀 KV 時 A 尚未傳播 → 讀到 null → `getEncryptionKey` 返回 null
+ *     → `unsealDb` 跳過解密 → `password` 保持 `enc:v1:` 密文
+ *     → `verifyUserPassword` 判定非 64 位 hex → **密碼認證失敗**。
+ *   - 等待數十秒後 KV 傳播完成，又能登入（「過一會就好了」）。
  *
- * 因此这里在写入后**主动回读确认**，读不到则按指数退避重试，直到
- * 密钥真正可读（或超出重试上限，明确报错而非静默返回）。
- * 这样 setup 只有在密钥**确实可被后续请求读到**时才报告成功。
+ * 因此這裡在寫入後**主動回讀確認**，讀不到則按指數退避重試，直到
+ * 密鑰真正可讀（或超出重試上限，明確報錯而非靜默返回）。
+ * 這樣 setup 只有在密鑰**確實可被後續請求讀到**時才報告成功。
  *
- * 并发安全：用进程内单飞（inflight 合并）消除同一实例内的重复生成。
+ * 併發安全：用進程內單飛（inflight 合併）消除同一實例內的重複生成。
  *
- * @returns 密钥；无法确定时返回 null 并说明原因
+ * @returns 密鑰；無法確定時返回 null 並說明原因
  */
 let ensureSecretInflight: Promise<string | null> | null = null
 
-/** 写后回读重试参数：总等待上限约 1.9s（0.1+0.2+0.4+0.8+... 封顶） */
+/** 寫後回讀重試參數：總等待上限約 1.9s（0.1+0.2+0.4+0.8+... 封頂） */
 const SECRET_VERIFY_RETRIES = 6
 const SECRET_VERIFY_BASE_MS = 100
 const SECRET_VERIFY_MAX_MS = 1000
@@ -1554,7 +1554,7 @@ function sleep(ms: number): Promise<void> {
 export async function ensureEncryptionSecret(
   envCtx?: any,
 ): Promise<string | null> {
-  // 进程内单飞：并发 setup 只生成一次
+  // 進程內單飛：併發 setup 只生成一次
   if (ensureSecretInflight) return ensureSecretInflight
 
   ensureSecretInflight = (async () => {
@@ -1563,14 +1563,14 @@ export async function ensureEncryptionSecret(
       globalEnvCtx ||
       (typeof process !== "undefined" ? process.env : {})
 
-    // 1. 环境变量优先。
-    //    必须与 getEncryptionKey 完全一致，否则会出现「setup 生成随机密钥，
-    //    而后续请求使用环境变量密钥」的分裂：同一份数据被两个密钥加解密，
-    //    已加密的密码永远解不开，表现为「初始化成功但密码不正确」。
+    // 1. 環境變量優先。
+    //    必須與 getEncryptionKey 完全一致，否則會出現「setup 生成隨機密鑰，
+    //    而後續請求使用環境變量密鑰」的分裂：同一份資料被兩個密鑰加解密，
+    //    已加密的密碼永遠解不開，表現為「初始化成功但密碼不正確」。
     const envKey = readEnvEncryptionKey(env)
     if (envKey) return envKey
 
-    // 2. 已存在则复用（存在性门控，永不覆盖）
+    // 2. 已存在則複用（存在性門控，永不覆蓋）
     const existing = await readPersistedSecret(env, ENCRYPTION_SECRET_KV_KEY)
     if (existing && existing.trim().length > 0) {
       cachedEncryptionKey = existing
@@ -1578,7 +1578,7 @@ export async function ensureEncryptionSecret(
       return existing
     }
 
-    // 3. 生成并写入
+    // 3. 生成並寫入
     const generated = generateSecret()
     const ok = await writePersistedSecret(
       env,
@@ -1593,8 +1593,8 @@ export async function ensureEncryptionSecret(
       return null
     }
 
-    // 4. 写后回读校验（关键）：确保密钥已传播，后续请求能读到同一密钥。
-    //    立即设缓存，保证**本实例**后续调用（saveDb 加密）与写入值一致。
+    // 4. 寫後回讀校驗（關鍵）：確保密鑰已傳播，後續請求能讀到同一密鑰。
+    //    立即設快取，保證**本實例**後續調用（saveDb 加密）與寫入值一致。
     cachedEncryptionKey = generated
     cachedFromEnv = false
 
@@ -1608,8 +1608,8 @@ export async function ensureEncryptionSecret(
         )
         return generated
       }
-      // 读到的值不是我们写的那把（可能被并发 setup 覆盖）：说明存在竞态，
-      // 采用「先写入者优先」——复用已存在的密钥，避免用两把钥匙加解密。
+      // 讀到的值不是我們寫的那把（可能被併發 setup 覆蓋）：說明存在競態，
+      // 採用「先寫入者優先」——複用已存在的密鑰，避免用兩把鑰匙加解密。
       if (readBack && readBack.trim().length > 0 && readBack !== generated) {
         console.warn(
           "[DB] A different encryption key already exists; adopting it to " +
@@ -1619,13 +1619,13 @@ export async function ensureEncryptionSecret(
         cachedFromEnv = false
         return readBack
       }
-      // 尚未传播：退避重试
+      // 尚未傳播：退避重試
       await sleep(delay)
       delay = Math.min(delay * 2, SECRET_VERIFY_MAX_MS)
     }
 
-    // 超出重试上限：密钥写入成功但暂时读不回。返回它并让本实例缓存生效，
-    // 但明确告警——此时跨实例的首次登录可能短暂失败，稍后自动恢复。
+    // 超出重試上限：密鑰寫入成功但暫時讀不回。返回它並讓本實例快取生效，
+    // 但明確告警——此時跨實例的首次登入可能短暫失敗，稍後自動恢復。
     console.warn(
       `[DB] Encryption key written but not yet readable after ` +
         `${SECRET_VERIFY_RETRIES} retries. Cross-instance reads may lag ` +
@@ -1637,42 +1637,42 @@ export async function ensureEncryptionSecret(
   try {
     return await ensureSecretInflight
   } finally {
-    // 释放单飞锁：下次调用重新走完整检查（密钥已持久化，会命中步骤 2）
+    // 釋放單飛鎖：下次調用重新走完整檢查（密鑰已持久化，會命中步驟 2）
     ensureSecretInflight = null
   }
 }
 
 /**
- * 「未变化字段跳过重新加密」缓存（纯性能优化，不参与任何功能语义）。
+ * 「未變化欄位跳過重新加密」快取（純性能優化，不參與任何功能語義）。
  *
- * ## 为什么需要
+ * ## 為什麼需要
  *
- * 内存中的库**始终是明文**，而每次 `saveDb`（任何一次配置改动、任何一次 admin
- * 操作）都会把所有敏感字段重新加密一遍。字段没变时这次加密毫无意义：
+ * 記憶體中的庫**始終是明文**，而每次 `saveDb`（任何一次配置改動、任何一次 admin
+ * 操作）都會把所有敏感欄位重新加密一遍。欄位沒變時這次加密毫無意義：
  *
- *   - 用 `aes-256-gcm` 时每字段约 30 µs（WebCrypto 调用开销）；
- *   - 用 `aes-256-gcm-pbkdf2` 时每字段约 27 ms（PBKDF2 10 万次）—— 这才是真痛；
- *   - 用 `des/3des-cbc-hmac` 时每字段约 0.3 ms（纯 JS）。
+ *   - 用 `aes-256-gcm` 時每欄位約 30 µs（WebCrypto 調用開銷）；
+ *   - 用 `aes-256-gcm-pbkdf2` 時每欄位約 27 ms（PBKDF2 10 萬次）—— 這才是真痛；
+ *   - 用 `des/3des-cbc-hmac` 時每欄位約 0.3 ms（純 JS）。
  *
- * load 时我们恰好知道「密文 ↔ 明文」的对应关系，把它记下来，save 时若明文未变、
- * 且算法与密钥都未变，就直接复用原密文，跳过整个密码学运算。
+ * load 時我們恰好知道「密文 ↔ 明文」的對應關係，把它記下來，save 時若明文未變、
+ * 且算法與密鑰都未變，就直接複用原密文，跳過整個密碼學運算。
  *
- * ## 为什么是安全的（无功能风险）
+ * ## 為什麼是安全的（無功能風險）
  *
- * 1. **三重校验**后才复用：`明文相同` + `算法/密钥指纹相同` + `密文算法 == 当前写入算法`。
- *    任一不满足都走正常加密路径 —— 因此「换算法」「关加密」「轮换密钥」「改值」
- *    的行为与不做该优化时**完全一致**（含自动迁移）。
- * 2. 复用只发生在**同一明文、同一密钥、同一算法**下，不会造成 nonce/IV 与
- *    不同明文复用（这是 AEAD 唯一需要避免的禁忌）。
- * 3. 缓存只在进程内、键为字段身份（`users:1:password`），容量有上限；
- *    对同一字段写入不同值时条目会被覆盖，不会读到过期值。
+ * 1. **三重校驗**後才複用：`明文相同` + `算法/密鑰指紋相同` + `密文算法 == 當前寫入算法`。
+ *    任一不滿足都走正常加密路徑 —— 因此「換算法」「關加密」「輪換密鑰」「改值」
+ *    的行為與不做該優化時**完全一致**（含自動遷移）。
+ * 2. 複用只發生在**同一明文、同一密鑰、同一算法**下，不會造成 nonce/IV 與
+ *    不同明文複用（這是 AEAD 唯一需要避免的禁忌）。
+ * 3. 快取只在進程內、鍵為欄位身份（`users:1:password`），容量有上限；
+ *    對同一欄位寫入不同值時條目會被覆蓋，不會讀到過期值。
  */
 interface SealedCacheEntry {
   plain: string
   sealed: string
-  /** 生成该密文时的 fieldCipher 指纹（算法 + 密钥） */
+  /** 生成該密文時的 fieldCipher 指紋（算法 + 密鑰） */
   fp: string
-  /** 生成该密文的算法（必须等于当前写入算法才允许复用） */
+  /** 生成該密文的算法（必須等於當前寫入算法才允許複用） */
   cipher: string
 }
 
@@ -1701,19 +1701,19 @@ function recallSealed(
 ): string | null {
   const hit = sealedCache.get(identity)
   if (!hit) return null
-  if (hit.fp !== fp) return null // 算法或密钥变了 → 必须重新加密
-  if (hit.cipher !== cipher) return null // 密文算法 ≠ 当前写入算法 → 需要迁移
-  if (hit.plain !== plain) return null // 值变了 → 必须重新加密
+  if (hit.fp !== fp) return null // 算法或密鑰變了 → 必須重新加密
+  if (hit.cipher !== cipher) return null // 密文算法 ≠ 當前寫入算法 → 需要遷移
+  if (hit.plain !== plain) return null // 值變了 → 必須重新加密
   return hit.sealed
 }
 
 /**
- * 加密单个字段（`seal`）。
+ * 加密單個欄位（`seal`）。
  *
- * - 未启用加密（fieldCipher 为 null）或未取到密钥：原样返回明文。
- * - 已有任意版本前缀：视为已加密（幂等），避免重复加密 —— 双重加密会在下次读取
- *   时只解开一层、仍然呈现密文，表现为「密码看起来还是乱码」的诡异故障。
- * - 明文未变且算法/密钥未变：复用上次的密文，跳过密码学运算（见 sealedCache）。
+ * - 未啟用加密（fieldCipher 為 null）或未取到密鑰：原樣返回明文。
+ * - 已有任意版本前綴：視為已加密（冪等），避免重複加密 —— 雙重加密會在下次讀取
+ *   時只解開一層、仍然呈現密文，表現為「密碼看起來還是亂碼」的詭異故障。
+ * - 明文未變且算法/密鑰未變：複用上次的密文，跳過密碼學運算（見 sealedCache）。
  */
 async function sealValue(
   value: string,
@@ -1744,10 +1744,10 @@ async function sealValue(
 }
 
 /**
- * 解密单个字段（`unseal`）。
+ * 解密單個欄位（`unseal`）。
  *
- * 算法由**密文前缀**决定，而不是当前 DB_CIPHER —— 这保证了「换算法 / 关加密」
- * 不会让既有密文无法读取。无前缀（明文）直接返回。
+ * 算法由**密文前綴**決定，而不是當前 DB_CIPHER —— 這保證了「換算法 / 關加密」
+ * 不會讓既有密文無法讀取。無前綴（明文）直接返回。
  */
 async function unsealValue(
   value: string,
@@ -1756,8 +1756,8 @@ async function unsealValue(
 ): Promise<string> {
   if (!value || !isSealedCiphertext(value)) return value
   if (!fieldCipher) {
-    // 有密文但拿不到密钥：保持原值，绝不丢数据，但必须显式告警 ——
-    // 否则表现为「密码/凭据看起来是乱码」而无任何线索。
+    // 有密文但拿不到密鑰：保持原值，絕不丟資料，但必須顯式告警 ——
+    // 否則表現為「密碼/憑據看起來是亂碼」而無任何線索。
     if (!unsealKeyWarned) {
       unsealKeyWarned = true
       console.error(
@@ -1771,8 +1771,8 @@ async function unsealValue(
   const hit = detectCipherPrefix(value)
   try {
     const plain = await fieldCipher.decrypt(value)
-    // 只有「密文算法 == 当前写入算法」时才记账：否则一旦复用就等于阻止了
-    // 「读到 v1 → 保存为 v2」这类自动迁移（那是必须发生的）。
+    // 只有「密文算法 == 當前寫入算法」時才記賬：否則一旦複用就等於阻止了
+    // 「讀到 v1 → 保存為 v2」這類自動遷移（那是必須發生的）。
     if (hit && hit.cipher === fieldCipher.cipher) {
       rememberSealed(
         identity,
@@ -1793,10 +1793,10 @@ async function unsealValue(
 }
 
 /**
- * 数据中是否存在本模块产生的密文（任意版本）。
+ * 資料中是否存在本模塊產生的密文（任意版本）。
  *
- * 用途：`DB_CIPHER=none` 且数据全为明文时，加载路径**完全不需要**解析密钥 ——
- * 既能避免一次额外的持久化读取，也避免误报「缺少加密密钥」。
+ * 用途：`DB_CIPHER=none` 且資料全為明文時，加載路徑**完全不需要**解析密鑰 ——
+ * 既能避免一次額外的持久化讀取，也避免誤報「缺少加密密鑰」。
  */
 function hasSealedValues(data: any): boolean {
   if (!data) return false
@@ -1824,13 +1824,13 @@ function hasSealedValues(data: any): boolean {
 }
 
 /**
- * 依据 `DB_CIPHER` 与共享密钥构造字段加解密器（一次 save / load 复用一个实例）。
+ * 依據 `DB_CIPHER` 與共享密鑰構造欄位加解密器（一次 save / load 複用一個實例）。
  *
- * @param opts.needDecrypt 读取路径专用：即使当前 `DB_CIPHER=none`，只要数据里存在
- *        历史密文（`enc:vN:`）就仍然需要密钥去解开它 —— 这正是「关掉加密后旧数据
- *        依旧可读、并在下次保存时自动转为明文」所依赖的分支。
- *        此时返回的对象写入算法是 `none`（seal 侧本就不会调用它）。
- * @returns null 表示「不需要加密/解密」或「需要但拿不到密钥」。后者由调用方告警。
+ * @param opts.needDecrypt 讀取路徑專用：即使當前 `DB_CIPHER=none`，只要資料裡存在
+ *        歷史密文（`enc:vN:`）就仍然需要密鑰去解開它 —— 這正是「關掉加密後舊資料
+ *        依舊可讀、並在下次保存時自動轉為明文」所依賴的分支。
+ *        此時返回的對象寫入算法是 `none`（seal 側本就不會調用它）。
+ * @returns null 表示「不需要加密/解密」或「需要但拿不到密鑰」。後者由調用方告警。
  */
 async function resolveFieldCipher(
   env: any,
@@ -1847,23 +1847,23 @@ async function sealDb(
   data: any,
   fieldCipher: FieldCipher | null,
 ): Promise<any> {
-  // 未启用加密：原样落盘（不做无意义的复制）
+  // 未啟用加密：原樣落盤（不做無意義的複製）
   if (!fieldCipher || fieldCipher.cipher === "none" || !data) return data
 
-  // ── 写时复制（copy-on-write）而不是整库 JSON 深拷贝 ──
+  // ── 寫時複製（copy-on-write）而不是整庫 JSON 深拷貝 ──
   //
-  // 历史实现每次落盘前都 `JSON.parse(JSON.stringify(data))`：把**整个配置**
-  // （含大量与敏感字段无关的数据）序列化再反序列化一遍，大配置下是纯开销。
-  // 这里只在「某个字段确实被修改」时才复制它所属的数组/实体；同时用展开运算符
-  // 保持键顺序，落盘结果与深拷贝版本逐字节一致。
+  // 歷史實現每次落盤前都 `JSON.parse(JSON.stringify(data))`：把**整個配置**
+  // （含大量與敏感欄位無關的資料）序列化再反序列化一遍，大配置下是純開銷。
+  // 這裡只在「某個欄位確實被修改」時才複製它所屬的數組/實體；同時用展開運算符
+  // 保持鍵順序，落盤結果與深拷貝版本逐字節一致。
   //
-  // 密钥派生由 fieldCipher 内部完成并缓存（见 crypto.ts 的 cachedDerive），
-  // 每个字段仍然各自使用独立随机 IV。
+  // 密鑰派生由 fieldCipher 內部完成並快取（見 crypto.ts 的 cachedDerive），
+  // 每個欄位仍然各自使用獨立隨機 IV。
   let storagesOut: any[] | undefined
   let settingsOut: any[] | undefined
   let usersOut: any[] | undefined
 
-  // 1. 存储配置中的 addition 字段（网盘凭据）
+  // 1. 儲存配置中的 addition 欄位（網盤憑據）
   const srcStorages: any[] = Array.isArray(data.storages) ? data.storages : []
   for (let i = 0; i < srcStorages.length; i++) {
     const s = srcStorages[i]
@@ -1881,7 +1881,7 @@ async function sealDb(
     storagesOut![i] = { ...s, addition: sealed }
   }
 
-  // 2. 敏感的系统设置
+  // 2. 敏感的系統設置
   const srcSettings: any[] = Array.isArray(data.settings) ? data.settings : []
   for (let i = 0; i < srcSettings.length; i++) {
     const st = srcSettings[i]
@@ -1896,13 +1896,13 @@ async function sealDb(
     settingsOut![i] = { ...st, value: sealed }
   }
 
-  // 3. 用户敏感信息（OTP 密钥 / 密码）
+  // 3. 用戶敏感信息（OTP 密鑰 / 密碼）
   const srcUsers: any[] = Array.isArray(data.users) ? data.users : []
   for (let i = 0; i < srcUsers.length; i++) {
     const u = srcUsers[i]
     if (!u) continue
     let next = u
-    // OTP 密钥
+    // OTP 密鑰
     if (u.otp_secret) {
       const sealed = await sealValue(
         String(u.otp_secret),
@@ -1911,7 +1911,7 @@ async function sealDb(
       )
       if (sealed !== u.otp_secret) next = { ...next, otp_secret: sealed }
     }
-    // 密码二次加密（defense-in-depth，即使已哈希也加密存储）
+    // 密碼二次加密（defense-in-depth，即使已哈希也加密儲存）
     if (u.password) {
       const sealed = await sealValue(
         String(u.password),
@@ -1926,7 +1926,7 @@ async function sealDb(
     }
   }
 
-  // 没有任何字段被修改：直接复用原对象（与深拷贝版本落盘结果一致）
+  // 沒有任何欄位被修改：直接複用原對象（與深拷貝版本落盤結果一致）
   if (!storagesOut && !settingsOut && !usersOut) return data
 
   const out: any = { ...data }
@@ -1937,10 +1937,10 @@ async function sealDb(
 }
 
 /**
- * 解密并发上限。
+ * 解密併發上限。
  *
- * v2/v3 密文只需一次快速密钥派生；旧 v1 密文仍需 PBKDF2（10 万次迭代），并在
- * 下次保存时自动迁移。限制并发可避免旧数据字段很多时产生 CPU/内存峰值。
+ * v2/v3 密文只需一次快速密鑰派生；舊 v1 密文仍需 PBKDF2（10 萬次迭代），並在
+ * 下次保存時自動遷移。限制併發可避免舊資料欄位很多時產生 CPU/記憶體峰值。
  */
 const UNSEAL_CONCURRENCY = 16
 
@@ -1950,20 +1950,20 @@ async function unsealDb(
 ): Promise<void> {
   if (!fieldCipher || !data) return
 
-  // 并行解密（带并发上限）：
+  // 並行解密（帶併發上限）：
   //
-  // 原先三类字段（storage/setting/user）各自串行 await，旧 v1 字段一多就是
-  // 「N 次 PBKDF2（10 万次迭代）」叠加，且该函数在一次请求内会被调用多次
-  // （历史缺陷下更是数十次），是加载变慢的主要贡献之一。
+  // 原先三類欄位（storage/setting/user）各自串行 await，舊 v1 欄位一多就是
+  // 「N 次 PBKDF2（10 萬次迭代）」疊加，且該函數在一次請求內會被調用多次
+  // （歷史缺陷下更是數十次），是加載變慢的主要貢獻之一。
   //
-  // 这里先**同步收集 thunk**（不在收集阶段就把解密全部发起），再按
-  // UNSEAL_CONCURRENCY 分批 await：既拿到并行带来的墙钟收益，又避免字段极多
-  // （如数千用户）时一次性并发过多造成 CPU/内存峰值。
+  // 這裡先**同步收集 thunk**（不在收集階段就把解密全部發起），再按
+  // UNSEAL_CONCURRENCY 分批 await：既拿到並行帶來的牆鍾收益，又避免欄位極多
+  // （如數千用戶）時一次性併發過多造成 CPU/記憶體峰值。
   //
-  // 密钥派生（v2 的 HKDF）由 fieldCipher 内部缓存，本次加载只发生一次。
+  // 密鑰派生（v2 的 HKDF）由 fieldCipher 內部快取，本次加載只發生一次。
   const tasks: Array<() => Promise<void>> = []
 
-  // 1. 解密存储配置（算法由密文前缀决定，与当前 DB_CIPHER 无关）
+  // 1. 解密儲存配置（算法由密文前綴決定，與當前 DB_CIPHER 無關）
   const srcStorages: any[] = Array.isArray(data.storages) ? data.storages : []
   for (let i = 0; i < srcStorages.length; i++) {
     const s = srcStorages[i]
@@ -1977,7 +1977,7 @@ async function unsealDb(
     }
   }
 
-  // 2. 解密系统设置
+  // 2. 解密系統設置
   const srcSettings: any[] = Array.isArray(data.settings) ? data.settings : []
   for (let i = 0; i < srcSettings.length; i++) {
     const st = srcSettings[i]
@@ -1996,12 +1996,12 @@ async function unsealDb(
     }
   }
 
-  // 3. 解密用户信息（OTP 密钥 / 密码）
+  // 3. 解密用戶信息（OTP 密鑰 / 密碼）
   const srcUsers: any[] = Array.isArray(data.users) ? data.users : []
   for (let i = 0; i < srcUsers.length; i++) {
     const u = srcUsers[i]
     if (!u) continue
-    // OTP 密钥
+    // OTP 密鑰
     if (typeof u.otp_secret === "string" && isSealedCiphertext(u.otp_secret)) {
       const target = u
       const sealedValue = target.otp_secret
@@ -2010,7 +2010,7 @@ async function unsealDb(
         target.otp_secret = await unsealValue(sealedValue, fieldCipher, identity)
       })
     }
-    // 密码解密
+    // 密碼解密
     if (typeof u.password === "string" && isSealedCiphertext(u.password)) {
       const target = u
       const sealedValue = target.password
@@ -2037,19 +2037,19 @@ export const saveDb = async (
 
   const activeEnv = envCtx || globalEnvCtx
 
-  // ============ 写前守卫：永远不得以「空数据」覆盖持久化配置 ============
+  // ============ 寫前守衛：永遠不得以「空資料」覆蓋持久化配置 ============
   //
-  // 历史缺陷链路：读取失败被吞掉 → 回退到默认（空）库 → 后续任意写操作把它
-  // 落盘，真实配置被空壳覆盖，系统随后被判为「未初始化」，用户看到的就是
-  // 「数据库被清空」。
+  // 歷史缺陷鏈路：讀取失敗被吞掉 → 回退到默認（空）庫 → 後續任意寫操作把它
+  // 落盤，真實配置被空殼覆蓋，系統隨後被判為「未初始化」，用戶看到的就是
+  // 「資料庫被清空」。
   //
-  // 核心不变量（务必长期保持）：
-  //   **默认拒绝写入空壳。** 空壳 = 没有任何存储/分享/元数据/插件，没有设置
-  //   密码的用户，且所有设置都还是默认值。无论当前是否「可信」，只要 payload
-  //   是空壳，就必须显式 force 才允许落盘。
+  // 核心不變量（務必長期保持）：
+  //   **默認拒絕寫入空殼。** 空殼 = 沒有任何儲存/分享/元資料/插件，沒有設置
+  //   密碼的用戶，且所有設置都還是默認值。無論當前是否「可信」，只要 payload
+  //   是空殼，就必須顯式 force 才允許落盤。
   //
-  // 这样即使某条调用链在读取失败后拿到默认库，也无法把它写回存储。
-  // 唯一的例外是调用方明确知情（首次初始化、管理员主动重置）并传入 force。
+  // 這樣即使某條調用鏈在讀取失敗後拿到默認庫，也無法把它寫回儲存。
+  // 唯一的例外是調用方明確知情（首次初始化、管理員主動重置）並傳入 force。
   const shell = isDbShell(data)
   if (shell && !options?.force) {
     dbWriteBlocked = true
@@ -2070,13 +2070,13 @@ export const saveDb = async (
   dbWriteBlocked = false
   // Refresh the request cache so any getDb() later in this request observes
   // the write rather than a pre-write snapshot.
-  // 无参调用会以 globalEnvCtx 为键命中缓存，因此这里也同步刷新该键，
-  // 否则「写后读」在无参路径上可能读到 TTL 内的旧快照。
+  // 無參調用會以 globalEnvCtx 為鍵命中快取，因此這裡也同步刷新該鍵，
+  // 否則「寫後讀」在無參路徑上可能讀到 TTL 內的舊快照。
   const cacheKey = envCtx || resolveNoArgKey()
   if (cacheKey) dbCache.set(cacheKey, { ts: Date.now(), db: data })
 
-  // `activeEnv` 已在本函数开头解析（写前守卫也依赖它），这里只需通过可注入的
-  // storeBackendLoader 取后端，便于测试统计 load/save 次数。
+  // `activeEnv` 已在本函數開頭解析（寫前守衛也依賴它），這裡只需通過可注入的
+  // storeBackendLoader 取後端，便於測試統計 load/save 次數。
   const backend = await storeBackendLoader(activeEnv)
   const configured = backend.isConfigured
     ? await backend.isConfigured(activeEnv)
@@ -2091,15 +2091,15 @@ export const saveDb = async (
   }
 
   try {
-    // 落盘前对敏感字段做静态加密（可选，见 DB_CIPHER），内存中的 data 保持明文。
-    // cipher=none（默认）时直接按明文落盘，不解析密钥（也不需要密钥）。
+    // 落盤前對敏感欄位做靜態加密（可選，見 DB_CIPHER），記憶體中的 data 保持明文。
+    // cipher=none（默認）時直接按明文落盤，不解析密鑰（也不需要密鑰）。
     const cipher = readCipher(activeEnv)
     console.log(
       `[DB] saveDb: cipher=${cipher}, persisting to ${backend.name}, storages=${data.storages?.length || 0}`,
     )
     const fieldCipher = cipher === "none" ? null : await resolveFieldCipher(activeEnv)
     if (cipher !== "none" && !fieldCipher && !sealKeyMissingWarned) {
-      // 只在首次告警：密钥缺失会持续到密钥可用为止，逐次写入都打印只会刷屏。
+      // 只在首次告警：密鑰缺失會持續到密鑰可用為止，逐次寫入都打印只會刷屏。
       sealKeyMissingWarned = true
       console.error(
         `[DB] DB_CIPHER=${cipher} but no encryption key is available; ` +
@@ -2125,8 +2125,8 @@ export const saveDb = async (
     `[DB] Successfully persisted ${data.storages?.length || 0} storages to ${backend.name}`,
   )
 
-  // 写入成功 = 存储中的内容与内存库一致，因此内存库现在可视为可信；
-  // 这样同一 isolate 后续的写入不会被守卫误拦。
+  // 寫入成功 = 儲存中的內容與記憶體庫一致，因此記憶體庫現在可視為可信；
+  // 這樣同一 isolate 後續的寫入不會被守衛誤攔。
   dbTrusted = true
   dbLastLoadError = null
   return true
@@ -2135,23 +2135,23 @@ export const saveDb = async (
 export async function resolvePath(virtualPath: string, envCtx?: any) {
   const db = await getDb(envCtx)
 
-  // ============ 路径遍历防护增强 (2026-09-08) ============
-  // 1. URL 解码（防止 %2e%2e 等编码绕过）
+  // ============ 路徑遍歷防護增強 (2026-09-08) ============
+  // 1. URL 解碼（防止 %2e%2e 等編碼繞過）
   let path = virtualPath
   try {
     path = decodeURIComponent(String(path || ""))
   } catch {
-    // 解码失败，使用原始值
+    // 解碼失敗，使用原始值
   }
 
-  // 2. 多重解码检测（防止双重编码绕过）
+  // 2. 多重解碼檢測（防止雙重編碼繞過）
   let prevPath = ""
   let decodeAttempts = 0
   while (path !== prevPath && decodeAttempts < 3) {
     prevPath = path
     try {
       const decoded = decodeURIComponent(path)
-      if (decoded === path) break // 没有更多编码
+      if (decoded === path) break // 沒有更多編碼
       path = decoded
       decodeAttempts++
     } catch {
@@ -2159,15 +2159,15 @@ export async function resolvePath(virtualPath: string, envCtx?: any) {
     }
   }
 
-  // 3. 规范化路径分隔符和特殊字符
+  // 3. 規範化路徑分隔符和特殊字符
   path = path
-    .replace(/\\/g, "/") // 反斜杠 -> 正斜杠
-    .replace(/%5c/gi, "/") // URL 编码的反斜杠
-    .replace(/%2f/gi, "/") // URL 编码的正斜杠
-    .replace(/\.{3,}/g, "..") // 多个点规范化为 ..
-    .replace(/\/+/g, "/") // 多个斜杠合并为一个
+    .replace(/\\/g, "/") // 反斜槓 -> 正斜槓
+    .replace(/%5c/gi, "/") // URL 編碼的反斜槓
+    .replace(/%2f/gi, "/") // URL 編碼的正斜槓
+    .replace(/\.{3,}/g, "..") // 多個點規範化為 ..
+    .replace(/\/+/g, "/") // 多個斜槓合併為一個
 
-  // 4. 检测非法字符
+  // 4. 檢測非法字符
   const illegalChars = ["\0", "\r", "\n", "\t"]
   for (const ch of illegalChars) {
     if (path.includes(ch)) {
@@ -2177,12 +2177,12 @@ export async function resolvePath(virtualPath: string, envCtx?: any) {
     }
   }
 
-  // 5. Windows 绝对路径检测
+  // 5. Windows 絕對路徑檢測
   if (/^[A-Za-z]:/.test(path)) {
     throw new Error("invalid path: absolute Windows path not allowed")
   }
 
-  // 6. UNC 路径检测
+  // 6. UNC 路徑檢測
   if (path.startsWith("//") || path.startsWith("\\\\")) {
     throw new Error("invalid path: UNC path not allowed")
   }
@@ -2282,9 +2282,9 @@ export async function resolvePath(virtualPath: string, envCtx?: any) {
         throw new Error("path traversal blocked: escapes storage root")
       }
 
-      // FIX(H-4): 即使 rootFolder 为 "/"（无限制）从而跳过了上面的 containment
-      // 校验，最终物理路径也绝不允许出现 ".." 段。这堵住了「root 挂载的存储
-      // 依赖 cleanPath 钳制、而 root_folder_path 本身可能携带 .. 」的纵深缺口。
+      // FIX(H-4): 即使 rootFolder 為 "/"（無限制）從而跳過了上面的 containment
+      // 校驗，最終物理路徑也絕不允許出現 ".." 段。這堵住了「root 掛載的儲存
+      // 依賴 cleanPath 鉗制、而 root_folder_path 本身可能攜帶 .. 」的縱深缺口。
       if (physicalPath.split("/").includes("..")) {
         throw new Error("path traversal blocked: illegal '..' segment")
       }

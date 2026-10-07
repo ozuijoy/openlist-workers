@@ -1,10 +1,10 @@
-// UrlTree driver — 从 url_structure 文本构建虚拟文件树，文件内容为 URL 直链
+// UrlTree driver — 從 url_structure 文本構建虛擬文件樹，文件內容為 URL 直鏈
 // 移植自 OpenList Go 版 drivers/url_tree。
 //
-// 文本结构（每行缩进 2 空格表示一级）：
+// 文本結構（每行縮進 2 空格表示一級）：
 //   FolderName:
 //     [FileName:][FileSize:][Modified:]Url
-// 无名称时用 URL 最后一段作为文件名。
+// 無名稱時用 URL 最後一段作為文件名。
 import {
   StorageDriver,
   FileItem,
@@ -14,7 +14,7 @@ import { sortFileItems } from "../../internal/driver/sort"
 import { assertSafeUrl } from "../../pkg/http"
 import { UrlTreeAddition, UrlTreeNode } from "./types"
 
-// ---- 树构建 ----
+// ---- 樹構建 ----
 
 function parseFileLine(line: string): UrlTreeNode {
   const httpIdx = line.indexOf("http://")
@@ -61,7 +61,7 @@ function parseFileLine(line: string): UrlTreeNode {
       }
     }
   } else {
-    // 无名称：用 URL 最后一段
+    // 無名稱：用 URL 最後一段
     const u = new URL(url)
     const segs = u.pathname.split("/").filter(Boolean)
     node.name = segs[segs.length - 1] || url
@@ -89,7 +89,7 @@ function buildTree(text: string): UrlTreeNode {
     const level = indent / 2
     const line = rawLine.slice(indent).trim()
     if (!line) continue
-    // 回退到父级
+    // 回退到父級
     while (level <= stack[stack.length - 1].level) {
       stack.pop()
     }
@@ -181,7 +181,7 @@ async function getSizeFromUrl(url: string): Promise<number> {
   }
 }
 
-// ---- 驱动 ----
+// ---- 驅動 ----
 
 export class UrlTreeDriver implements StorageDriver {
   private addition: UrlTreeAddition
@@ -351,7 +351,7 @@ export class UrlTreeDriver implements StorageDriver {
 
   async put(_v: string, physicalPath: string, content: Buffer): Promise<void> {
     if (!this.addition.writable) throw new Error("[UrlTree] not writable")
-    // put 的内容应是一行 URL 定义（name:url）
+    // put 的內容應是一行 URL 定義（name:url）
     const line = content.toString("utf8").trim()
     const parent = getNodeByPath(
       this.root,

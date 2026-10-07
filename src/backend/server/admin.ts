@@ -21,8 +21,8 @@ import {
 export const adminRouter = new Hono()
 
 adminRouter.use("*", async (c, next) => {
-  // 统一走 checkAdminAuth：静态 API token（settings.token）与 JWT 管理员
-  // （role===2 且 DB 中存在未禁用用户）都视为管理员。
+  // 統一走 checkAdminAuth：靜態 API token（settings.token）與 JWT 管理員
+  // （role===2 且 DB 中存在未禁用用戶）都視為管理員。
   const isAdmin = await checkAdminAuth(c)
   if (!isAdmin) {
     return c.json({ code: 401, message: "Unauthorized", data: null })
@@ -30,7 +30,7 @@ adminRouter.use("*", async (c, next) => {
   await next()
 })
 
-// 生成密码学安全的随机 token（替代 Math.random）
+// 生成密碼學安全的隨機 token（替代 Math.random）
 function generateSecureToken(length = 32): string {
   const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
   const bytes = new Uint8Array(length)
@@ -40,7 +40,7 @@ function generateSecureToken(length = 32): string {
   ) {
     crypto.getRandomValues(bytes)
   } else {
-    // 极端兜底（几乎不会走到）：混入时间戳降低可预测性
+    // 極端兜底（幾乎不會走到）：混入時間戳降低可預測性
     for (let i = 0; i < length; i++) {
       bytes[i] = ((Math.random() * 256) | 0) ^ (Date.now() & 0xff)
     }
@@ -54,8 +54,8 @@ function generateSecureToken(length = 32): string {
 
 adminRouter.get("/storage/list", async (c) => {
   const db = await getDb(c.env)
-  // 排序对齐 Go internal/db.GetStorages（addStorageOrder = `order, id`）：
-  // 后台存储列表按「序号」升序、同序号按 id 升序，此前是按数组原始顺序返回。
+  // 排序對齊 Go internal/db.GetStorages（addStorageOrder = `order, id`）：
+  // 後台儲存列表按「序號」升序、同序號按 id 升序，此前是按數組原始順序返回。
   const content = [...(db.storages || [])].sort((a: any, b: any) => {
     const orderA = Number(a.order) || 0
     const orderB = Number(b.order) || 0
@@ -239,8 +239,8 @@ adminRouter.post("/storage/create", async (c) => {
     )
   }
 
-  // mount_path 为空时用驱动配置的 default_mount_path 兜底，
-  // 避免空路径被规范化成 "/" 而与根挂载冲突
+  // mount_path 為空時用驅動配置的 default_mount_path 兜底，
+  // 避免空路徑被規範化成 "/" 而與根掛載衝突
   let rawMount = body.mount_path
   if (!rawMount || String(rawMount).trim() === "") {
     const fallbackMount =
@@ -288,12 +288,12 @@ adminRouter.post("/storage/create", async (c) => {
     modified: new Date().toISOString(),
   }
 
-  // 先保存配置到 KV（防止网盘连接超时导致配置丢失）
+  // 先保存配置到 KV（防止網盤連接超時導致配置丟失）
   db.storages.push(newStorage)
   try {
     await saveDb(db, c.env)
   } catch (saveErr: any) {
-    // KV 写入失败：回滚内存状态，返回明确错误
+    // KV 寫入失敗：回滾記憶體狀態，返回明確錯誤
     db.storages.pop()
     return c.json({
       code: 500,
@@ -302,7 +302,7 @@ adminRouter.post("/storage/create", async (c) => {
     })
   }
 
-  // 再尝试连接远程网盘（不重复 init，getDriver 内部已经 init 过）
+  // 再嘗試連接遠程網盤（不重複 init，getDriver 內部已經 init 過）
   if (!newStorage.disabled) {
     try {
       await getDriver(newStorage.driver, newStorage)
@@ -313,7 +313,7 @@ adminRouter.post("/storage/create", async (c) => {
       if (String(e.message || e).includes("unsupported driver")) {
         newStorage.disabled = true
       }
-      // 更新状态并重新保存
+      // 更新狀態並重新保存
       try {
         await saveDb(db, c.env)
       } catch (saveErr: any) {
@@ -321,7 +321,7 @@ adminRouter.post("/storage/create", async (c) => {
           "[admin/storage/create] Failed to update storage status:",
           saveErr,
         )
-        // 状态更新失败不影响主流程，继续返回
+        // 狀態更新失敗不影響主流程，繼續返回
       }
       return c.json({
         code: 500,
@@ -329,7 +329,7 @@ adminRouter.post("/storage/create", async (c) => {
         data: newStorage,
       })
     }
-    // 连接成功，更新状态
+    // 連接成功，更新狀態
     try {
       await saveDb(db, c.env)
     } catch (saveErr: any) {
@@ -337,7 +337,7 @@ adminRouter.post("/storage/create", async (c) => {
         "[admin/storage/create] Failed to update storage status after connection:",
         saveErr,
       )
-      // 已经连接成功，状态更新失败不影响用户，继续返回成功
+      // 已經連接成功，狀態更新失敗不影響用戶，繼續返回成功
     }
   }
 
@@ -348,7 +348,7 @@ adminRouter.post("/storage/update", async (c) => {
   const body = await c.req.json().catch(() => ({}))
   const db = await getDb(c.env)
 
-  // 与 create 保持一致：空路径用 default_mount_path 兜底
+  // 與 create 保持一致：空路徑用 default_mount_path 兜底
   let rawMount = body.mount_path
   if (!rawMount || String(rawMount).trim() === "") {
     const fallbackMount =
@@ -448,9 +448,9 @@ adminRouter.post("/storage/enable", async (c) => {
     s.disabled = false
     s.modified = new Date().toISOString()
     await saveDb(db, c.env)
-    // 异步初始化驱动（不阻塞响应）：启用多个云盘时立即返回，
-    // 初始化完成后更新状态；失败时把错误写入 status，下次访问或
-    // 重新加载时会再次尝试。
+    // 非同步初始化驅動（不阻塞響應）：啟用多個雲盤時立即返回，
+    // 初始化完成後更新狀態；失敗時把錯誤寫入 status，下次訪問或
+    // 重新加載時會再次嘗試。
     ;(async () => {
       try {
         await getDriver(s.driver, s)
@@ -565,13 +565,13 @@ const BASE_FIELDS = [
     type: "number",
     default: "30",
     required: false,
-    help: "目录内容缓存时长（分钟）",
+    help: "目錄內容快取時長（分鐘）",
   },
 ]
 
 /**
- * 路径级缓存覆盖（对齐 Go model.Storage.CustomCachePolicies）。
- * 支持 JSON 数组：[{"path":"/photos/*","cache_expiration":1440}]
+ * 路徑級快取覆蓋（對齊 Go model.Storage.CustomCachePolicies）。
+ * 支持 JSON 數組：[{"path":"/photos/*","cache_expiration":1440}]
  * 或映射形式：{"/photos/*": 1440}
  */
 const CUSTOM_CACHE_POLICIES_FIELD = {
@@ -579,10 +579,10 @@ const CUSTOM_CACHE_POLICIES_FIELD = {
   type: "text",
   default: "",
   required: false,
-  help: '按路径覆盖缓存时长，JSON 格式，如 [{"path":"/photos/*","cache_expiration":1440}]',
+  help: '按路徑覆蓋快取時長，JSON 格式，如 [{"path":"/photos/*","cache_expiration":1440}]',
 }
 
-/** 存储级签名开关（对齐 Go common.IsStorageSignEnabled） */
+/** 儲存級簽名開關（對齊 Go common.IsStorageSignEnabled） */
 const ENABLE_SIGN_FIELD = {
   name: "enable_sign",
   type: "bool",
@@ -591,7 +591,7 @@ const ENABLE_SIGN_FIELD = {
   help: "Enable signature validation for this storage",
 }
 
-/** 禁止目录列表（对齐 Go model.Storage.DisableIndex） */
+/** 禁止目錄列表（對齊 Go model.Storage.DisableIndex） */
 const DISABLE_INDEX_FIELD = {
   name: "disable_index",
   type: "bool",
@@ -601,10 +601,10 @@ const DISABLE_INDEX_FIELD = {
 }
 
 /**
- * proxy_range（对齐 Go op/driver.go）：仅对声明了 ProxyRangeOption 的驱动开放。
+ * proxy_range（對齊 Go op/driver.go）：僅對聲明瞭 ProxyRangeOption 的驅動開放。
  *
- * 默认 true：透传客户端 Range 是默认行为（Go 的透明代理本就转发客户端请求头，
- * 见 internal/net/serve.go 的 ProcessHeader），该字段只在需要显式关闭时使用。
+ * 默認 true：透傳客戶端 Range 是默認行為（Go 的透明代理本就轉發客戶端請求頭，
+ * 見 internal/net/serve.go 的 ProcessHeader），該欄位只在需要顯式關閉時使用。
  */
 function buildProxyRangeField() {
   return {
@@ -632,16 +632,16 @@ const WEBDAV_POLICY_FIELD = {
 }
 
 /**
- * 按 Go internal/op/driver.go 的规则构造代理相关表单项。
+ * 按 Go internal/op/driver.go 的規則構造代理相關表單項。
  *
- * 驱动能力（MustProxy / PreferProxy / ProxyRangeOption）**全部**由
- * internal/driver/proxy.ts 派生——那里是驱动能力表的唯一真相（对齐
- * Go drivers 各驱动的 meta.go）。admin.ts 不再维护第二份 only_proxy/prefer 清单，
- * 避免两处各自演化后与运行时决策不一致。
+ * 驅動能力（MustProxy / PreferProxy / ProxyRangeOption）**全部**由
+ * internal/driver/proxy.ts 派生——那裡是驅動能力表的唯一真相（對齊
+ * Go drivers 各驅動的 meta.go）。admin.ts 不再維護第二份 only_proxy/prefer 清單，
+ * 避免兩處各自演化後與運行時決策不一致。
  *
- *   - MustProxy()   ：无 web_proxy / down_proxy_url，策略仅 use_proxy_url | native_proxy
- *   - DefaultProxy()：web_proxy 默认 true、策略默认 native_proxy（PreferProxy 驱动）
- *   - 其余          ：web_proxy 默认 false、策略默认 302_redirect
+ *   - MustProxy()   ：無 web_proxy / down_proxy_url，策略僅 use_proxy_url | native_proxy
+ *   - DefaultProxy()：web_proxy 默認 true、策略默認 native_proxy（PreferProxy 驅動）
+ *   - 其餘          ：web_proxy 默認 false、策略默認 302_redirect
  */
 function buildProxyFields(driverKey = "") {
   const normKey = normalizeDriverName(driverKey)
@@ -681,13 +681,13 @@ const SEED_POLICY_FIELD = {
   help: "Override automatic transfer-seed generation for this storage",
 }
 
-/** 对齐 Go：down_proxy_url 对所有非 MustProxy 驱动开放；MustProxy 驱动不需要 */
+/** 對齊 Go：down_proxy_url 對所有非 MustProxy 驅動開放；MustProxy 驅動不需要 */
 const DOWN_PROXY_URL_FIELD = {
   name: "down_proxy_url",
   type: "string",
   default: "",
   required: false,
-  help: "自定义下载代理地址（支持 $path 占位符；留空则用本服务代理）",
+  help: "自定義下載代理地址（支持 $path 佔位符；留空則用本服務代理）",
 }
 
 const DISABLE_PROXY_SIGN_FIELD = {
@@ -788,8 +788,8 @@ const driverConfigs: Record<string, any> = {
   Onedrive: {
     name: "Onedrive",
     default_mount_path: "/onedrive",
-    // 对齐 Go drivers/onedrive/meta.go：无 MustProxy/PreferProxy，
-    // webdav_policy 默认 302_redirect（OneDrive 默认走直链）。
+    // 對齊 Go drivers/onedrive/meta.go：無 MustProxy/PreferProxy，
+    // webdav_policy 默認 302_redirect（OneDrive 默認走直鏈）。
     common: [
       ...BASE_FIELDS,
       CUSTOM_CACHE_POLICIES_FIELD,
@@ -892,7 +892,7 @@ const driverConfigs: Record<string, any> = {
   OnedriveAPP: {
     name: "OnedriveAPP",
     default_mount_path: "/onedrive_app",
-    // 同 Onedrive：默认 302_redirect
+    // 同 Onedrive：默認 302_redirect
     common: [
       ...BASE_FIELDS,
       CUSTOM_CACHE_POLICIES_FIELD,
@@ -1102,7 +1102,7 @@ const driverConfigs: Record<string, any> = {
   "123Pan": {
     name: "123Pan",
     default_mount_path: "/123",
-    // 对齐 Go drivers/123/meta.go：只有 PreferProxy（无 OnlyProxy）
+    // 對齊 Go drivers/123/meta.go：只有 PreferProxy（無 OnlyProxy）
     common: [
       ...BASE_FIELDS,
       CUSTOM_CACHE_POLICIES_FIELD,
@@ -1130,14 +1130,14 @@ const driverConfigs: Record<string, any> = {
         type: "string",
         default: "",
         required: false,
-        help: "登录令牌（可选，自动持久化，无需手动填写）。仅需填写上方 123 网盘手机号和密码，登录后自动获取并保存，跳过重复登录可避免境外 IP 触发风控。",
+        help: "登入令牌（可選，自動持久化，無需手動填寫）。僅需填寫上方 123 網盤手機號和密碼，登入後自動獲取並保存，跳過重複登入可避免境外 IP 觸發風控。",
       },
       {
         name: "cookie",
         type: "text",
         default: "",
         required: false,
-        help: "浏览器 Cookie（可选）。在 123 网盘网页登录后，从开发者工具复制请求头中的 Cookie 整串粘贴于此（含 sso-token），或从 Authorization: Bearer <token> 中复制 token/Bearer 值。解析出的 JWT 会作为 Bearer 令牌使用，效果等同访问令牌，适合账号密码登录被风控拦截的环境。",
+        help: "瀏覽器 Cookie（可選）。在 123 網盤網頁登入後，從開發者工具複製請求頭中的 Cookie 整串粘貼於此（含 sso-token），或從 Authorization: Bearer <token> 中複製 token/Bearer 值。解析出的 JWT 會作為 Bearer 令牌使用，效果等同訪問令牌，適合賬號密碼登入被風控攔截的環境。",
       },
       {
         name: "root_id",
@@ -1188,7 +1188,7 @@ const driverConfigs: Record<string, any> = {
   BaiduNetdisk: {
     name: "BaiduNetdisk",
     default_mount_path: "/baidu",
-    // 对齐 Go drivers/baidu_netdisk/meta.go：只有 PreferProxy（无 OnlyProxy）
+    // 對齊 Go drivers/baidu_netdisk/meta.go：只有 PreferProxy（無 OnlyProxy）
     common: [
       ...BASE_FIELDS,
       CUSTOM_CACHE_POLICIES_FIELD,
@@ -1211,14 +1211,14 @@ const driverConfigs: Record<string, any> = {
         type: "string",
         default: "",
         required: true,
-        help: "访问令牌（必填）。通过 https://api.oplist.org/ 获取。若令牌失效，挂载时会自动根据 refresh_token 通过在线 API 换新并持久化。",
+        help: "訪問令牌（必填）。通過 https://api.oplist.org/ 獲取。若令牌失效，掛載時會自動根據 refresh_token 通過在線 API 換新並持久化。",
       },
       {
         name: "use_online_api",
         type: "bool",
         default: "true",
         required: false,
-        help: "使用在线 API 刷新 token（无需 ClientID/ClientSecret）",
+        help: "使用在線 API 刷新 token（無需 ClientID/ClientSecret）",
       },
       {
         name: "api_url_address",
@@ -1326,7 +1326,7 @@ const driverConfigs: Record<string, any> = {
   "115Open": {
     name: "115Open",
     default_mount_path: "/115",
-    // 对齐 Go drivers/115_open/meta.go：OnlyProxy（无 302 选项）
+    // 對齊 Go drivers/115_open/meta.go：OnlyProxy（無 302 選項）
     common: [
       ...BASE_FIELDS,
       CUSTOM_CACHE_POLICIES_FIELD,
@@ -1342,21 +1342,21 @@ const driverConfigs: Record<string, any> = {
         type: "string",
         default: "",
         required: true,
-        help: "访问令牌（必填）。通过 115 开放平台获取；失效时自动用 refresh_token 刷新并持久化。",
+        help: "訪問令牌（必填）。通過 115 開放平台獲取；失效時自動用 refresh_token 刷新並持久化。",
       },
       {
         name: "refresh_token",
         type: "string",
         default: "",
         required: true,
-        help: "刷新令牌（必填）。通过 115 开放平台获取；access_token 失效时自动刷新。",
+        help: "刷新令牌（必填）。通過 115 開放平台獲取；access_token 失效時自動刷新。",
       },
       {
         name: "root_id",
         type: "string",
         default: "0",
         required: false,
-        help: "根文件夹 ID，默认 0（根目录）",
+        help: "根文件夾 ID，默認 0（根目錄）",
       },
       {
         name: "order_by",
@@ -1617,14 +1617,14 @@ const driverConfigs: Record<string, any> = {
         type: "string",
         default: "",
         required: true,
-        help: "迅雷开放平台 OAuth client_id（必填）。",
+        help: "迅雷開放平台 OAuth client_id（必填）。",
       },
       {
         name: "client_secret",
         type: "string",
         default: "",
         required: true,
-        help: "迅雷开放平台 OAuth client_secret（必填）。",
+        help: "迅雷開放平台 OAuth client_secret（必填）。",
       },
       {
         name: "client_version",
@@ -1694,7 +1694,7 @@ const driverConfigs: Record<string, any> = {
   "189Cloud": {
     name: "189Cloud",
     default_mount_path: "/189",
-    // 对齐 Go drivers/189/meta.go：OnlyProxy
+    // 對齊 Go drivers/189/meta.go：OnlyProxy
     common: [
       ...BASE_FIELDS,
       CUSTOM_CACHE_POLICIES_FIELD,
@@ -1724,14 +1724,14 @@ const driverConfigs: Record<string, any> = {
         type: "text",
         default: "",
         required: false,
-        help: "Fill in the cookie if need captcha (若遇滑块验证码或设备锁，可在浏览器登录后复制 Cookie 填入)",
+        help: "Fill in the cookie if need captcha (若遇滑塊驗證碼或設備鎖，可在瀏覽器登入後複製 Cookie 填入)",
       },
       {
         name: "root_folder_id",
         type: "string",
         default: "-11",
         required: false,
-        help: "根文件夹ID，默认为 -11（个人云根目录）",
+        help: "根文件夾ID，默認為 -11（個人雲根目錄）",
       },
       {
         name: "order_by",
@@ -1776,35 +1776,35 @@ const driverConfigs: Record<string, any> = {
         type: "string",
         default: "",
         required: false,
-        help: "账号（手机号/UID），仅 account 模式需填写",
+        help: "賬號（手機號/UID），僅 account 模式需填寫",
       },
       {
         name: "password",
         type: "string",
         default: "",
         required: false,
-        help: "密码，仅 account 模式需填写",
+        help: "密碼，僅 account 模式需填寫",
       },
       {
         name: "cookie",
         type: "text",
         default: "",
         required: false,
-        help: "登录 Cookie（含 ylogin, phpdisk_info 等），cookie 模式需填写；有效期约 15 天",
+        help: "登入 Cookie（含 ylogin, phpdisk_info 等），cookie 模式需填寫；有效期約 15 天",
       },
       {
         name: "root_folder_id",
         type: "string",
         default: "-1",
         required: false,
-        help: "根文件夹 ID / 分享 ID（个人盘默认 -1，分享链接填分享 ID 如 b00xxxx）",
+        help: "根文件夾 ID / 分享 ID（個人盤默認 -1，分享鏈接填分享 ID 如 b00xxxx）",
       },
       {
         name: "share_password",
         type: "string",
         default: "",
         required: false,
-        help: "提取码 / 访问密码（无密码留空）",
+        help: "提取碼 / 訪問密碼（無密碼留空）",
       },
       {
         name: "baseUrl",
@@ -1818,7 +1818,7 @@ const driverConfigs: Record<string, any> = {
         type: "string",
         default: "https://pan.lanzoui.com",
         required: false,
-        help: "分享页面解析域名",
+        help: "分享頁面解析域名",
       },
       {
         name: "user_agent",
@@ -1826,14 +1826,14 @@ const driverConfigs: Record<string, any> = {
         default:
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36 Chrome/142.0.0.0 OpenList/42",
         required: true,
-        help: "发送给蓝奏云 API 与直链解析时携带的客户端 User-Agent",
+        help: "發送給藍奏雲 API 與直鏈解析時攜帶的客戶端 User-Agent",
       },
       {
         name: "repair_file_info",
         type: "bool",
         default: "false",
         required: false,
-        help: "通过 HEAD 请求修正文件精确大小与修改时间（WebDAV 推荐开启）",
+        help: "通過 HEAD 請求修正文件精確大小與修改時間（WebDAV 推薦開啟）",
       },
       {
         name: "order_by",
@@ -1864,8 +1864,8 @@ const driverConfigs: Record<string, any> = {
   WebDav: {
     name: "WebDav",
     default_mount_path: "/webdav",
-    // 对齐 Go drivers/webdav/meta.go 的 PreferProxy: true：
-    // web_proxy 默认 true、webdav_policy 默认 native_proxy。
+    // 對齊 Go drivers/webdav/meta.go 的 PreferProxy: true：
+    // web_proxy 默認 true、webdav_policy 默認 native_proxy。
     common: [
       ...BASE_FIELDS,
       CUSTOM_CACHE_POLICIES_FIELD,
@@ -2295,7 +2295,7 @@ const driverConfigs: Record<string, any> = {
   WeiYun: {
     name: "WeiYun",
     default_mount_path: "/weiyun",
-    // 对齐 Go drivers/weiyun/meta.go：OnlyProxy
+    // 對齊 Go drivers/weiyun/meta.go：OnlyProxy
     common: [
       ...BASE_FIELDS,
       CUSTOM_CACHE_POLICIES_FIELD,
@@ -2355,7 +2355,7 @@ const driverConfigs: Record<string, any> = {
   SFTP: {
     name: "SFTP",
     default_mount_path: "/sftp",
-    // 对齐 Go drivers/sftp/meta.go：OnlyProxy + NoLinkURL（无直链可 302）
+    // 對齊 Go drivers/sftp/meta.go：OnlyProxy + NoLinkURL（無直鏈可 302）
     common: [
       ...BASE_FIELDS,
       CUSTOM_CACHE_POLICIES_FIELD,
@@ -2427,7 +2427,7 @@ const driverConfigs: Record<string, any> = {
   FTP: {
     name: "FTP",
     default_mount_path: "/ftp",
-    // 对齐 Go drivers/ftp/meta.go：OnlyProxy + NoLinkURL
+    // 對齊 Go drivers/ftp/meta.go：OnlyProxy + NoLinkURL
     common: [
       ...BASE_FIELDS,
       CUSTOM_CACHE_POLICIES_FIELD,
@@ -2714,7 +2714,7 @@ const driverConfigs: Record<string, any> = {
   Terabox: {
     name: "Terabox",
     default_mount_path: "/terabox",
-    // 对齐 Go drivers/terabox/meta.go：OnlyProxy
+    // 對齊 Go drivers/terabox/meta.go：OnlyProxy
     common: [
       ...BASE_FIELDS,
       CUSTOM_CACHE_POLICIES_FIELD,
@@ -2821,7 +2821,7 @@ const driverConfigs: Record<string, any> = {
   Alias: {
     name: "Alias",
     default_mount_path: "/alias",
-    // 对齐 Go drivers/alias/meta.go：ProxyRangeOption
+    // 對齊 Go drivers/alias/meta.go：ProxyRangeOption
     common: [
       ...BASE_FIELDS,
       CUSTOM_CACHE_POLICIES_FIELD,
@@ -3021,7 +3021,7 @@ const driverConfigs: Record<string, any> = {
   "139Yun": {
     name: "139Yun",
     default_mount_path: "/139",
-    // 对齐 Go drivers/139/meta.go：ProxyRangeOption 且实例默认 ProxyRange = true
+    // 對齊 Go drivers/139/meta.go：ProxyRangeOption 且實例默認 ProxyRange = true
     common: [
       ...BASE_FIELDS,
       CUSTOM_CACHE_POLICIES_FIELD,
@@ -3093,7 +3093,7 @@ const driverConfigs: Record<string, any> = {
   Mega_nz: {
     name: "Mega_nz",
     default_mount_path: "/mega",
-    // 对齐 Go drivers/mega/meta.go：OnlyProxy + NoLinkURL
+    // 對齊 Go drivers/mega/meta.go：OnlyProxy + NoLinkURL
     common: [
       ...BASE_FIELDS,
       CUSTOM_CACHE_POLICIES_FIELD,
@@ -3224,7 +3224,7 @@ const driverConfigs: Record<string, any> = {
   "123PanShare": {
     name: "123PanShare",
     default_mount_path: "/123_share",
-    // 对齐 Go drivers/123_share/meta.go：OnlyProxy + PreferProxy
+    // 對齊 Go drivers/123_share/meta.go：OnlyProxy + PreferProxy
     common: [
       ...BASE_FIELDS,
       CUSTOM_CACHE_POLICIES_FIELD,
@@ -3436,7 +3436,7 @@ const driverConfigs: Record<string, any> = {
   SMB: {
     name: "SMB",
     default_mount_path: "/smb",
-    // 对齐 Go drivers/smb/meta.go：OnlyProxy + NoLinkURL
+    // 對齊 Go drivers/smb/meta.go：OnlyProxy + NoLinkURL
     common: [
       ...BASE_FIELDS,
       CUSTOM_CACHE_POLICIES_FIELD,
@@ -3512,7 +3512,7 @@ const driverConfigs: Record<string, any> = {
   Crypt: {
     name: "Crypt",
     default_mount_path: "/crypt",
-    // 对齐 Go drivers/crypt/meta.go：OnlyProxy + NoLinkURL
+    // 對齊 Go drivers/crypt/meta.go：OnlyProxy + NoLinkURL
     common: [
       ...BASE_FIELDS,
       CUSTOM_CACHE_POLICIES_FIELD,
@@ -3528,21 +3528,21 @@ const driverConfigs: Record<string, any> = {
         type: "string",
         default: "",
         required: true,
-        help: "加密数据实际存储的位置（另一个已挂载存储的路径，如 /aliyundrive/enc）",
+        help: "加密資料實際儲存的位置（另一個已掛載儲存的路徑，如 /aliyundrive/enc）",
       },
       {
         name: "password",
         type: "string",
         default: "",
         required: true,
-        help: "主密码（用于派生加密密钥）",
+        help: "主密碼（用於派生加密密鑰）",
       },
       {
         name: "salt",
         type: "string",
         default: "",
         required: false,
-        help: "盐（第二密码）。可选但推荐，提高密钥强度",
+        help: "鹽（第二密碼）。可選但推薦，提高密鑰強度",
       },
       {
         name: "filename_encryption",
@@ -3550,7 +3550,7 @@ const driverConfigs: Record<string, any> = {
         options: "off,standard,obfuscate",
         default: "off",
         required: true,
-        help: "文件名加密方式。当前仅支持 off（文件名不加密，仅内容加密）",
+        help: "文件名加密方式。當前僅支持 off（文件名不加密，僅內容加密）",
       },
       {
         name: "directory_name_encryption",
@@ -3564,7 +3564,7 @@ const driverConfigs: Record<string, any> = {
         type: "string",
         default: ".bin",
         required: true,
-        help: "加密文件的后缀（高级选项）",
+        help: "加密文件的後綴（高級選項）",
       },
       {
         name: "filename_encoding",
@@ -3592,7 +3592,7 @@ const driverConfigs: Record<string, any> = {
   Virtual: {
     name: "Virtual",
     default_mount_path: "/virtual",
-    // 对齐 Go drivers/virtual/meta.go：OnlyProxy + NoLinkURL
+    // 對齊 Go drivers/virtual/meta.go：OnlyProxy + NoLinkURL
     common: [
       ...BASE_FIELDS,
       CUSTOM_CACHE_POLICIES_FIELD,
@@ -3608,28 +3608,28 @@ const driverConfigs: Record<string, any> = {
         type: "number",
         default: "30",
         required: true,
-        help: "每个目录下生成的占位文件数量",
+        help: "每個目錄下生成的佔位文件數量",
       },
       {
         name: "num_folder",
         type: "number",
         default: "30",
         required: true,
-        help: "每个目录下生成的占位目录数量",
+        help: "每個目錄下生成的佔位目錄數量",
       },
       {
         name: "max_file_size",
         type: "number",
         default: "1073741824",
         required: true,
-        help: "占位文件最大字节数",
+        help: "佔位文件最大字節數",
       },
       {
         name: "min_file_size",
         type: "number",
         default: "1048576",
         required: true,
-        help: "占位文件最小字节数",
+        help: "佔位文件最小字節數",
       },
     ],
     config: {
@@ -3647,7 +3647,7 @@ const driverConfigs: Record<string, any> = {
   AListV3: {
     name: "AListV3",
     default_mount_path: "/alist",
-    // 对齐 Go drivers/alist_v3/meta.go：ProxyRangeOption
+    // 對齊 Go drivers/alist_v3/meta.go：ProxyRangeOption
     common: [
       ...BASE_FIELDS,
       CUSTOM_CACHE_POLICIES_FIELD,
@@ -3664,7 +3664,7 @@ const driverConfigs: Record<string, any> = {
         type: "string",
         default: "",
         required: true,
-        help: "另一个 OpenList / AList 实例的地址，如 https://example.com",
+        help: "另一個 OpenList / AList 實例的地址，如 https://example.com",
       },
       { name: "meta_password", type: "string", default: "", required: false },
       { name: "username", type: "string", default: "", required: false },
@@ -3674,7 +3674,7 @@ const driverConfigs: Record<string, any> = {
         type: "string",
         default: "",
         required: false,
-        help: "访问令牌（可选，自动持久化，无需手动填写）",
+        help: "訪問令牌（可選，自動持久化，無需手動填寫）",
       },
       {
         name: "pass_ip_to_upsteam",
@@ -3716,21 +3716,21 @@ const driverConfigs: Record<string, any> = {
         type: "text",
         default: "",
         required: true,
-        help: "URL 树结构文本，每行缩进 2 空格表示一级。目录行以 : 结尾，文件行格式 [FileName:][FileSize:][Modified:]Url",
+        help: "URL 樹結構文本，每行縮進 2 空格表示一級。目錄行以 : 結尾，文件行格式 [FileName:][FileSize:][Modified:]Url",
       },
       {
         name: "head_size",
         type: "bool",
         default: "false",
         required: false,
-        help: "用 HEAD 请求获取文件大小（可能失败）",
+        help: "用 HEAD 請求獲取文件大小（可能失敗）",
       },
       {
         name: "writable",
         type: "bool",
         default: "false",
         required: false,
-        help: "允许增删改文件树（会持久化回 url_structure）",
+        help: "允許增刪改文件樹（會持久化回 url_structure）",
       },
     ],
     config: {
@@ -3748,7 +3748,7 @@ const driverConfigs: Record<string, any> = {
   Strm: {
     name: "Strm",
     default_mount_path: "/strm",
-    // 对齐 Go drivers/strm/meta.go：OnlyProxy + NoLinkURL
+    // 對齊 Go drivers/strm/meta.go：OnlyProxy + NoLinkURL
     common: [
       ...BASE_FIELDS,
       CUSTOM_CACHE_POLICIES_FIELD,
@@ -3764,28 +3764,28 @@ const driverConfigs: Record<string, any> = {
         type: "text",
         default: "",
         required: true,
-        help: "路径映射，每行一个：虚拟名:底层路径（如 movies:/aliyundrive/movies），或直接底层路径",
+        help: "路徑映射，每行一個：虛擬名:底層路徑（如 movies:/aliyundrive/movies），或直接底層路徑",
       },
       {
         name: "siteUrl",
         type: "text",
         default: "",
         required: false,
-        help: "strm 文件内容的 URL 前缀（留空则用相对路径）",
+        help: "strm 文件內容的 URL 前綴（留空則用相對路徑）",
       },
       {
         name: "PathPrefix",
         type: "text",
         default: "/d",
         required: false,
-        help: "下载路径前缀",
+        help: "下載路徑前綴",
       },
       {
         name: "downloadFileTypes",
         type: "text",
         default: "ass,srt,vtt,sub,strm",
         required: false,
-        help: "需原样下载的文件扩展名（通常为字幕）",
+        help: "需原樣下載的文件擴展名（通常為字幕）",
       },
       {
         name: "filterFileTypes",
@@ -3793,7 +3793,7 @@ const driverConfigs: Record<string, any> = {
         default:
           "mp4,mkv,flv,avi,wmv,ts,rmvb,webm,mp3,flac,aac,wav,ogg,m4a,wma,alac",
         required: false,
-        help: "支持生成 strm 的文件扩展名（视频/音频）",
+        help: "支持生成 strm 的文件擴展名（視頻/音頻）",
       },
       { name: "encodePath", type: "bool", default: "true", required: false },
       { name: "withoutUrl", type: "bool", default: "false", required: false },
@@ -3821,28 +3821,28 @@ const driverConfigs: Record<string, any> = {
         type: "string",
         default: "",
         required: true,
-        help: "Azure 存储端点，如 https://accountname.blob.core.windows.net/",
+        help: "Azure 儲存端點，如 https://accountname.blob.core.windows.net/",
       },
       {
         name: "access_key",
         type: "string",
         default: "",
         required: true,
-        help: "Azure 存储访问密钥（Base64）",
+        help: "Azure 儲存訪問密鑰（Base64）",
       },
       {
         name: "container_name",
         type: "string",
         default: "",
         required: true,
-        help: "容器名称",
+        help: "容器名稱",
       },
       {
         name: "sign_url_expire",
         type: "number",
         default: "4",
         required: false,
-        help: "SAS URL 有效期（小时）",
+        help: "SAS URL 有效期（小時）",
       },
     ],
     config: {
@@ -3868,7 +3868,7 @@ const driverConfigs: Record<string, any> = {
         type: "string",
         default: "",
         required: true,
-        help: "下载域名（可含协议头）",
+        help: "下載域名（可含協議頭）",
       },
       { name: "operator_name", type: "string", default: "", required: true },
       {
@@ -3882,14 +3882,14 @@ const driverConfigs: Record<string, any> = {
         type: "string",
         default: "",
         required: false,
-        help: "防盗链 Token（留空则用操作员密码）",
+        help: "防盜鏈 Token（留空則用操作員密碼）",
       },
       {
         name: "sign_url_expire",
         type: "number",
         default: "4",
         required: false,
-        help: "链接有效期（小时）",
+        help: "鏈接有效期（小時）",
       },
     ],
     config: {
@@ -3913,14 +3913,14 @@ const driverConfigs: Record<string, any> = {
         type: "text",
         default: "",
         required: true,
-        help: "钉钉文档网页 Cookie",
+        help: "釘釘文件網頁 Cookie",
       },
       {
         name: "root_folder_id",
         type: "string",
         default: "",
         required: true,
-        help: "根目录 dentryUuid",
+        help: "根目錄 dentryUuid",
       },
     ],
     config: {
@@ -3944,7 +3944,7 @@ const driverConfigs: Record<string, any> = {
         type: "string",
         default: "",
         required: true,
-        help: "Emby 服务器地址，如 http://localhost:8096",
+        help: "Emby 伺服器地址，如 http://localhost:8096",
       },
       { name: "api_key", type: "string", default: "", required: false },
       { name: "user_id", type: "string", default: "", required: false },
@@ -3962,7 +3962,7 @@ const driverConfigs: Record<string, any> = {
         type: "string",
         default: "1",
         required: false,
-        help: "根目录 ID，默认 1",
+        help: "根目錄 ID，默認 1",
       },
     ],
     config: {
@@ -4014,7 +4014,7 @@ const driverConfigs: Record<string, any> = {
         type: "number",
         default: "4",
         required: false,
-        help: "链接有效期（小时）",
+        help: "鏈接有效期（小時）",
       },
       {
         name: "placeholder",
@@ -4050,7 +4050,7 @@ const driverConfigs: Record<string, any> = {
         type: "string",
         default: "",
         required: true,
-        help: "图床服务地址",
+        help: "圖床服務地址",
       },
       { name: "token", type: "string", default: "", required: true },
       {
@@ -4105,7 +4105,7 @@ const driverConfigs: Record<string, any> = {
         type: "string",
         default: "",
         required: false,
-        help: "手机号（登录用，+86 格式）",
+        help: "手機號（登入用，+86 格式）",
       },
       { name: "verify_code", type: "string", default: "", required: false },
       { name: "page_size", type: "number", default: "100", required: false },
@@ -4139,7 +4139,7 @@ const driverConfigs: Record<string, any> = {
         type: "string",
         default: "",
         required: true,
-        help: "AutoIndex 目录页 URL",
+        help: "AutoIndex 目錄頁 URL",
       },
       {
         name: "item_xpath",
@@ -4187,7 +4187,7 @@ const driverConfigs: Record<string, any> = {
   ProtonDrive: {
     name: "ProtonDrive",
     default_mount_path: "/proton",
-    // 对齐 Go drivers/proton_drive/meta.go：OnlyProxy + NoLinkURL
+    // 對齊 Go drivers/proton_drive/meta.go：OnlyProxy + NoLinkURL
     common: [
       ...BASE_FIELDS,
       CUSTOM_CACHE_POLICIES_FIELD,
@@ -4203,35 +4203,35 @@ const driverConfigs: Record<string, any> = {
         type: "string",
         default: "",
         required: true,
-        help: "Proton 账号邮箱",
+        help: "Proton 賬號郵箱",
       },
       {
         name: "password",
         type: "string",
         default: "",
         required: true,
-        help: "Proton 账号密码",
+        help: "Proton 賬號密碼",
       },
       {
         name: "two_fa_code",
         type: "string",
         default: "",
         required: false,
-        help: "两步验证码（如已启用 2FA）",
+        help: "兩步驗證碼（如已啟用 2FA）",
       },
       {
         name: "root_folder_id",
         type: "string",
         default: "root",
         required: false,
-        help: "根文件夹 LinkID，默认 root 表示主共享根目录",
+        help: "根文件夾 LinkID，默認 root 表示主共享根目錄",
       },
       {
         name: "chunk_size",
         type: "number",
         default: "4",
         required: false,
-        help: "分块大小（MB）",
+        help: "分塊大小（MB）",
       },
       {
         name: "use_reusable_login",
@@ -4299,7 +4299,7 @@ adminRouter.post("/setting/save", async (c) => {
     db.settings = []
   }
   for (const item of body) {
-    // 仅接受已知字段与基本类型，防止类型混淆 / 原型污染 / 嵌套对象注入
+    // 僅接受已知欄位與基本類型，防止類型混淆 / 原型汙染 / 嵌套對象注入
     if (!item || typeof item !== "object" || Array.isArray(item)) continue
     const key = item.key
     if (typeof key !== "string" || key.length === 0 || key.length > 128)
@@ -4459,12 +4459,12 @@ adminRouter.post("/setting/set_thunderx", async (c) => {
 adminRouter.post("/setting/reset_token", async (c) => {
   const newToken = generateSecureToken(32)
   await updateSettingValue(c.env, { token: newToken })
-  // `token` 设置是链接/下载签名密钥（对应 Go 的 sign.Instance()），
-  // 变更后旧的下载链接签名立即失效——与 Go ResetToken 行为一致。
+  // `token` 設置是鏈接/下載簽名密鑰（對應 Go 的 sign.Instance()），
+  // 變更後舊的下載鏈接簽名立即失效——與 Go ResetToken 行為一致。
   //
-  // 注意：JWT 密钥来自 env.JWT_SECRET / 持久化的 openlist_jwt_secret，与这里的
-  // `token` 设置无关，所以清 JWT 缓存**不会**让已签发的 JWT 失效；这里调用只是
-  // 让进程内缓存与最新的 env/持久化值保持一致。
+  // 注意：JWT 密鑰來自 env.JWT_SECRET / 持久化的 openlist_jwt_secret，與這裡的
+  // `token` 設置無關，所以清 JWT 快取**不會**讓已簽發的 JWT 失效；這裡調用只是
+  // 讓進程內快取與最新的 env/持久化值保持一致。
   const { resetJwtSecretCache } = await import("./middlewares")
   resetJwtSecretCache()
   return c.json({ code: 200, message: "success", data: newToken })
@@ -4508,7 +4508,7 @@ adminRouter.post("/meta/create", async (c) => {
     return c.json({ code: 400, message: "meta already exists", data: null })
   }
 
-  // 校验 hide 正则合法性（对齐 Go handles/meta.go:71-80 validHide）
+  // 校驗 hide 正則合法性（對齊 Go handles/meta.go:71-80 validHide）
   const hide = String(body.hide || "")
   if (hide) {
     const invalidLine = validateHide(hide)
@@ -4565,7 +4565,7 @@ adminRouter.post("/meta/update", async (c) => {
     return c.json({ code: 400, message: "meta already exists", data: null })
   }
 
-  // 校验 hide 正则合法性（对齐 Go handles/meta.go:71-80 validHide）
+  // 校驗 hide 正則合法性（對齊 Go handles/meta.go:71-80 validHide）
   const hide = body.hide !== undefined ? String(body.hide) : db.metas[idx].hide
   if (hide) {
     const invalidLine = validateHide(hide)
@@ -4644,9 +4644,9 @@ adminRouter.get("/kv/status", async (c) => {
 })
 
 // --- Search Index / Scan ---
-// Serverless 环境无常驻后台任务，索引构建为「请求内同步遍历 + KV 缓存」。
-// 对大型存储可能耗时较长（受 Worker CPU 时限约束），但中小型部署可用；
-// 前端仍可实时搜索（search 函数递归遍历），索引缓存仅用于加速与进度展示。
+// Serverless 環境無常駐後台任務，索引構建為「請求內同步遍歷 + KV 快取」。
+// 對大型儲存可能耗時較長（受 Worker CPU 時限約束），但中小型部署可用；
+// 前端仍可實時搜索（search 函數遞歸遍歷），索引快取僅用於加速與進度展示。
 
 function indexProgress(db: any) {
   const idx = db.search_index || {}
@@ -4658,7 +4658,7 @@ function indexProgress(db: any) {
   }
 }
 
-// POST /api/admin/index/build — 全量重建索引（同步遍历 /）
+// POST /api/admin/index/build — 全量重建索引（同步遍歷 /）
 adminRouter.post("/index/build", async (c) => {
   try {
     const db = await getDb(c.env)
@@ -4684,7 +4684,7 @@ adminRouter.post("/index/build", async (c) => {
   }
 })
 
-// POST /api/admin/index/update — 更新指定路径索引
+// POST /api/admin/index/update — 更新指定路徑索引
 adminRouter.post("/index/update", async (c) => {
   try {
     const body = await c.req.json().catch(() => ({}))
@@ -4692,7 +4692,7 @@ adminRouter.post("/index/update", async (c) => {
     const maxDepth = Math.min(20, Math.max(0, Number(body.max_depth) || 20))
     const db = await getDb(c.env)
     const prev = db.search_index?.items || []
-    // 移除旧索引中属于这些路径的条目，再重建
+    // 移除舊索引中屬於這些路徑的條目，再重建
     const keep = prev.filter(
       (it: any) => !paths.some((p: string) => (it.parent || "/").startsWith(p)),
     )
@@ -4718,7 +4718,7 @@ adminRouter.post("/index/update", async (c) => {
   }
 })
 
-// POST /api/admin/index/stop — 无后台任务，直接标记完成
+// POST /api/admin/index/stop — 無後台任務，直接標記完成
 adminRouter.post("/index/stop", async (c) => {
   const db = await getDb(c.env)
   if (db.search_index) db.search_index.is_done = true
@@ -4740,7 +4740,7 @@ adminRouter.post("/index/clear", async (c) => {
   return c.json({ code: 200, message: "success", data: indexProgress(db) })
 })
 
-// GET /api/admin/index/progress — 索引进度
+// GET /api/admin/index/progress — 索引進度
 adminRouter.get("/index/progress", async (c) => {
   const db = await getDb(c.env)
   return c.json({
@@ -4750,7 +4750,7 @@ adminRouter.get("/index/progress", async (c) => {
   })
 })
 
-// POST /api/admin/scan/start — 手动扫描（同步遍历 /）
+// POST /api/admin/scan/start — 手動掃描（同步遍歷 /）
 adminRouter.post("/scan/start", async (c) => {
   try {
     const db = await getDb(c.env)
@@ -4781,7 +4781,7 @@ adminRouter.post("/scan/start", async (c) => {
   }
 })
 
-// POST /api/admin/scan/stop — 无后台任务，标记完成
+// POST /api/admin/scan/stop — 無後台任務，標記完成
 adminRouter.post("/scan/stop", async (c) => {
   return c.json({
     code: 200,
@@ -4790,7 +4790,7 @@ adminRouter.post("/scan/stop", async (c) => {
   })
 })
 
-// GET /api/admin/scan/progress — 扫描进度
+// GET /api/admin/scan/progress — 掃描進度
 adminRouter.get("/scan/progress", async (c) => {
   const db = await getDb(c.env)
   const scan = db.scan_result || {}
@@ -5075,9 +5075,9 @@ adminRouter.post("/plugin/batch_save", async (c) => {
   }
 })
 
-// ---- Message（与 Go internal/message/http.go 对齐）----
-// 进程内消息队列：send 入队、get 出队。Serverless 多实例下队列不跨实例共享，
-// 属于「尽力而为」的实现，与 Go 的 channel 语义一致（无消息返回 404）。
+// ---- Message（與 Go internal/message/http.go 對齊）----
+// 進程內消息佇列：send 入隊、get 出隊。Serverless 多實例下佇列不跨實例共享，
+// 屬於「盡力而為」的實現，與 Go 的 channel 語義一致（無消息返回 404）。
 const messageQueue: string[] = []
 
 adminRouter.post("/message/send", async (c) => {
@@ -5101,9 +5101,9 @@ adminRouter.post("/message/get", (c) => {
   return c.json({ code: 200, message: "success", data: message })
 })
 
-// ============ 审计日志接口 (添加日期: 2026-09-05) ============
+// ============ 審計日誌介面 (添加日期: 2026-09-05) ============
 
-// GET /api/admin/audit/logs - 查询审计日志
+// GET /api/admin/audit/logs - 查詢審計日誌
 adminRouter.get("/audit/logs", async (c) => {
   try {
     const { queryAuditLogs } = await import("../internal/model/audit")
@@ -5123,7 +5123,7 @@ adminRouter.get("/audit/logs", async (c) => {
       status,
       startDate,
       endDate,
-      limit: Math.min(limit, 1000), // 最多返回 1000 条
+      limit: Math.min(limit, 1000), // 最多返回 1000 條
     })
 
     return c.json({
@@ -5146,7 +5146,7 @@ adminRouter.get("/audit/logs", async (c) => {
   }
 })
 
-// GET /api/admin/audit/stats - 获取审计日志统计
+// GET /api/admin/audit/stats - 獲取審計日誌統計
 adminRouter.get("/audit/stats", async (c) => {
   try {
     const { getAuditStats } = await import("../internal/model/audit")
@@ -5169,7 +5169,7 @@ adminRouter.get("/audit/stats", async (c) => {
   }
 })
 
-// POST /api/admin/audit/cleanup - 清理过期日志
+// POST /api/admin/audit/cleanup - 清理過期日誌
 adminRouter.post("/audit/cleanup", async (c) => {
   try {
     const body = await c.req.json().catch(() => ({}))

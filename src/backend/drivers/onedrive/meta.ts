@@ -21,9 +21,9 @@ export const config = {
   name: "Onedrive",
   localSort: true,
   defaultRoot: "/",
-  // 对齐 Go drivers/onedrive/meta.go：config 里不设 only_proxy / prefer_proxy，
-  // 因此 webdav_policy 的默认值为 302_redirect，OneDrive 默认走直链。
-  // 驱动能力表的唯一真相在 internal/driver/proxy.ts，此处不再重复登记。
+  // 對齊 Go drivers/onedrive/meta.go：config 裡不設 only_proxy / prefer_proxy，
+  // 因此 webdav_policy 的默認值為 302_redirect，OneDrive 默認走直鏈。
+  // 驅動能力表的唯一真相在 internal/driver/proxy.ts，此處不再重複登記。
   preferProxy: false,
 }
 

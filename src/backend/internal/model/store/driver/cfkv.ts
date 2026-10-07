@@ -1,10 +1,10 @@
 /**
- * Cloudflare KV API 驱动（远程 REST API 访问）
+ * Cloudflare KV API 驅動（遠程 REST API 訪問）
  * 
- * 通过 Cloudflare REST API 远程访问 KV，无需 Worker binding。
- * 适用于外部服务访问、CI/CD、跨账号访问等场景。
+ * 通過 Cloudflare REST API 遠程訪問 KV，無需 Worker binding。
+ * 適用於外部服務訪問、CI/CD、跨賬號訪問等場景。
  * 
- * 环境变量：
+ * 環境變量：
  * - CF_ACCOUNT / CLOUDFLARE_ACCOUNT_ID
  * - CF_KV_UUID / CLOUDFLARE_KV_NAMESPACE_ID
  * - CF_API_KEY / CLOUDFLARE_API_TOKEN
@@ -40,7 +40,7 @@ export const cfkvDriver: Driver = {
   },
 
   async init(env?: any): Promise<void> {
-    // Cloudflare KV API 无需初始化
+    // Cloudflare KV API 無需初始化
   },
 
   async get(key: string, env?: any): Promise<string | null> {

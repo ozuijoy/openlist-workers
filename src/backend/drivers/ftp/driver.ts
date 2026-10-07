@@ -140,8 +140,8 @@ export class FTPDriver implements StorageDriver {
     physicalPath: string,
     names: string[],
   ): Promise<void> {
-    // physicalPath 已是目标项自身的物理路径（op/storage.ts 逐项解析后传入），
-    // 直接删除即可；不得再拼 name，否则指向不存在的 <item>/<name>，导致静默删除失败。
+    // physicalPath 已是目標項自身的物理路徑（op/storage.ts 逐項解析後傳入），
+    // 直接刪除即可；不得再拼 name，否則指向不存在的 <item>/<name>，導致靜默刪除失敗。
     const target = cleanPosixPath(physicalPath)
     await this.client.removeRecursive(target)
   }
@@ -153,8 +153,8 @@ export class FTPDriver implements StorageDriver {
     srcPhys: string,
     dstPhys: string,
   ): Promise<void> {
-    // srcPhys/dstPhys 已是源/目标项自身的物理路径，直接重命名即可；
-    // 不得再拼 name，否则源/目标路径错位。
+    // srcPhys/dstPhys 已是源/目標項自身的物理路徑，直接重命名即可；
+    // 不得再拼 name，否則源/目標路徑錯位。
     const src = cleanPosixPath(srcPhys)
     const dst = cleanPosixPath(dstPhys)
     await this.client.rename(src, dst)

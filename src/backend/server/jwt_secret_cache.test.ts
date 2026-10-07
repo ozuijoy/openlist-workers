@@ -4,28 +4,28 @@ import { __resetDbCacheForTest } from "../internal/model/db"
 import { getJwtSecret, resetJwtSecretCache } from "./middlewares"
 
 /**
- * getJwtSecret() 缓存回归测试
+ * getJwtSecret() 快取迴歸測試
  *
- * 背景 1（性能）：getJwtSecret 的「持久化密钥」分支曾经只 `return kvSecret`
- * 而不写缓存，导致该函数**自身**没有缓存：只要底层读取没有被其它层记忆化，
- * 每次调用都会重新回源。而它一次请求内会被
- * getUserFromContext / csrfProtection / checkAdminAuth 调用 2-4 次。
+ * 背景 1（性能）：getJwtSecret 的「持久化密鑰」分支曾經只 `return kvSecret`
+ * 而不寫快取，導致該函數**自身**沒有快取：只要底層讀取沒有被其它層記憶化，
+ * 每次調用都會重新回源。而它一次請求內會被
+ * getUserFromContext / csrfProtection / checkAdminAuth 調用 2-4 次。
  *
- * 背景 2（隔离）：缓存必须是**按 env 对象**的。env 决定「去哪个后端读密钥」，
- * 单一进程级缓存会把先读到的密钥发给另一套环境，导致跨环境 token 互相可验证。
- * （Go 版是单进程单部署、密钥在启动时由 conf.Conf.JwtSecret 一次确定，不存在
- * 该问题；TS 版必须按 env 隔离才能保持等价语义。）
+ * 背景 2（隔離）：快取必須是**按 env 對象**的。env 決定「去哪個後端讀密鑰」，
+ * 單一進程級快取會把先讀到的密鑰發給另一套環境，導致跨環境 token 互相可驗證。
+ * （Go 版是單進程單部署、密鑰在啟動時由 conf.Conf.JwtSecret 一次確定，不存在
+ * 該問題；TS 版必須按 env 隔離才能保持等價語義。）
  *
- * 说明：底层 getKvBinding 也有按 env 身份的结果缓存，因此复用同一个 env 对象时，
- * 即使 getJwtSecret 自身不缓存也可能不产生额外读取。本文件直接用「KV 绑定上的
- * 读取计数」观测真实回源次数，并复用同一个 env 对象——这正是生产形态：
- * 一次请求 = 一个 env 对象。
+ * 說明：底層 getKvBinding 也有按 env 身份的結果快取，因此複用同一個 env 對象時，
+ * 即使 getJwtSecret 自身不快取也可能不產生額外讀取。本文件直接用「KV 綁定上的
+ * 讀取計數」觀測真實回源次數，並複用同一個 env 對象——這正是生產形態：
+ * 一次請求 = 一個 env 對象。
  */
 
 const JWT_SECRET_KV_KEY = "openlist_jwt_secret"
 const STRONG_SECRET = "a".repeat(48)
 
-/** 构造带读取计数的 KV 绑定（每次新建，绑定到不同的 env 上）。 */
+/** 構造帶讀取計數的 KV 綁定（每次新建，綁定到不同的 env 上）。 */
 function createCountingKv(
   seed: Record<string, string>,
   stats: { get: number; put: number },
@@ -43,19 +43,19 @@ function createCountingKv(
   }
 }
 
-test("getJwtSecret: 同一 env 命中缓存后不再回源（修复前每次调用都回源）", async () => {
+test("getJwtSecret: 同一 env 命中快取後不再回源（修復前每次調用都回源）", async () => {
   __resetDbCacheForTest()
   resetJwtSecretCache()
 
   const stats = { get: 0, put: 0 }
   const seed = { [JWT_SECRET_KV_KEY]: STRONG_SECRET }
-  // 生产形态：一次请求 = 一个 env 对象，同一对象内可能被调用多次。
+  // 生產形態：一次請求 = 一個 env 對象，同一對象內可能被調用多次。
   const env = { KV: createCountingKv(seed, stats) }
 
   const first = await getJwtSecret({ env })
   assert.equal(first, STRONG_SECRET)
   const readsAfterFirst = stats.get
-  assert.ok(readsAfterFirst >= 1, "首次调用必须回源存储")
+  assert.ok(readsAfterFirst >= 1, "首次調用必須回源儲存")
 
   const second = await getJwtSecret({ env })
   const third = await getJwtSecret({ env })
@@ -65,11 +65,11 @@ test("getJwtSecret: 同一 env 命中缓存后不再回源（修复前每次调�
   assert.equal(
     stats.get,
     readsAfterFirst,
-    "同一 env 命中缓存后不得再回源（修复前此处会 +2 次）",
+    "同一 env 命中快取後不得再回源（修復前此處會 +2 次）",
   )
 })
 
-test("getJwtSecret: resetJwtSecretCache 后重新回源（支持令牌全失效）", async () => {
+test("getJwtSecret: resetJwtSecretCache 後重新回源（支持令牌全失效）", async () => {
   __resetDbCacheForTest()
   resetJwtSecretCache()
 
@@ -79,17 +79,17 @@ test("getJwtSecret: resetJwtSecretCache 后重新回源（支持令牌全失效�
   await getJwtSecret({ env: { KV: createCountingKv(seed, stats) } })
   const before = stats.get
 
-  // 模拟 reset_token：清缓存后必须重新回源，使旧 token 全部失效。
+  // 模擬 reset_token：清快取後必須重新回源，使舊 token 全部失效。
   resetJwtSecretCache()
   const again = await getJwtSecret({
     env: { KV: createCountingKv(seed, stats) },
   })
 
   assert.equal(again, STRONG_SECRET)
-  assert.ok(stats.get > before, "清缓存后必须重新回源 KV")
+  assert.ok(stats.get > before, "清快取後必須重新回源 KV")
 })
 
-test("getJwtSecret: env.JWT_SECRET 优先级最高且不读 KV", async () => {
+test("getJwtSecret: env.JWT_SECRET 優先級最高且不讀 KV", async () => {
   __resetDbCacheForTest()
   resetJwtSecretCache()
 
@@ -102,10 +102,10 @@ test("getJwtSecret: env.JWT_SECRET 优先级最高且不读 KV", async () => {
 
   const secret = await getJwtSecret({ env })
   assert.equal(secret, envSecret)
-  assert.equal(stats.get, 0, "配置了 env.JWT_SECRET 时不应读取 KV")
+  assert.equal(stats.get, 0, "配置了 env.JWT_SECRET 時不應讀取 KV")
 })
 
-test("getJwtSecret: 不同 env 各自使用自己后端的密钥（不得串用）", async () => {
+test("getJwtSecret: 不同 env 各自使用自己後端的密鑰（不得串用）", async () => {
   __resetDbCacheForTest()
   resetJwtSecretCache()
 
@@ -119,15 +119,15 @@ test("getJwtSecret: 不同 env 各自使用自己后端的密钥（不得串用�
   assert.equal(await getJwtSecret({ env: envA }), secretA)
   const readsA = statsA.get
 
-  // 修复前：envB 会拿到 envA 的密钥（进程级单变量缓存）。
+  // 修復前：envB 會拿到 envA 的密鑰（進程級單變量快取）。
   assert.equal(
     await getJwtSecret({ env: envB }),
     secretB,
-    "envB 必须拿到自己后端的密钥，不能复用 envA 的",
+    "envB 必須拿到自己後端的密鑰，不能複用 envA 的",
   )
-  assert.ok(statsB.get >= 1, "envB 必须实际回源自己的后端")
+  assert.ok(statsB.get >= 1, "envB 必須實際回源自己的後端")
 
-  // envA 的缓存也不应被 envB 覆盖。
+  // envA 的快取也不應被 envB 覆蓋。
   assert.equal(await getJwtSecret({ env: envA }), secretA)
-  assert.equal(statsA.get, readsA, "envA 仍应命中自己的缓存")
+  assert.equal(statsA.get, readsA, "envA 仍應命中自己的快取")
 })

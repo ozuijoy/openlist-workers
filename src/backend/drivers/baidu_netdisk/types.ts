@@ -3,39 +3,39 @@
 // (types.go + meta.go)
 
 export interface BaiduAddition {
-  /** 排序字段: name / time / size */
+  /** 排序欄位: name / time / size */
   order_by?: string
   /** 排序方向: asc / desc */
   order_direction?: string
-  /** 下载 API: official / crack / crack_video */
+  /** 下載 API: official / crack / crack_video */
   download_api?: string
-  /** 使用在线 API 刷新 token（无需 ClientID/ClientSecret） */
+  /** 使用在線 API 刷新 token（無需 ClientID/ClientSecret） */
   use_online_api?: boolean | string
-  /** 在线 token API 地址 */
+  /** 在線 token API 地址 */
   api_url_address?: string
   /** 本地 OAuth 的 ClientID */
   client_id?: string
   /** 本地 OAuth 的 ClientSecret */
   client_secret?: string
-  /** crack / crack_video 下载模式使用的 UA */
+  /** crack / crack_video 下載模式使用的 UA */
   custom_crack_ua?: string
-  /** 已保存的 access token（自动持久化） */
+  /** 已保存的 access token（自動持久化） */
   access_token?: string
   /** 刷新令牌（必填） */
   refresh_token: string
-  /** 上传线程数，默认 "3"，范围 1~32 */
+  /** 上傳執行緒數，默認 "3"，範圍 1~32 */
   upload_thread?: string
-  /** 单个分片上传超时（秒），默认 60 */
+  /** 單個分片上傳超時（秒），默認 60 */
   upload_timeout?: number
-  /** 上传 API 域名，默认 https://d.pcs.baidu.com */
+  /** 上傳 API 域名，默認 https://d.pcs.baidu.com */
   upload_api?: string
-  /** 动态获取上传域名，失败时回退到 upload_api */
+  /** 動態獲取上傳域名，失敗時回退到 upload_api */
   use_dynamic_upload_api?: boolean | string
-  /** 自定义分片大小，0 为自动 */
+  /** 自定義分片大小，0 為自動 */
   custom_upload_part_size?: number
-  /** 低带宽上传模式 */
+  /** 低帶寬上傳模式 */
   low_bandwith_upload_mode?: boolean | string
-  /** 仅列出视频文件 */
+  /** 僅列出視頻文件 */
   only_list_video_file?: boolean | string
 }
 
@@ -52,7 +52,7 @@ export interface BaiduTokenErrResp {
   error_description?: string
 }
 
-/** 在线 API 响应（api.oplist.org/baiduyun/renewapi） */
+/** 在線 API 響應（api.oplist.org/baiduyun/renewapi） */
 export interface BaiduOnlineTokenResp {
   refresh_token?: string
   access_token?: string
@@ -111,7 +111,7 @@ export interface BaiduPrecreateResp {
   block_list: number[]
   // return_type=2
   info?: BaiduFile
-  /** 断点续传对应的上传域名（运行时缓存，不来自 API） */
+  /** 斷點續傳對應的上傳域名（運行時快取，不來自 API） */
   upload_url?: string
 }
 

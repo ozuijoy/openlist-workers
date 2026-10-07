@@ -257,9 +257,9 @@ export class PikPakDriver implements StorageDriver {
     physicalPath: string,
     names: string[],
   ): Promise<void> {
-    // physicalPath 是目标项自身的物理路径（参数即目标项路径，不得再拼 name，
-    // 否则指向 <item>/<name>）；父目录取 physicalPath 去掉末段后的部分，
-    // 目标名取其末段，在父目录子项中按名查找对应 id。
+    // physicalPath 是目標項自身的物理路徑（參數即目標項路徑，不得再拼 name，
+    // 否則指向 <item>/<name>）；父目錄取 physicalPath 去掉末段後的部分，
+    // 目標名取其末段，在父目錄子項中按名查找對應 id。
     const clean = this.cleanPath(physicalPath)
     const targetName = clean.split("/").pop() || ""
     const parentPath = clean.split("/").slice(0, -1).join("/")
@@ -288,10 +288,10 @@ export class PikPakDriver implements StorageDriver {
     srcPhys: string,
     dstPhys: string,
   ): Promise<void> {
-    // srcPhys/dstPhys 是源/目标项自身的物理路径（参数即目标项路径，不得再拼 name）：
-    // 直接当父目录解析会指到项本身——源侧会去 <srcItem> 的子项里找 name（永远落空），
-    // 目标侧解析一个尚不存在的目标项必然报错。
-    // 故两侧父目录均去掉末段，源名取 srcPhys 末段，在源父目录子项中按名查 id。
+    // srcPhys/dstPhys 是源/目標項自身的物理路徑（參數即目標項路徑，不得再拼 name）：
+    // 直接當父目錄解析會指到項本身——源側會去 <srcItem> 的子項裡找 name（永遠落空），
+    // 目標側解析一個尚不存在的目標項必然報錯。
+    // 故兩側父目錄均去掉末段，源名取 srcPhys 末段，在源父目錄子項中按名查 id。
     const srcClean = this.cleanPath(srcPhys)
     const dstClean = this.cleanPath(dstPhys)
     const srcName = srcClean.split("/").pop() || ""
@@ -327,8 +327,8 @@ export class PikPakDriver implements StorageDriver {
     srcPhys: string,
     dstPhys: string,
   ): Promise<void> {
-    // 与 move 同理：参数是源/目标项自身路径，不得再拼 name；
-    // 两侧父目录均去掉末段，源名取 srcPhys 末段，在源父目录子项中按名查 id。
+    // 與 move 同理：參數是源/目標項自身路徑，不得再拼 name；
+    // 兩側父目錄均去掉末段，源名取 srcPhys 末段，在源父目錄子項中按名查 id。
     const srcClean = this.cleanPath(srcPhys)
     const dstClean = this.cleanPath(dstPhys)
     const srcName = srcClean.split("/").pop() || ""

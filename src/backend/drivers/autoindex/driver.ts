@@ -1,4 +1,4 @@
-// AutoIndex driver - Nginx/静态目录索引适配器
+// AutoIndex driver - Nginx/靜態目錄索引適配器
 // Ported from: OpenList-Backends/drivers/autoindex
 import {
   StorageDriver,
@@ -18,7 +18,7 @@ const FETCH_TIMEOUT_MS = 30_000
 export function normalizeAutoIndexAddition(a: any): AutoIndexAddition {
   const norm = { ...(a || {}) } as any
   norm.url = (norm.url || "").trim()
-  // Go: 无 scheme 则补 https://，无尾斜杠则补 /
+  // Go: 無 scheme 則補 https://，無尾斜槓則補 /
   if (norm.url && !/:\/\//.test(norm.url)) norm.url = "https://" + norm.url
   if (norm.url && !norm.url.endsWith("/")) norm.url += "/"
   norm.item_xpath = norm.item_xpath || DefaultItemXPath
@@ -36,7 +36,7 @@ export class AutoIndexDriver implements StorageDriver {
 
   constructor(addition: any) {
     this.addition = normalizeAutoIndexAddition(addition)
-    // Go 用换行分隔 ignore 列表；兼容逗号分隔
+    // Go 用換行分隔 ignore 列表；相容逗號分隔
     if (this.addition.ignore_file_names) {
       this.ignoreNames = this.addition.ignore_file_names
         .split(/\r?\n|,/)
@@ -53,7 +53,7 @@ export class AutoIndexDriver implements StorageDriver {
     return (p || "").split("/").filter(Boolean).join("/")
   }
 
-  // 目录 URL（带尾斜杠，供相对 href 正确拼接）
+  // 目錄 URL（帶尾斜槓，供相對 href 正確拼接）
   private buildDirURL(physicalPath: string): string {
     const rel = this.cleanRel(physicalPath)
     return this.addition.url + rel + (rel ? "/" : "")
@@ -69,8 +69,8 @@ export class AutoIndexDriver implements StorageDriver {
       modified: node.modified
         ? parseTime(node.modified, this.addition.modified_time_format || "")
         : new Date().toISOString(),
-      // sign 保留给下载签名（pkg/sign），不可塞入 URL，否则前端会拼出无效
-      // ?sign=http://... 导致签名校验 401。直链走 raw_url。
+      // sign 保留給下載簽名（pkg/sign），不可塞入 URL，否則前端會拼出無效
+      // ?sign=http://... 導致簽名校驗 401。直鏈走 raw_url。
       sign: "",
       type: calcFileType(node.name, isDir),
       raw_url: isDir ? "" : fullURL,
@@ -79,9 +79,9 @@ export class AutoIndexDriver implements StorageDriver {
 
   async list(virtualPath: string, physicalPath: string): Promise<FileItem[]> {
     const baseURL = this.buildDirURL(physicalPath)
-    // 边缘运行时通常会等到平台级超时（EdgeOne 为 120 秒）才中止不可达的
-    // 上游请求。显式限制单次目录读取，避免一个失联的 AutoIndex 挂载长期占用
-    // 实例并拖累同一服务的其他请求。
+    // 邊緣運行時通常會等到平台級超時（EdgeOne 為 120 秒）才中止不可達的
+    // 上游請求。顯式限制單次目錄讀取，避免一個失聯的 AutoIndex 掛載長期佔用
+    // 實例並拖累同一服務的其他請求。
     const res = await fetch(baseURL, {
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     })
@@ -121,7 +121,7 @@ export class AutoIndexDriver implements StorageDriver {
       }
     }
 
-    // 静态服务：文件 URL 即 根 URL + 相对路径
+    // 靜態服務：文件 URL 即 根 URL + 相對路徑
     const fullURL = this.addition.url + rel
     return {
       name,

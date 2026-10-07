@@ -1,6 +1,6 @@
-// Azure Blob Storage driver — 通过 REST API + SharedKey/SAS 认证访问 Azure Blob
+// Azure Blob Storage driver — 通過 REST API + SharedKey/SAS 認證訪問 Azure Blob
 // 移植自 OpenList Go 版 drivers/azure_blob。
-// 目录采用「虚拟目录」语义（List Blobs delimiter=/），目录标记为空 blob。
+// 目錄採用「虛擬目錄」語義（List Blobs delimiter=/），目錄標記為空 blob。
 import {
   StorageDriver,
   FileItem,
@@ -59,7 +59,7 @@ async function hmacSha256Base64(
   return bytesToBase64(new Uint8Array(sig))
 }
 
-// 简单 XML 提取：从 Azure List Blobs 响应中提取 blob/prefix 信息
+// 簡單 XML 提取：從 Azure List Blobs 響應中提取 blob/prefix 信息
 function parseListBlobsXml(xml: string): AzureListResult {
   const result: AzureListResult = { blobs: [], prefixes: [] }
   const blobRe = /<Blob>([\s\S]*?)<\/Blob>/g
@@ -120,7 +120,7 @@ export class AzureBlobDriver implements StorageDriver {
     }
   }
 
-  /** 计算 SharedKey 签名（stringToSign） */
+  /** 計算 SharedKey 簽名（stringToSign） */
   private async sharedKeySignature(
     method: string,
     path: string,
@@ -148,7 +148,7 @@ export class AzureBlobDriver implements StorageDriver {
     return hmacSha256Base64(stringToSign, this.keyBytes)
   }
 
-  /** 发起带 SharedKey 认证的请求 */
+  /** 發起帶 SharedKey 認證的請求 */
   private async request(
     method: string,
     path: string,
@@ -189,7 +189,7 @@ export class AzureBlobDriver implements StorageDriver {
     })
   }
 
-  /** 生成 SAS 下载 URL */
+  /** 生成 SAS 下載 URL */
   private async sasUrl(blobPath: string): Promise<string> {
     const expiry = new Date(
       Date.now() + (this.addition.sign_url_expire || 4) * 3600 * 1000,
@@ -302,8 +302,8 @@ export class AzureBlobDriver implements StorageDriver {
     srcPhys: string,
     dstPhys: string,
   ): Promise<void> {
-    // srcPhys/dstPhys 是目标项自身的物理路径（op/storage.ts moveItems 逐项调用），
-    // 不得再拼 name，否则会指向 `<item>/<name>` 这种不存在的 blob。
+    // srcPhys/dstPhys 是目標項自身的物理路徑（op/storage.ts moveItems 逐項調用），
+    // 不得再拼 name，否則會指向 `<item>/<name>` 這種不存在的 blob。
     const srcKey = this.getKey(srcPhys)
     const dstKey = this.getKey(dstPhys)
     await this.copyBlob(srcKey, dstKey)
@@ -317,7 +317,7 @@ export class AzureBlobDriver implements StorageDriver {
     srcPhys: string,
     dstPhys: string,
   ): Promise<void> {
-    // 同 move：srcPhys/dstPhys 已是目标项自身路径，不得再拼 name。
+    // 同 move：srcPhys/dstPhys 已是目標項自身路徑，不得再拼 name。
     const srcKey = this.getKey(srcPhys)
     const dstKey = this.getKey(dstPhys)
     await this.copyBlob(srcKey, dstKey)
@@ -343,7 +343,7 @@ export class AzureBlobDriver implements StorageDriver {
         "x-ms-copy-source": srcUrl,
       },
     })
-    // 202 表示复制已接受（异步）
+    // 202 表示複製已接受（非同步）
     if (res.status !== 201 && res.status !== 202 && !res.ok) {
       throw new Error(`[AzureBlob] copy failed: HTTP ${res.status}`)
     }

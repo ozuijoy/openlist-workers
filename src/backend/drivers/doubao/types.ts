@@ -1,4 +1,4 @@
-// doubao (豆包 / 抖音豆包网盘) - Cookie 认证
+// doubao (豆包 / 抖音豆包網盤) - Cookie 認證
 // API reference: Go drivers/doubao
 
 export interface DriverDoubaoAddition {
@@ -11,7 +11,7 @@ export interface DoubaoFile {
   id: string
   name: string
   key: string
-  node_type: number // 1=目录
+  node_type: number // 1=目錄
   size: number
   parent_id: string
   create_time: number

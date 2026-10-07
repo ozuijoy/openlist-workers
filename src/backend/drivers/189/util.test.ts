@@ -105,7 +105,7 @@ test("login rejects redirects to untrusted hosts before sending cookies", async 
 
   await assert.rejects(
     () => client.login({ force: true }),
-    /不受信任的登录重定向地址/,
+    /不受信任的登入重定向地址/,
   )
   assert.deepEqual(cookiesSent, ["session=secret"])
 })
@@ -357,14 +357,14 @@ test("malformed fileListAO is rejected instead of becoming an empty directory", 
 
   const client = new Pan189Client({ username: "", password: "" })
 
-  await assert.rejects(() => client.getFiles("-11"), /fileListAO.*数组/)
+  await assert.rejects(() => client.getFiles("-11"), /fileListAO.*數組/)
 })
 
 test("large 189Cloud file and folder ids are preserved exactly", async () => {
   const folderId = "925521251969871401"
   const fileId = "925521251969871402"
 
-  const body = `{"res_code":0,"res_message":"","fileListAO":{"count":2,"fileList":[{"id":${fileId},"name":"测试.txt","size":15,"lastOpTime":"2026-08-23 10:14:24"}],"folderList":[{"id":${folderId},"name":"Openlist","lastOpTime":"2026-08-23 10:15:00"}]}}`
+  const body = `{"res_code":0,"res_message":"","fileListAO":{"count":2,"fileList":[{"id":${fileId},"name":"測試.txt","size":15,"lastOpTime":"2026-08-23 10:14:24"}],"folderList":[{"id":${folderId},"name":"Openlist","lastOpTime":"2026-08-23 10:15:00"}]}}`
   globalThis.fetch = (async (input) =>
     mockResponse(requestUrl(input), body, {
       status: 200,
@@ -406,7 +406,7 @@ test("null file counts are rejected instead of becoming zero", async () => {
 
   const client = new Pan189Client({ username: "", password: "" })
 
-  await assert.rejects(() => client.getFiles("-11"), /fileListAO.*数组/)
+  await assert.rejects(() => client.getFiles("-11"), /fileListAO.*數組/)
 })
 
 test("driver initialization does not preflight the root directory", async () => {

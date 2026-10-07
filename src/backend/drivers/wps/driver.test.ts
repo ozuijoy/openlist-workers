@@ -14,7 +14,7 @@ test("WpsDriver instantiation and methods", async () => {
 
   // Mock getGroups
   ;(driver as any).client.getGroups = async () => [
-    { group_id: 1001, id: 1001, name: "我的文档" },
+    { group_id: 1001, id: 1001, name: "我的文件" },
   ]
 
   // Mock getFiles
@@ -52,11 +52,11 @@ test("WpsDriver instantiation and methods", async () => {
   // Root list returns groups
   const rootItems = await driver.list("/", "/")
   assert.equal(rootItems.length, 1)
-  assert.equal(rootItems[0].name, "我的文档")
+  assert.equal(rootItems[0].name, "我的文件")
   assert.equal(rootItems[0].is_dir, true)
 
   // Group list returns files & folders
-  const groupItems = await driver.list("/我的文档", "/我的文档")
+  const groupItems = await driver.list("/我的文件", "/我的文件")
   assert.equal(groupItems.length, 2)
   assert.equal(groupItems[0].name, "work")
   assert.equal(groupItems[0].is_dir, true)
@@ -68,6 +68,6 @@ test("WpsDriver instantiation and methods", async () => {
   ;(driver as any).client.getDownloadUrl = async () =>
     "https://ks3.kdocs.cn/download/doc.docx"
 
-  const link = await driver.link("/我的文档/doc.docx", "/我的文档/doc.docx")
+  const link = await driver.link("/我的文件/doc.docx", "/我的文件/doc.docx")
   assert.equal(link.url, "https://ks3.kdocs.cn/download/doc.docx")
 })

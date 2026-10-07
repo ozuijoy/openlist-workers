@@ -83,7 +83,7 @@ export class DriverTeambition implements StorageDriver {
       }
     } catch {}
 
-    // Fallback: 目录
+    // Fallback: 目錄
     try {
       await this.client.getFiles(await this.pathToId(physicalPath))
       return {
@@ -177,7 +177,7 @@ export class DriverTeambition implements StorageDriver {
     throw new Error(`[Teambition] '${name}' not found`)
   }
 
-  /** 物理路径 → 目录 ID（根目录返回空串） */
+  /** 物理路徑 → 目錄 ID（根目錄返回空串） */
   private async pathToId(physicalPath: string): Promise<string> {
     const clean = physicalPath.split("/").filter(Boolean).join("/")
     if (!clean) return ""

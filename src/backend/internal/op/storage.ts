@@ -126,8 +126,8 @@ const driverInitCache = new Map<string, Promise<StorageDriver>>()
 const cookiePersistenceCache = new Map<string, Promise<void>>()
 const deferredTokenPersistence = new WeakSet<object>()
 
-// M-8：驱动实例缓存容量上限。storage.modified 变化会产生新 key，旧条目若不清理，
-// 长生命周期 isolate 中会无限累积。超出上限时按插入顺序淘汰最旧条目。
+// M-8：驅動實例快取容量上限。storage.modified 變化會產生新 key，舊條目若不清理，
+// 長生命週期 isolate 中會無限累積。超出上限時按插入順序淘汰最舊條目。
 const MAX_DRIVER_CACHE = 100
 
 function setDriverCache(key: string, driver: StorageDriver): void {
@@ -140,7 +140,7 @@ function setDriverCache(key: string, driver: StorageDriver): void {
 
 export interface StorageRequestContext {
   waitUntil?: (promise: Promise<unknown>) => void
-  env?: any // ESA/Cloudflare env，用于请求级缓存复用
+  env?: any // ESA/Cloudflare env，用於請求級快取複用
 }
 
 export interface GetDriverOptions {
@@ -257,7 +257,7 @@ async function createDriver(
     normDriver === "aliyundriveoauth2" ||
     normDriver.includes("aliyun")
   ) {
-    // 统一只保留阿里云盘 OAuth2 (AliyundriveOpen)
+    // 統一隻保留阿里雲盤 OAuth2 (AliyundriveOpen)
     driver = new AliyundriveOpen(parseAddition(storageConfig))
     await driver.init?.()
   } else if (
@@ -580,7 +580,7 @@ async function createDriver(
   ) {
     const addition = parseAddition(storageConfig)
     driver = new Pan115Driver(addition, async (tokens) => {
-      // 持久化刷新后的 access_token / refresh_token，避免冷启动重复刷新
+      // 持久化刷新後的 access_token / refresh_token，避免冷啟動重複刷新
       try {
         const db = await getDb()
         const st = (db.storages || []).find(
@@ -1388,9 +1388,9 @@ export async function listItems(
   const activeStorages = (db.storages || []).filter((s: any) => !s.disabled)
   const cleanListedPath = resolved.cleanPath
 
-  // 挂载点顺序对齐 Go op.getStorageVirtualFilesByPath：
-  //   Order 升序；Order 相同时按 MountPath 升序。
-  // 此前直接沿用数据库数组顺序，后台存储编辑页里的「序号」因此完全不生效。
+  // 掛載點順序對齊 Go op.getStorageVirtualFilesByPath：
+  //   Order 升序；Order 相同時按 MountPath 升序。
+  // 此前直接沿用資料庫數組順序，後台儲存編輯頁裡的「序號」因此完全不生效。
   const orderedStorages = [...activeStorages].sort((a: any, b: any) => {
     const orderA = Number(a.order) || 0
     const orderB = Number(b.order) || 0
@@ -1432,15 +1432,15 @@ export async function listItems(
 }
 
 /**
- * raw_url 使用哪个端点前缀（`/api/p` 还是 `/api/d`）。
+ * raw_url 使用哪個端點前綴（`/api/p` 還是 `/api/d`）。
  *
- * Go 的 `/p` 在取链接前先跑 `canProxy()`，不通过直接 403 `proxy not allowed`；
- * `/d` 不受该限制（走 `ShouldProxy`）。因此 raw_url 必须与存储自身的代理配置匹配：
- * 拿 `/p` 去请求一个既没开 `web_proxy`、扩展名也不在 `proxy_types` / `text_types`
- * 里的存储，必然 403。
+ * Go 的 `/p` 在取鏈接前先跑 `canProxy()`，不通過直接 403 `proxy not allowed`；
+ * `/d` 不受該限制（走 `ShouldProxy`）。因此 raw_url 必須與儲存自身的代理配置匹配：
+ * 拿 `/p` 去請求一個既沒開 `web_proxy`、擴展名也不在 `proxy_types` / `text_types`
+ * 裡的儲存，必然 403。
  *
- * 这是 #66 修复后暴露的第二个问题：文件列表走 `/d` 所以正常，而预览页的「下载」
- * 按钮与 `img/video` 的 src 用的是 raw_url（此前恒为 `/api/p`）。
+ * 這是 #66 修復後暴露的第二個問題：文件列表走 `/d` 所以正常，而預覽頁的「下載」
+ * 按鈕與 `img/video` 的 src 用的是 raw_url（此前恆為 `/api/p`）。
  */
 async function resolveRawUrlPrefix(
   storage: any,
@@ -1459,7 +1459,7 @@ async function resolveRawUrlPrefix(
     })
     return allowProxy ? "/api/p" : "/api/d"
   } catch {
-    // 设置读不到时保持旧行为（/p），由 rawRouter 给出最终结论
+    // 設置讀不到時保持舊行為（/p），由 rawRouter 給出最終結論
     return "/api/p"
   }
 }
@@ -1522,10 +1522,10 @@ export async function getItem(
   return {
     item,
     provider: driverName,
-    // 端点前缀按 canProxy() 选（见 resolveRawUrlPrefix），路径必须逐段编码
-    // （对齐 Go utils.EncodePath(path, true)）：raw_url 会被前端直接当 href/src
-    // 使用，未编码的 `?`/`#` 会被截断、裸 `%` 会让服务端 decodeURIComponent 抛错
-    // （见 pkg/path.encodeDownloadPath 注释）。
+    // 端點前綴按 canProxy() 選（見 resolveRawUrlPrefix），路徑必須逐段編碼
+    // （對齊 Go utils.EncodePath(path, true)）：raw_url 會被前端直接當 href/src
+    // 使用，未編碼的 `?`/`#` 會被截斷、裸 `%` 會讓服務端 decodeURIComponent 拋錯
+    // （見 pkg/path.encodeDownloadPath 註釋）。
     rawUrl: `${await resolveRawUrlPrefix(resolved.storage, virtualPath)}${encodeDownloadPath(virtualPath)}`,
   }
 }

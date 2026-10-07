@@ -1,14 +1,14 @@
-// cnb_releases (CNB 代码托管 Releases) - Bearer token 认证
+// cnb_releases (CNB 代碼託管 Releases) - Bearer token 認證
 // API base: https://api.cnb.cool
 
 export interface DriverCnbReleasesAddition {
-  /** 仓库 slug（org/repo） */
+  /** 倉庫 slug（org/repo） */
   repo: string
-  /** 访问令牌（必填） */
+  /** 訪問令牌（必填） */
   token: string
-  /** 使用 tag name 作为版本名 */
+  /** 使用 tag name 作為版本名 */
   use_tag_name?: boolean
-  /** 新建 release 的目标分支 */
+  /** 新建 release 的目標分支 */
   default_branch?: string
 }
 

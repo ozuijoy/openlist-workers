@@ -1,16 +1,16 @@
 /**
- * 输入验证模块 (Input Validation)
+ * 輸入驗證模塊 (Input Validation)
  * 添加日期: 2026-09-05
  * 
- * 使用 Zod 进行类型安全的输入验证，防止注入攻击和数据污染
+ * 使用 Zod 進行類型安全的輸入驗證，防止注入攻擊和資料汙染
  */
 
 import { z } from "zod"
 
-// ============ 通用验证器 ============
+// ============ 通用驗證器 ============
 
 /**
- * 用户名验证（3-32 字符，仅字母数字下划线）
+ * 用戶名驗證（3-32 字符，僅字母數字下劃線）
  */
 export const usernameSchema = z
   .string()
@@ -19,7 +19,7 @@ export const usernameSchema = z
   .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores")
 
 /**
- * 密码验证（8-128 字符，至少包含字母和数字）
+ * 密碼驗證（8-128 字符，至少包含字母和數字）
  */
 export const passwordSchema = z
   .string()
@@ -29,7 +29,7 @@ export const passwordSchema = z
   .regex(/[0-9]/, "Password must contain at least one number")
 
 /**
- * 邮箱验证
+ * 郵箱驗證
  */
 export const emailSchema = z
   .string()
@@ -37,8 +37,8 @@ export const emailSchema = z
   .max(255, "Email must be at most 255 characters")
 
 /**
- * 路径验证（防止路径遍历攻击）
- * 2026-09-08 增强：添加更多安全检查
+ * 路徑驗證（防止路徑遍歷攻擊）
+ * 2026-09-08 增強：添加更多安全檢查
  */
 export const pathSchema = z
   .string()
@@ -51,7 +51,7 @@ export const pathSchema = z
   .refine((path) => !path.startsWith("//") && !path.startsWith("\\\\"), "UNC path not allowed")
 
 /**
- * TOTP 令牌验证（6 位数字）
+ * TOTP 令牌驗證（6 位數字）
  */
 export const totpTokenSchema = z
   .string()
@@ -59,39 +59,39 @@ export const totpTokenSchema = z
   .regex(/^\d{6}$/, "TOTP token must be numeric")
 
 /**
- * 分页参数验证
+ * 分頁參數驗證
  */
 export const paginationSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   per_page: z.coerce.number().int().min(1).max(1000).default(50),
 })
 
-// ============ API 请求验证 ============
+// ============ API 請求驗證 ============
 
 /**
- * 登录请求验证
+ * 登入請求驗證
  */
 export const loginRequestSchema = z.object({
   username: usernameSchema,
   password: z.string().min(1, "Password is required"),
-  totp_token: z.string().optional(), // 双因素认证令牌（可选）
+  totp_token: z.string().optional(), // 雙因素認證令牌（可選）
   remember: z.boolean().optional().default(false),
 })
 
 /**
- * 用户创建请求验证
+ * 用戶創建請求驗證
  */
 export const createUserRequestSchema = z.object({
   username: usernameSchema,
   password: passwordSchema,
-  role: z.number().int().min(0).max(3).default(1), // 0=超级管理员, 1=管理员, 2=普通用户, 3=访客
+  role: z.number().int().min(0).max(3).default(1), // 0=超級管理員, 1=管理員, 2=普通用戶, 3=訪客
   permission: z.number().int().min(0).default(0),
   disabled: z.boolean().optional().default(false),
   base_path: pathSchema.optional(),
 })
 
 /**
- * 用户更新请求验证
+ * 用戶更新請求驗證
  */
 export const updateUserRequestSchema = z.object({
   password: passwordSchema.optional(),
@@ -102,14 +102,14 @@ export const updateUserRequestSchema = z.object({
 })
 
 /**
- * 2FA 启用请求验证
+ * 2FA 啟用請求驗證
  */
 export const enable2FARequestSchema = z.object({
-  token: totpTokenSchema, // 验证用户已正确配置 TOTP
+  token: totpTokenSchema, // 驗證用戶已正確配置 TOTP
 })
 
 /**
- * 文件操作请求验证
+ * 文件操作請求驗證
  */
 export const fileOperationRequestSchema = z.object({
   path: pathSchema,
@@ -118,22 +118,22 @@ export const fileOperationRequestSchema = z.object({
 })
 
 /**
- * 设置更新请求验证
+ * 設置更新請求驗證
  */
 export const settingsUpdateRequestSchema = z.object({
   site_title: z.string().max(100).optional(),
   logo_url: z.string().url().max(500).optional(),
   allow_signup: z.boolean().optional(),
   default_role: z.number().int().min(0).max(3).optional(),
-  session_timeout: z.number().int().min(300).max(86400).optional(), // 5 分钟 ~ 24 小时
+  session_timeout: z.number().int().min(300).max(86400).optional(), // 5 分鐘 ~ 24 小時
 })
 
-// ============ 验证辅助函数 ============
+// ============ 驗證輔助函數 ============
 
 /**
- * 验证输入并返回解析结果
+ * 驗證輸入並返回解析結果
  * @param schema Zod schema
- * @param data 待验证数据
+ * @param data 待驗證資料
  * @returns { success, data?, error? }
  */
 export function validate<T>(
@@ -154,22 +154,22 @@ export function validate<T>(
 }
 
 /**
- * 验证输入并抛出异常（用于 async 路由）
+ * 驗證輸入並拋出異常（用於 async 路由）
  * @param schema Zod schema
- * @param data 待验证数据
- * @returns 解析后的数据
- * @throws 验证失败时抛出错误
+ * @param data 待驗證資料
+ * @returns 解析後的資料
+ * @throws 驗證失敗時拋出錯誤
  */
 export function validateOrThrow<T>(schema: z.ZodSchema<T>, data: unknown): T {
   return schema.parse(data)
 }
 
 /**
- * 安全验证（不抛出异常，返回默认值）
+ * 安全驗證（不拋出異常，返回默認值）
  * @param schema Zod schema
- * @param data 待验证数据
- * @param defaultValue 验证失败时的默认值
- * @returns 解析后的数据或默认值
+ * @param data 待驗證資料
+ * @param defaultValue 驗證失敗時的默認值
+ * @returns 解析後的資料或默認值
  */
 export function validateSafe<T>(
   schema: z.ZodSchema<T>,
@@ -183,17 +183,17 @@ export function validateSafe<T>(
   }
 }
 
-// ============ SQL 注入防护 ============
+// ============ SQL 注入防護 ============
 
 /**
- * 清理 SQL 查询参数（虽然应该使用参数化查询，但作为额外防护）
+ * 清理 SQL 查詢參數（雖然應該使用參數化查詢，但作為額外防護）
  */
 export function sanitizeSQLInput(input: string): string {
   return input.replace(/['";\\]/g, "")
 }
 
 /**
- * 验证排序字段（防止 SQL 注入）
+ * 驗證排序欄位（防止 SQL 注入）
  */
 export const sortFieldSchema = z.enum([
   "id",
@@ -206,14 +206,14 @@ export const sortFieldSchema = z.enum([
 ])
 
 /**
- * 验证排序方向
+ * 驗證排序方向
  */
 export const sortOrderSchema = z.enum(["asc", "desc", "ASC", "DESC"])
 
-// ============ XSS 防护 ============
+// ============ XSS 防護 ============
 
 /**
- * 转义 HTML 特殊字符（防止 XSS）
+ * 轉義 HTML 特殊字符（防止 XSS）
  */
 export function escapeHTML(input: string): string {
   const map: Record<string, string> = {
@@ -228,13 +228,13 @@ export function escapeHTML(input: string): string {
 }
 
 /**
- * 清理用户输入的显示文本（移除危险字符）
+ * 清理用戶輸入的顯示文本（移除危險字符）
  */
 export function sanitizeDisplayText(input: string): string {
   return input.replace(/[<>]/g, "").trim()
 }
 
-// ============ 导出所有验证器 ============
+// ============ 導出所有驗證器 ============
 
 export const validators = {
   username: usernameSchema,

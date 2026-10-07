@@ -19,7 +19,7 @@ function fileToItem(f: CloudreveFile): FileItem {
   }
 }
 
-/** 规范化 uri（Cloudreve 根为 "/"） */
+/** 規範化 uri（Cloudreve 根為 "/"） */
 function normUri(p: string): string {
   if (!p || p === "/") return "/"
   return p.startsWith("/") ? p : "/" + p
@@ -63,7 +63,7 @@ export class DriverCloudreve implements StorageDriver {
       }
     } catch {}
 
-    // Fallback: 可能是目录（根目录等）
+    // Fallback: 可能是目錄（根目錄等）
     try {
       const files = await this.client.listFiles(uri)
       return {

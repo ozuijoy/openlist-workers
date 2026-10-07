@@ -1,4 +1,4 @@
-// Strm driver types — 将底层网盘的视频文件以 .strm 文件形式暴露
+// Strm driver types — 將底層網盤的視頻文件以 .strm 文件形式暴露
 export interface StrmAddition {
   paths: string
   siteUrl?: string

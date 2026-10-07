@@ -1,4 +1,4 @@
-// baidu_photo (百度相册) - Cookie 认证
+// baidu_photo (百度相冊) - Cookie 認證
 // API reference: Go drivers/baidu_photo
 
 export interface DriverBaiduPhotoAddition {

@@ -1,186 +1,186 @@
-# 贡献指南 (Contributing Guide)
+# 貢獻指南 (Contributing Guide)
 
-感谢你对 **OpenList** 的关注与支持！🎉
+感謝你對 **OpenList** 的關注與支持！🎉
 
-OpenList 是一个基于 **SolidJS** + **Hono** + **TypeScript** 的现代化全栈文件列表与网盘管理系统。我们欢迎任何形式的贡献，包括但不限于报告 Bug、提出新功能建议、改进文档、参与国际化翻译以及提交代码。
+OpenList 是一個基於 **SolidJS** + **Hono** + **TypeScript** 的現代化全棧文件列表與網盤管理系統。我們歡迎任何形式的貢獻，包括但不限於報告 Bug、提出新功能建議、改進文件、參與國際化翻譯以及提交代碼。
 
 ---
 
-## 目录
+## 目錄
 
-- [贡献方式](#-贡献方式)
-- [本地开发环境](#-本地开发环境)
-  - [环境要求](#环境要求)
+- [貢獻方式](#-貢獻方式)
+- [本地開發環境](#-本地開發環境)
+  - [環境要求](#環境要求)
   - [快速起步](#快速起步)
-  - [常用脚本](#常用脚本)
-- [核心架构与开发规范](#-核心架构与开发规范)
-  - [全栈 Web 标准优先与边缘兼容（重要）](#全栈-web-标准优先与边缘兼容重要)
-  - [添加新的存储驱动 (Storage Driver)](#添加新的存储驱动-storage-driver)
-  - [前端开发规范 (SolidJS)](#前端开发规范-solidjs)
-  - [国际化翻译 (i18n)](#国际化翻译-i18n)
-- [Git 提交规范 (Commit Convention)](#-git-提交规范-commit-convention)
+  - [常用腳本](#常用腳本)
+- [核心架構與開發規範](#-核心架構與開發規範)
+  - [全棧 Web 標準優先與邊緣相容（重要）](#全棧-web-標準優先與邊緣相容重要)
+  - [添加新的儲存驅動 (Storage Driver)](#添加新的儲存驅動-storage-driver)
+  - [前端開發規範 (SolidJS)](#前端開發規範-solidjs)
+  - [國際化翻譯 (i18n)](#國際化翻譯-i18n)
+- [Git 提交規範 (Commit Convention)](#-git-提交規範-commit-convention)
 - [Pull Request (PR) 流程](#-pull-request-pr-流程)
-  - [PR 准备与自检清单](#pr-准备与自检清单)
-  - [AI 辅助使用声明 (AI Disclosure)](#ai-辅助使用声明-ai-disclosure)
-- [行为准则与开源许可证](#-行为准则与开源许可证)
+  - [PR 準備與自檢清單](#pr-準備與自檢清單)
+  - [AI 輔助使用聲明 (AI Disclosure)](#ai-輔助使用聲明-ai-disclosure)
+- [行為準則與開源許可證](#-行為準則與開源許可證)
 
 ---
 
-## 💡 贡献方式
+## 💡 貢獻方式
 
-### 1. 报告 Bug
+### 1. 報告 Bug
 
-如果您在使用过程中发现了 Bug，请通过 [GitHub Issues](https://github.com/OpenListTeam/OpenList/issues) 提交：
+如果您在使用過程中發現了 Bug，請通過 [GitHub Issues](https://github.com/OpenListTeam/OpenList/issues) 提交：
 
-- 检查是否已有相同或相似的 Issue。
-- 详细描述问题发生的场景、复现步骤、预期行为与实际表现。
-- 提供运行环境信息（部署方式如 Node.js 容器 / Cloudflare Workers / Vercel、Node 版本、浏览器版本等）。
-- 附上相关的控制台日志或错误堆栈截图/文本。
+- 檢查是否已有相同或相似的 Issue。
+- 詳細描述問題發生的場景、復現步驟、預期行為與實際表現。
+- 提供運行環境信息（部署方式如 Node.js 容器 / Cloudflare Workers / Vercel、Node 版本、瀏覽器版本等）。
+- 附上相關的控制檯日誌或錯誤堆棧截圖/文本。
 
-### 2. 提出功能建议 (Feature Requests)
+### 2. 提出功能建議 (Feature Requests)
 
-我们乐于听取各种创新的点子！提交功能建议前：
+我們樂於聽取各種創新的點子！提交功能建議前：
 
-- 清晰阐述该功能的使用场景与价值。
-- 简述预期的交互方式或技术实现构想。
+- 清晰闡述該功能的使用場景與價值。
+- 簡述預期的交互方式或技術實現構想。
 
-### 3. 参与国际化翻译 (i18n)
+### 3. 參與國際化翻譯 (i18n)
 
-项目使用 Crowdin 管理多语言翻译：
+項目使用 Crowdin 管理多語言翻譯：
 
-- 可通过运行 `pnpm run crowdin:download` 同步最新文案。
-- 也欢迎在 [Crowdin 项目页面](https://oplist.org/) 或通过 PR 完善语言包。
+- 可通過運行 `pnpm run crowdin:download` 同步最新文案。
+- 也歡迎在 [Crowdin 項目頁面](https://oplist.org/) 或通過 PR 完善語言包。
 
-### 4. 提交代码 (Code Contributions)
+### 4. 提交代碼 (Code Contributions)
 
-无论是修复 Bug、重构代码、新增网盘驱动还是优化 UI，我们都热烈欢迎！请参考下文的开发与提交规范。
+無論是修復 Bug、重構代碼、新增網盤驅動還是優化 UI，我們都熱烈歡迎！請參考下文的開發與提交規範。
 
 ---
 
-## 🛠️ 本地开发环境
+## 🛠️ 本地開發環境
 
-### 环境要求
+### 環境要求
 
-- **Node.js**：`>= 18.0.0`（推荐 `22.x`）
-- **包管理器**：推荐使用 **`pnpm`**（`>= 9.0.0`）
+- **Node.js**：`>= 18.0.0`（推薦 `22.x`）
+- **包管理器**：推薦使用 **`pnpm`**（`>= 9.0.0`）
 
 ### 快速起步
 
-1. **Fork 并克隆仓库**：
+1. **Fork 並克隆倉庫**：
 
    ```bash
    git clone https://github.com/<your-username>/OpenList.git
    cd openlist
    ```
 
-2. **安装依赖**：
+2. **安裝依賴**：
 
    ```bash
    pnpm install
    ```
 
-3. **启动本地开发服务器**：
+3. **啟動本地開發伺服器**：
 
    ```bash
    pnpm run dev
    ```
 
-   开发服务器将同时启动 Hono 后端 API 与 Vite 前端服务，默认访问地址：`http://localhost:3000`。
+   開發伺服器將同時啟動 Hono 後端 API 與 Vite 前端服務，默認訪問地址：`http://localhost:3000`。
 
-4. **Cloudflare Workers 边缘模拟调试（可选）**：
+4. **Cloudflare Workers 邊緣模擬調試（可選）**：
    ```bash
    pnpm run dev:worker
    ```
 
-### 常用脚本
+### 常用腳本
 
-| 命令                  | 说明                                             |
+| 命令                  | 說明                                             |
 | :-------------------- | :----------------------------------------------- |
-| `pnpm run dev`        | 启动本地全栈开发环境（Vite + Hono）              |
-| `pnpm run lint`       | 执行 TypeScript 类型检查 (`tsc --noEmit`)        |
-| `pnpm run format`     | 使用 Prettier 格式化源码                         |
-| `pnpm run build`      | 构建完整生产产物（前端静态资源 + Edge 后端脚本） |
-| `pnpm run build:edge` | 使用 esbuild 单独打包无服务器/边缘后端脚本       |
-| `pnpm run test:189`   | 运行 189Cloud 驱动单元测试                       |
-| `pnpm run crowdin`    | 上传并下载 Crowdin 国际化翻译资源                |
-| `pnpm run i18n:build` | 更新并编译国际化语言包                           |
+| `pnpm run dev`        | 啟動本地全棧開發環境（Vite + Hono）              |
+| `pnpm run lint`       | 執行 TypeScript 類型檢查 (`tsc --noEmit`)        |
+| `pnpm run format`     | 使用 Prettier 格式化源碼                         |
+| `pnpm run build`      | 構建完整生產產物（前端靜態資源 + Edge 後端腳本） |
+| `pnpm run build:edge` | 使用 esbuild 單獨打包無伺服器/邊緣後端腳本       |
+| `pnpm run test:189`   | 運行 189Cloud 驅動單元測試                       |
+| `pnpm run crowdin`    | 上傳並下載 Crowdin 國際化翻譯資源                |
+| `pnpm run i18n:build` | 更新並編譯國際化語言包                           |
 
 ---
 
-## 🧱 核心架构与开发规范
+## 🧱 核心架構與開發規範
 
 ```
 openlist/
-├── api/                   # 边缘 / Serverless 入口 ([...route].ts)
+├── api/                   # 邊緣 / Serverless 入口 ([...route].ts)
 ├── src/
-│   ├── backend/           # 后端核心 (Hono)
-│   │   ├── drivers/       # 各网盘存储驱动实现
-│   │   ├── internal/      # 核心逻辑 (存储调度/数据库/操作层)
+│   ├── backend/           # 後端核心 (Hono)
+│   │   ├── drivers/       # 各網盤儲存驅動實現
+│   │   ├── internal/      # 核心邏輯 (儲存調度/資料庫/操作層)
 │   │   └── server/        # API 路由 (fs/auth/admin/share/task/mcp 等)
-│   ├── components/        # SolidJS 通用前端组件
-│   ├── pages/             # 前端页面 (浏览/管理后台/分享/登录等)
-│   ├── store/             # 响应式状态管理
-│   ├── types/             # 共享 TypeScript 类型定义
-│   └── utils/             # 前端工具函数
+│   ├── components/        # SolidJS 通用前端組件
+│   ├── pages/             # 前端頁面 (瀏覽/管理後台/分享/登入等)
+│   ├── store/             # 響應式狀態管理
+│   ├── types/             # 共享 TypeScript 類型定義
+│   └── utils/             # 前端工具函數
 ```
 
-### 全栈 Web 标准优先与边缘兼容（重要）
+### 全棧 Web 標準優先與邊緣相容（重要）
 
-OpenList 的后端设计目标是**跨平台与边缘原生**（既能在 Node.js 容器运行，也能部署在 Cloudflare Workers、Vercel、AWS Lambda 等边缘无服务器环境）：
+OpenList 的後端設計目標是**跨平台與邊緣原生**（既能在 Node.js 容器運行，也能部署在 Cloudflare Workers、Vercel、AWS Lambda 等邊緣無伺服器環境）：
 
-1. **必须使用标准 Web API**：
-   - 使用 `fetch`、`Web Crypto` (`crypto.subtle`)、`ReadableStream`、`Headers`、`Response` 等标准 Web API。
-2. **禁止在通用后端直接引入 Node.js 独占模块**：
-   - 禁止在 `src/backend/server/` 或通用驱动中静态引入 `fs`、`path`、`net`、`child_process` 等 Node 原生包。
-   - 如需仅限 Node.js 容器的功能（如本地文件系统驱动 `LocalDriver`），必须使用动态导入 `await import(...)` 并做好运行环境检测隔离。
-   - 依赖 Node 原生二进制的驱动（当前为 `sftp` / `ftp`）会在边缘构建阶段被 [`scripts/build-edge.mjs`](../scripts/build-edge.mjs) 的 `emptyNodeDriverPlugin` 替换为空实现（构造时抛错）。**新增此类驱动时，必须同步把驱动目录与相关原生包加入该插件的依赖过滤规则**，否则边缘平台会因缺少 `.node` 文件 loader 而打包失败。
-3. **数据持久化适配**：
-   - 核心数据操作通过模型层抽象，支持 **Cloudflare KV**（边缘环境）与 **JSON 文件**（Node.js 容器环境）无缝适配。
+1. **必須使用標準 Web API**：
+   - 使用 `fetch`、`Web Crypto` (`crypto.subtle`)、`ReadableStream`、`Headers`、`Response` 等標準 Web API。
+2. **禁止在通用後端直接引入 Node.js 獨佔模塊**：
+   - 禁止在 `src/backend/server/` 或通用驅動中靜態引入 `fs`、`path`、`net`、`child_process` 等 Node 原生包。
+   - 如需僅限 Node.js 容器的功能（如本地文件系統驅動 `LocalDriver`），必須使用動態導入 `await import(...)` 並做好運行環境檢測隔離。
+   - 依賴 Node 原生二進制的驅動（當前為 `sftp` / `ftp`）會在邊緣構建階段被 [`scripts/build-edge.mjs`](../scripts/build-edge.mjs) 的 `emptyNodeDriverPlugin` 替換為空實現（構造時拋錯）。**新增此類驅動時，必須同步把驅動目錄與相關原生包加入該插件的依賴過濾規則**，否則邊緣平台會因缺少 `.node` 文件 loader 而打包失敗。
+3. **資料持久化適配**：
+   - 核心資料操作通過模型層抽象，支持 **Cloudflare KV**（邊緣環境）與 **JSON 文件**（Node.js 容器環境）無縫適配。
 
-### 添加新的存储驱动 (Storage Driver)
+### 添加新的儲存驅動 (Storage Driver)
 
-若需支持新的网盘或对象存储，请按以下步骤实现：
+若需支持新的網盤或對象儲存，請按以下步驟實現：
 
-1. **在 `src/backend/drivers/<driver_name>/` 创建驱动目录**：
-   - `types.ts`：定义该网盘的附加配置项（Addition）与 API 数据结构。
-   - `util.ts`：封装与该网盘开放平台/接口交互的 Client 类。
-   - `driver.ts`：实现 `StorageDriver` 接口（定义于 `src/backend/internal/driver/base.ts`）。
-2. **实现 `StorageDriver` 接口方法**：
-   - `list(virtualPath, physicalPath)`: 获取目录文件列表
-   - `get(virtualPath, physicalPath)`: 获取单文件详情/下载直链
-   - `mkdir(virtualPath, physicalPath)`: 创建目录
+1. **在 `src/backend/drivers/<driver_name>/` 創建驅動目錄**：
+   - `types.ts`：定義該網盤的附加配置項（Addition）與 API 資料結構。
+   - `util.ts`：封裝與該網盤開放平台/介面交互的 Client 類。
+   - `driver.ts`：實現 `StorageDriver` 介面（定義於 `src/backend/internal/driver/base.ts`）。
+2. **實現 `StorageDriver` 介面方法**：
+   - `list(virtualPath, physicalPath)`: 獲取目錄文件列表
+   - `get(virtualPath, physicalPath)`: 獲取單文件詳情/下載直鏈
+   - `mkdir(virtualPath, physicalPath)`: 創建目錄
    - `rename(virtualPath, physicalPath, newName)`: 重命名
-   - `remove(virtualPath, physicalPath, names)`: 删除文件/目录
-   - `move` / `copy` / `put`（按网盘支持能力选择实现）
-3. **注册驱动**：
-   - 在 `src/backend/internal/op/storage.ts` 中引入并注册驱动实例获取逻辑。
-   - 在 `src/backend/server/admin.ts` 中补充驱动配置项元数据（如需要后台驱动表单支持）。
+   - `remove(virtualPath, physicalPath, names)`: 刪除文件/目錄
+   - `move` / `copy` / `put`（按網盤支持能力選擇實現）
+3. **註冊驅動**：
+   - 在 `src/backend/internal/op/storage.ts` 中引入並註冊驅動實例獲取邏輯。
+   - 在 `src/backend/server/admin.ts` 中補充驅動配置項元資料（如需要後台驅動表單支持）。
 
-### 前端开发规范 (SolidJS)
+### 前端開發規範 (SolidJS)
 
-- UI 组件库使用 `@hope-ui/solid` 与原生 CSS，避免引入冗余庞大的样式库。
-- 遵循 SolidJS 细粒度响应式最佳实践（正确使用 `createSignal`、`createMemo`、`createStore`，避免解构 props 导致丢失响应性）。
-- 注意暗色模式 (Dark Mode) 与移动端响应式布局的适配。
+- UI 組件庫使用 `@hope-ui/solid` 與原生 CSS，避免引入冗餘龐大的樣式庫。
+- 遵循 SolidJS 細粒度響應式最佳實踐（正確使用 `createSignal`、`createMemo`、`createStore`，避免解構 props 導致丟失響應性）。
+- 注意暗色模式 (Dark Mode) 與移動端響應式佈局的適配。
 
 ---
 
-## 📌 Git 提交规范 (Commit Convention)
+## 📌 Git 提交規範 (Commit Convention)
 
-提交信息请遵循 [Conventional Commits](https://www.conventionalcommits.org/) 规范，格式如下：
+提交信息請遵循 [Conventional Commits](https://www.conventionalcommits.org/) 規範，格式如下：
 
 ```
 <type>(<scope>): <subject>
 ```
 
-### 常用 Type 类型
+### 常用 Type 類型
 
 - `feat`: 新增功能特性
-- `fix`: 修复 Bug
-- `docs`: 文档变动
-- `style`: 代码格式调整（不影响逻辑的空格、分号等）
-- `refactor`: 重构代码（既不修复 bug 也不添加新功能）
-- `chore`: 构建过程、辅助工具或依赖项的变动
-- `perf`: 性能优化
+- `fix`: 修復 Bug
+- `docs`: 文件變動
+- `style`: 代碼格式調整（不影響邏輯的空格、分號等）
+- `refactor`: 重構代碼（既不修復 bug 也不添加新功能）
+- `chore`: 構建過程、輔助工具或依賴項的變動
+- `perf`: 性能優化
 
 ### 示例
 
@@ -193,48 +193,48 @@ OpenList 的后端设计目标是**跨平台与边缘原生**（既能在 Node.j
 
 ## 🔀 Pull Request (PR) 流程
 
-1. **创建分支**：从最新的 `main` 分支切出新分支：
+1. **創建分支**：從最新的 `main` 分支切出新分支：
    ```bash
    git checkout -b feat/your-feature-name
    ```
-2. **编写代码与自测**：
-   - 编写优雅、注释清晰的代码。
-   - 在本地充分测试变更功能及周边逻辑。
-3. **提交前自检**：
+2. **編寫代碼與自測**：
+   - 編寫優雅、註釋清晰的代碼。
+   - 在本地充分測試變更功能及周邊邏輯。
+3. **提交前自檢**：
 
    ```bash
-   # 1. 确保无 TypeScript 类型错误
+   # 1. 確保無 TypeScript 類型錯誤
    pnpm run lint
 
-   # 2. 格式化代码
+   # 2. 格式化代碼
    pnpm run format
 
-   # 3. 确保构建通过
+   # 3. 確保構建通過
    pnpm run build
    ```
 
-4. **推送到远程并提交 PR**：
-   - 将分支推送到你的 Fork 仓库并向 `main` 分支发起 PR。
-   - 详细填写 PR 描述模板（参考项目提供的 [PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md)）。
+4. **推送到遠程並提交 PR**：
+   - 將分支推送到你的 Fork 倉庫並向 `main` 分支發起 PR。
+   - 詳細填寫 PR 描述模板（參考項目提供的 [PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md)）。
 
-### PR 准备与自检清单
+### PR 準備與自檢清單
 
-- [ ] 代码已通过 `pnpm run lint` 类型检查。
-- [ ] 代码已通过 `pnpm run format` 格式化。
-- [ ] 已在本地测试通过（包括 Node.js 模式与边缘环境模式兼容性）。
-- [ ] PR 标题符合 Conventional Commits 规范（包含必填的 `type(scope)`）。
-- [ ] 如涉及破坏性变更或配置调整，已在 PR 摘要中明确说明。
+- [ ] 代碼已通過 `pnpm run lint` 類型檢查。
+- [ ] 代碼已通過 `pnpm run format` 格式化。
+- [ ] 已在本地測試通過（包括 Node.js 模式與邊緣環境模式相容性）。
+- [ ] PR 標題符合 Conventional Commits 規範（包含必填的 `type(scope)`）。
+- [ ] 如涉及破壞性變更或配置調整，已在 PR 摘要中明確說明。
 
-### AI 辅助使用声明 (AI Disclosure)
+### AI 輔助使用聲明 (AI Disclosure)
 
-OpenList 欢迎开发者合理使用 AI 工具提升开发效率。为了确保代码库的合规性与可维护性：
+OpenList 歡迎開發者合理使用 AI 工具提升開發效率。為了確保代碼庫的合規性與可維護性：
 
-- 若 PR 中包含由 AI（如 ChatGPT、Claude、Copilot、Gemini 等）大量生成的代码或重构内容，请在 PR 模版中的 **AI Disclosure** 区域予以如实勾选与说明。
-- 贡献者需自行审查并完全理解所提交的 AI 辅助内容，确保代码质量与安全性。
+- 若 PR 中包含由 AI（如 ChatGPT、Claude、Copilot、Gemini 等）大量生成的代碼或重構內容，請在 PR 模版中的 **AI Disclosure** 區域予以如實勾選與說明。
+- 貢獻者需自行審查並完全理解所提交的 AI 輔助內容，確保代碼質量與安全性。
 
 ---
 
-## 📜 行为准则与开源许可证
+## 📜 行為準則與開源許可證
 
-- **行为准则**：请保持友善、包容与互相尊重的沟通氛围。对技术实现有不同意见时，欢迎基于事实和规范进行建设性讨论。
-- **开源许可证**：向本项目提交的所有贡献均默认遵循项目的 [AGPL-3.0 许可证](LICENSE)。在提交代码前，请确保你拥有提交该代码的版权或已取得合规授权。
+- **行為準則**：請保持友善、包容與互相尊重的溝通氛圍。對技術實現有不同意見時，歡迎基於事實和規範進行建設性討論。
+- **開源許可證**：向本項目提交的所有貢獻均默認遵循項目的 [AGPL-3.0 許可證](LICENSE)。在提交代碼前，請確保你擁有提交該代碼的版權或已取得合規授權。

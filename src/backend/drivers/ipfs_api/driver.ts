@@ -70,7 +70,7 @@ export class DriverIpfs implements StorageDriver {
       } catch {}
     }
 
-    // ipfs/ipns 模式：通过父目录 list 找到
+    // ipfs/ipns 模式：通過父目錄 list 找到
     const parentPath = "/" + parts.slice(0, -1).join("/")
     try {
       const files = await this.list(_virtualPath, parentPath)
@@ -83,7 +83,7 @@ export class DriverIpfs implements StorageDriver {
       }
     } catch {}
 
-    // Fallback: 目录
+    // Fallback: 目錄
     try {
       await this.client.resolveIpfsPath(rawPath)
       return {

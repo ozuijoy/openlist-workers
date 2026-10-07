@@ -1,4 +1,4 @@
-// misskey (Misskey 网盘 drive) - JSON POST + Bearer token
+// misskey (Misskey 網盤 drive) - JSON POST + Bearer token
 // API reference: Go drivers/misskey
 
 export interface DriverMisskeyAddition {

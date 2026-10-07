@@ -1,8 +1,8 @@
 /**
- * 蓝奏云辅助工具函数：
- * - 阿里云 WAF 防火墙 (acw_sc__v2) 纯 TS 自动求解
- * - 中文相对时间与文件大小解析
- * - HTML / JS 动态变量与表单提取
+ * 藍奏雲輔助工具函數：
+ * - 阿里雲 WAF 防火牆 (acw_sc__v2) 純 TS 自動求解
+ * - 中文相對時間與文件大小解析
+ * - HTML / JS 動態變量與表單提取
  */
 
 const timeSplitReg = /([0-9.]*)\s*([\u4e00-\u9fa5]+)/
@@ -12,13 +12,13 @@ const findDataReg = /data[:\s]+({[^}]+})/
 const findKVReg = /'(.+?)':('?([^' },]*)'?)/g
 
 /**
- * 解析蓝奏云的各种中文时间格式
+ * 解析藍奏雲的各種中文時間格式
  */
 export function mustParseTime(str: string): string {
   if (!str) return new Date().toISOString()
   const trimmed = str.trim()
 
-  // 尝试标准日期格式 YYYY-MM-DD
+  // 嘗試標準日期格式 YYYY-MM-DD
   const directDate = new Date(trimmed)
   if (!isNaN(directDate.getTime())) {
     return directDate.toISOString()
@@ -34,9 +34,9 @@ export function mustParseTime(str: string): string {
 
     if (unit.includes("秒前")) {
       return new Date(now - val * 1000).toISOString()
-    } else if (unit.includes("分") || unit.includes("分钟前")) {
+    } else if (unit.includes("分") || unit.includes("分鐘前")) {
       return new Date(now - val * 60000).toISOString()
-    } else if (unit.includes("小时前") || unit.includes("小时")) {
+    } else if (unit.includes("小時前") || unit.includes("小時")) {
       return new Date(now - val * 3600000).toISOString()
     } else if (unit.includes("天前") || unit.includes("天")) {
       return new Date(now - val * DAY_MS).toISOString()
@@ -51,7 +51,7 @@ export function mustParseTime(str: string): string {
 }
 
 /**
- * 将蓝奏云大小字符串（如 "12.5 M", "500 K", "1024 B"）转换为字节数值
+ * 將藍奏雲大小字符串（如 "12.5 M", "500 K", "1024 B"）轉換為字節數值
  */
 export function sizeStrToInt64(sizeStr: string): number {
   if (!sizeStr) return 0
@@ -76,7 +76,7 @@ export function sizeStrToInt64(sizeStr: string): number {
 }
 
 /**
- * 移除 HTML 注释与单行注释
+ * 移除 HTML 註釋與單行註釋
  */
 export function removeNotes(html: string): string {
   return html.replace(/<!--[\s\S]*?-->|[^:]\/\/.*|\/\*[\s\S]*?\*\//g, (b) => {
@@ -88,7 +88,7 @@ export function removeNotes(html: string): string {
 }
 
 /**
- * 移除 JS 注释
+ * 移除 JS 註釋
  */
 export function removeJSComment(data: string): string {
   let result = ""
@@ -158,12 +158,12 @@ function hexXor(hex1: string, hex2: string): string {
 }
 
 /**
- * 自动计算阿里云盾 WAF (acw_sc__v2) 挑战响应 Cookie
+ * 自動計算阿里雲盾 WAF (acw_sc__v2) 挑戰響應 Cookie
  */
 export function calcAcwScV2(htmlContent: string): string {
   const match = htmlContent.match(findAcwScV2Reg)
   if (!match || match.length < 2) {
-    throw new Error("[Lanzou] 无法匹配到 acw_sc__v2 的 arg1 参数")
+    throw new Error("[Lanzou] 無法匹配到 acw_sc__v2 的 arg1 參數")
   }
   const arg1 = match[1]
   const mask = "3000176000856006061501533003690027800375"
@@ -172,8 +172,8 @@ export function calcAcwScV2(htmlContent: string): string {
 
 function findJSVarFunc(key: string, data: string): string {
   if (!key || !data) return ""
-  // 页面可能先 var key = '' 再 var key = '真实值'（覆盖式赋值），
-  // 必须取最后一个非空匹配，而不是第一个匹配
+  // 頁面可能先 var key = '' 再 var key = '真實值'（覆蓋式賦值），
+  // 必須取最後一個非空匹配，而不是第一個匹配
   const takeLastNonEmpty = (
     matches: RegExpMatchArray[],
   ): string => {
@@ -274,14 +274,14 @@ function formToMap(formData: string): Record<string, string> {
 }
 
 /**
- * 解析 HTML 中内嵌的 data: { ... } 对象或 data : '...' 表单字符串并解析变量
+ * 解析 HTML 中內嵌的 data: { ... } 對象或 data : '...' 表單字符串並解析變量
  */
 export function htmlJsonToMap(
   html: string,
   fullHtml?: string,
 ): Record<string, string> {
   const contextHtml = fullHtml || html
-  // 1. 尝试匹配最长 data : { ... } 对象
+  // 1. 嘗試匹配最長 data : { ... } 對象
   const dataMatches = Array.from(html.matchAll(/data\s*:\s*({[\s\S]*?})/g))
   if (dataMatches.length > 0) {
     let bestMatch = dataMatches[0][1]
@@ -296,23 +296,23 @@ export function htmlJsonToMap(
     }
   }
 
-  // 2. 尝试匹配 data : 'key=val&...' 字符串
+  // 2. 嘗試匹配 data : 'key=val&...' 字符串
   const formMatch = html.match(/data\s*:\s*['"]([^'"]+)['"]/)
   if (formMatch && formMatch[1].includes("=")) {
     return formToMap(formMatch[1])
   }
 
-  throw new Error("[Lanzou] 未能找到请求参数 data 对象")
+  throw new Error("[Lanzou] 未能找到請求參數 data 對象")
 }
 
 /**
- * 查找并提取 HTML 中的指定 JS 函数源码
+ * 查找並提取 HTML 中的指定 JS 函數源碼
  */
 export function getJSFunctionByName(html: string, name: string): string {
   const fnReg = new RegExp(`function\\s+${name}\\s*\\([^)]*\\)\\s*\\{`, "i")
   const match = html.search(fnReg)
   if (match === -1) {
-    throw new Error(`[Lanzou] 未找到函数 ${name}`)
+    throw new Error(`[Lanzou] 未找到函數 ${name}`)
   }
 
   let count = 0

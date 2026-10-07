@@ -1,7 +1,7 @@
 /**
- * Key 格式适配器
+ * Key 格式適配器
  *
- * 将数据按表拆分，每个实体一条记录：
+ * 將資料按表拆分，每個實體一條記錄：
  * - settings_<key>
  * - users_<id>
  * - storages_<id>
@@ -9,13 +9,13 @@
  * - metas_<id>
  * - plugins_<id>
  *
- * 避免大 JSON，适合频繁读写单条记录的场景。
+ * 避免大 JSON，適合頻繁讀寫單條記錄的場景。
  *
- * 键名约束：EdgeOne KV 只接受字母、数字和下划线，因此分隔符用 `_`
- * 而不是 `:`，且 id 中的非法字符（如 UUID 的 `-`）需转义。
+ * 鍵名約束：EdgeOne KV 只接受字母、數字和下劃線，因此分隔符用 `_`
+ * 而不是 `:`，且 id 中的非法字符（如 UUID 的 `-`）需轉義。
  *
- * 转义方案无需反向解析：所有读写都是"构造键名"，实体的主键值一律
- * 来自记录 JSON 本身，key 只用作存储地址。
+ * 轉義方案無需反向解析：所有讀寫都是"構造鍵名"，實體的主鍵值一律
+ * 來自記錄 JSON 本身，key 只用作儲存地址。
  */
 import type { FormatAdapter, Driver } from "../types"
 import { TABLE_NAMES, TABLE_KEY, type TableName } from "../schema"
@@ -23,12 +23,12 @@ import { entityKeyOf, tableKeyPrefix } from "../keycodec"
 
 const INIT_MARK = "openlist_config"
 
-/** 构造表前缀（使用共享键名编码，兼容 EdgeOne KV 字符集约束） */
+/** 構造表前綴（使用共享鍵名編碼，相容 EdgeOne KV 字符集約束） */
 function tablePrefix(table: string): string {
   return tableKeyPrefix(table)
 }
 
-/** 构造完整键名 */
+/** 構造完整鍵名 */
 function fullKeyOf(table: string, id: string): string {
   return entityKeyOf(table, id)
 }
@@ -37,7 +37,7 @@ export const keyFormat: FormatAdapter = {
   name: "key",
 
   async load(driver: Driver, env?: any): Promise<any | null> {
-    // 检查是否已初始化
+    // 檢查是否已初始化
     const mark = await driver.get(INIT_MARK, env)
     if (!mark) return null
 
@@ -66,7 +66,7 @@ export const keyFormat: FormatAdapter = {
   },
 
   async save(data: any, driver: Driver, env?: any): Promise<boolean> {
-    // 清空旧数据
+    // 清空舊資料
     for (const table of TABLE_NAMES) {
       const prefix = tablePrefix(table)
       const keys = await driver.list(prefix, env)
@@ -75,7 +75,7 @@ export const keyFormat: FormatAdapter = {
       }
     }
 
-    // 写入新数据
+    // 寫入新資料
     for (const table of TABLE_NAMES) {
       const keyCol = TABLE_KEY[table]
       const records = data?.[table] || []
@@ -90,7 +90,7 @@ export const keyFormat: FormatAdapter = {
       }
     }
 
-    // 标记已初始化
+    // 標記已初始化
     await driver.put(INIT_MARK, String(Date.now()), env)
     return true
   },
@@ -123,13 +123,13 @@ export const keyFormat: FormatAdapter = {
     const keyCol = TABLE_KEY[table as keyof typeof TABLE_KEY]
     const prefix = tablePrefix(table)
 
-    // 清空旧数据
+    // 清空舊資料
     const oldKeys = await driver.list(prefix, env)
     for (const key of oldKeys) {
       await driver.delete(key, env)
     }
 
-    // 写入新数据
+    // 寫入新資料
     for (const record of records) {
       const id = String(record?.[keyCol] ?? "")
       if (!id) continue

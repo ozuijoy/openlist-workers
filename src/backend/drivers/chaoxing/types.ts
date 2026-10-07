@@ -1,4 +1,4 @@
-// chaoxing (超星小组网盘) - Cookie 认证 + AES 登录
+// chaoxing (超星小組網盤) - Cookie 認證 + AES 登入
 // API reference: Go drivers/chaoxing
 
 export interface DriverChaoXingAddition {
@@ -9,9 +9,9 @@ export interface DriverChaoXingAddition {
   cookie?: string
 }
 
-// 手机端学习通上传的文件 content 字段与网页端不同：
-// 网页端 json `"puid": 54321, "size": 12345`
-// 手机端 json `"puid": "54321", "size": "12345"`
+// 手機端學習通上傳的文件 content 欄位與網頁端不同：
+// 網頁端 json `"puid": 54321, "size": 12345`
+// 手機端 json `"puid": "54321", "size": "12345"`
 export interface ChaoXingFileContent {
   folderName?: string
   name?: string

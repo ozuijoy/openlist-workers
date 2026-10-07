@@ -4,16 +4,16 @@ import { getDb, saveDb } from "../internal/model/db"
 import { getJwtSecret, getUserFromContext } from "./middlewares"
 
 /**
- * WebAuthn / Passkey 登录。
+ * WebAuthn / Passkey 登入。
  *
- * 契约对齐 Go（go-webauthn）：
- *  - begin_login / finish_login（discoverable login 支持 username 可选）
- *  - begin_registration / finish_registration（需已登录）
+ * 契約對齊 Go（go-webauthn）：
+ *  - begin_login / finish_login（discoverable login 支持 username 可選）
+ *  - begin_registration / finish_registration（需已登入）
  *  - delete_authn / getcredentials
- * session 数据 JSON 序列化 + base64 后经 `session` header 回传（无状态，Worker 友好）。
+ * session 資料 JSON 序列化 + base64 後經 `session` header 回傳（無狀態，Worker 友好）。
  *
- * 纯 Web Crypto 手写：CBOR 解码（attestationObject + COSE key）、ES256/RS256
- * 签名验证、rpIdHash 与 challenge 校验。无外部依赖。
+ * 純 Web Crypto 手寫：CBOR 解碼（attestationObject + COSE key）、ES256/RS256
+ * 簽名驗證、rpIdHash 與 challenge 校驗。無外部依賴。
  */
 
 export const webauthnRouter = new Hono()
@@ -44,7 +44,7 @@ function b64Decode(s: string): Uint8Array {
   return out
 }
 
-// ---------- CBOR 解码（最小实现，支持主要类型 0-6 与不定长数组/map）----------
+// ---------- CBOR 解碼（最小實現，支持主要類型 0-6 與不定長數組/map）----------
 interface CborReader {
   u8: Uint8Array
   i: number
@@ -176,7 +176,7 @@ async function parseAttestation(attObj: Uint8Array): Promise<{
   const credentialId = authData.slice(offset, offset + credIdLen)
   offset += credIdLen
 
-  // credentialPublicKey 是 CBOR COSE key，单独解码
+  // credentialPublicKey 是 CBOR COSE key，單獨解碼
   const keyReader: CborReader = { u8: authData.slice(offset), i: 0 }
   const cose = cborDecode(keyReader)
   const publicKey = await coseToCryptoKey(cose)
@@ -184,7 +184,7 @@ async function parseAttestation(attObj: Uint8Array): Promise<{
   return { authData, publicKey, aaguid, credentialId, signCount, flags }
 }
 
-// ---------- 设置 / 工具 ----------
+// ---------- 設置 / 工具 ----------
 function getBoolSetting(db: any, key: string): boolean {
   const item = (db.settings || []).find((s: any) => s.key === key)
   const v = item?.value
@@ -242,7 +242,7 @@ function getUserCredentials(user: any): any[] {
   return user.webauthn_credentials || []
 }
 
-// ---------- 端点 ----------
+// ---------- 端點 ----------
 
 // POST /api/authn/webauthn_begin_login?username=xx
 webauthnRouter.post("/webauthn_begin_login", async (c) => {
@@ -303,7 +303,7 @@ webauthnRouter.post("/webauthn_finish_login", async (c) => {
   const rpId = rpIdOf(c, db)
 
   try {
-    // 1. 解析 clientDataJSON，校验 challenge
+    // 1. 解析 clientDataJSON，校驗 challenge
     const rawId = b64urlDecode(body.id || "")
     const clientDataJSON = JSON.parse(
       new TextDecoder().decode(b64urlDecode(body.response?.clientDataJSON || "")),
@@ -324,7 +324,7 @@ webauthnRouter.post("/webauthn_finish_login", async (c) => {
       return c.json({ code:400, message: "rpId hash mismatch", data: null }, 400)
     }
 
-    // 3. 找到对应用户与 credential
+    // 3. 找到對應用戶與 credential
     const username = c.req.query("username") || sd.username || ""
     let user = username
       ? (db.users || []).find((u: any) => u.username === username)
@@ -336,7 +336,7 @@ webauthnRouter.post("/webauthn_finish_login", async (c) => {
         return cid === body.id
       })
     } else {
-      // discoverable login：通过 userHandle 找到用户
+      // discoverable login：通過 userHandle 找到用戶
       const userHandle = b64urlDecode(body.response?.userHandle || "")
       if (userHandle.length) {
         const userId = new TextDecoder().decode(userHandle)
@@ -353,7 +353,7 @@ webauthnRouter.post("/webauthn_finish_login", async (c) => {
       return c.json({ code: 400, message: "credential not found", data: null }, 400)
     }
 
-    // 4. 验证签名（credential 存储 JWK 公钥）
+    // 4. 驗證簽名（credential 儲存 JWK 公鑰）
     const jwk = credential.publicKey
     if (!jwk) {
       return c.json({ code: 400, message: "credential missing public key", data: null }, 400)
@@ -394,7 +394,7 @@ webauthnRouter.post("/webauthn_finish_login", async (c) => {
       return c.json({ code: 400, message: "signature verification failed", data: null }, 400)
     }
 
-    // 5. 更新 signCount（防重放，可选）
+    // 5. 更新 signCount（防重放，可選）
     const signCount = (authData[33] << 24) | (authData[34] << 16) | (authData[35] << 8) | authData[36]
     if (credential.sign_count !== undefined && signCount !== 0 && signCount <= credential.sign_count) {
       return c.json({ code: 400, message: "stale signCount (possible replay)", data: null }, 400)
@@ -409,7 +409,7 @@ webauthnRouter.post("/webauthn_finish_login", async (c) => {
   }
 })
 
-// POST /api/authn/webauthn_begin_registration (需已登录)
+// POST /api/authn/webauthn_begin_registration (需已登入)
 webauthnRouter.post("/webauthn_begin_registration", async (c) => {
   const db = await getDb(c.env)
   if (!getBoolSetting(db, "webauthn_login_enabled")) {
@@ -462,7 +462,7 @@ webauthnRouter.post("/webauthn_begin_registration", async (c) => {
   })
 })
 
-// POST /api/authn/webauthn_finish_registration (需已登录，header: Session)
+// POST /api/authn/webauthn_finish_registration (需已登入，header: Session)
 webauthnRouter.post("/webauthn_finish_registration", async (c) => {
   const db = await getDb(c.env)
   if (!getBoolSetting(db, "webauthn_login_enabled")) {
@@ -483,7 +483,7 @@ webauthnRouter.post("/webauthn_finish_registration", async (c) => {
   const rpId = rpIdOf(c, db)
 
   try {
-    // 1. 校验 clientDataJSON challenge
+    // 1. 校驗 clientDataJSON challenge
     const clientDataJSON = JSON.parse(
       new TextDecoder().decode(b64urlDecode(body.response?.clientDataJSON || "")),
     )
@@ -498,7 +498,7 @@ webauthnRouter.post("/webauthn_finish_registration", async (c) => {
     const attObj = b64urlDecode(body.response?.attestationObject || "")
     const { publicKey, aaguid, credentialId, signCount } = await parseAttestation(attObj)
 
-    // 3. 保存 credential（JWK 公钥，便于 finish_login 时重建 CryptoKey）
+    // 3. 保存 credential（JWK 公鑰，便於 finish_login 時重建 CryptoKey）
     const rawId = body.id || b64urlEncode(credentialId)
     const credRecord = {
       id: rawId,
@@ -518,7 +518,7 @@ webauthnRouter.post("/webauthn_finish_registration", async (c) => {
   }
 })
 
-// POST /api/authn/delete_authn (需已登录，body: {id})
+// POST /api/authn/delete_authn (需已登入，body: {id})
 webauthnRouter.post("/delete_authn", async (c) => {
   const user = await getUserFromContext(c)
   if (!user || user.disabled) {
@@ -538,7 +538,7 @@ webauthnRouter.post("/delete_authn", async (c) => {
   return c.json({ code: 200, message: "Deleted Successfully", data: null })
 })
 
-// GET /api/authn/getcredentials (需已登录)
+// GET /api/authn/getcredentials (需已登入)
 webauthnRouter.get("/getcredentials", async (c) => {
   const user = await getUserFromContext(c)
   if (!user || user.disabled) {

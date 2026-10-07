@@ -237,8 +237,8 @@ export class S3Driver implements StorageDriver {
     dstPhys: string,
   ): Promise<void> {
     await this.checkDogeToken()
-    // srcPhys/dstPhys 是源/目标项自身的物理路径（参数即目标项路径，不得再拼 name，
-    // 否则指向 <item>/<name> 导致静默失败）。
+    // srcPhys/dstPhys 是源/目標項自身的物理路徑（參數即目標項路徑，不得再拼 name，
+    // 否則指向 <item>/<name> 導致靜默失敗）。
     const srcPath = this.getRemotePath(srcPhys)
     const dstPath = this.getRemotePath(dstPhys)
 
@@ -260,7 +260,7 @@ export class S3Driver implements StorageDriver {
     dstPhys: string,
   ): Promise<void> {
     await this.checkDogeToken()
-    // 同 move：srcPhys/dstPhys 已是目标项自身路径，不得再拼 name。
+    // 同 move：srcPhys/dstPhys 已是目標項自身路徑，不得再拼 name。
     const srcPath = this.getRemotePath(srcPhys)
     const dstPath = this.getRemotePath(dstPhys)
 
@@ -292,9 +292,9 @@ export class S3Driver implements StorageDriver {
     names: string[],
   ): Promise<void> {
     await this.checkDogeToken()
-    // physicalPath 是目标项自身的物理路径（op/storage.ts removeItems 逐项调用），
-    // 参数即目标项路径，直接删除它即可；若再拼一次 name 会指向 `<item>/<name>`，
-    // HEAD 404 后退化成按目录递归删除，prefix 同样查不到对象，最终静默返回成功但对象仍在。
+    // physicalPath 是目標項自身的物理路徑（op/storage.ts removeItems 逐項調用），
+    // 參數即目標項路徑，直接刪除它即可；若再拼一次 name 會指向 `<item>/<name>`，
+    // HEAD 404 後退化成按目錄遞歸刪除，prefix 同樣查不到對象，最終靜默返回成功但對象仍在。
     const targetPath = this.getRemotePath(physicalPath)
 
     const head = await this.client.headObject(targetPath)

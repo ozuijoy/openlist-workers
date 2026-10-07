@@ -7,17 +7,17 @@ import { canUseProxyEndpoint } from "../internal/driver/proxy"
 import { rawRouter } from "./raw"
 
 /**
- * #66 后续：`raw_url` 的端点前缀必须与存储自身的代理配置匹配。
+ * #66 後續：`raw_url` 的端點前綴必須與儲存自身的代理配置匹配。
  *
- * `/p` 与 `/d` 不是等价的：
- *   - `/p` 会先跑 Go 的 `canProxy()`（`MustProxy || WebProxy || webdav_policy=
- *     use_proxy_url || proxy_types || text_types`），不通过直接
+ * `/p` 與 `/d` 不是等價的：
+ *   - `/p` 會先跑 Go 的 `canProxy()`（`MustProxy || WebProxy || webdav_policy=
+ *     use_proxy_url || proxy_types || text_types`），不通過直接
  *     `403 proxy not allowed`；
- *   - `/d` 不受该门禁限制（Go 的 `/d` 走 `ShouldProxy`）。
+ *   - `/d` 不受該門禁限制（Go 的 `/d` 走 `ShouldProxy`）。
  *
- * 因此 raw_url 恒为 `/api/p` 时，凡是没有开启代理的存储，只要从预览页点「下载」
- * （或让 `img/video` 去取 raw_url）就会 403；而文件列表右键下载走 `/d`，所以看起来
- * 「只有预览页下载坏掉」。
+ * 因此 raw_url 恆為 `/api/p` 時，凡是沒有開啟代理的儲存，只要從預覽頁點「下載」
+ * （或讓 `img/video` 去取 raw_url）就會 403；而文件列表右鍵下載走 `/d`，所以看起來
+ * 「只有預覽頁下載壞掉」。
  */
 
 const storageRow = (driver: string, extra: Record<string, any> = {}) => ({
@@ -45,7 +45,7 @@ const appOf = () => {
   return app
 }
 
-test("非代理存储：raw_url 用 /api/d（/p 会被 canProxy 拒绝）", async () => {
+test("非代理儲存：raw_url 用 /api/d（/p 會被 canProxy 拒絕）", async () => {
   const env: any = {}
   await saveDb(dbWith([storageRow("gen")]), env)
 
@@ -53,7 +53,7 @@ test("非代理存储：raw_url 用 /api/d（/p 会被 canProxy 拒绝）", asyn
   assert.equal(rawUrl, "/api/d/np")
 })
 
-test("web_proxy=true 的存储：raw_url 用 /api/p", async () => {
+test("web_proxy=true 的儲存：raw_url 用 /api/p", async () => {
   const env: any = {}
   await saveDb(dbWith([storageRow("gen", { web_proxy: true })]), env)
 
@@ -61,7 +61,7 @@ test("web_proxy=true 的存储：raw_url 用 /api/p", async () => {
   assert.equal(rawUrl, "/api/p/np")
 })
 
-test("扩展名命中 proxy_types / text_types 时才允许 /p", () => {
+test("擴展名命中 proxy_types / text_types 時才允許 /p", () => {
   const storage = storageRow("gen")
   const check = (filename: string, proxyTypes: unknown, textTypes: unknown) =>
     canUseProxyEndpoint({
@@ -77,7 +77,7 @@ test("扩展名命中 proxy_types / text_types 时才允许 /p", () => {
   assert.equal(check("/np/a.txt", [], ["txt"]), true)
 })
 
-test("HTTP 层面：/p 对非代理存储回 403 proxy not allowed，/d 不受该门禁限制", async () => {
+test("HTTP 層面：/p 對非代理儲存回 403 proxy not allowed，/d 不受該門禁限制", async () => {
   const env: any = {}
   await saveDb(dbWith([storageRow("gen")]), env)
   const app = appOf()
@@ -86,11 +86,11 @@ test("HTTP 层面：/p 对非代理存储回 403 proxy not allowed，/d 不受�
   assert.equal(viaProxy.status, 403)
   assert.match(await viaProxy.text(), /proxy not allowed/)
 
-  // 同一路径走 /d：不触发 canProxy 门禁（这里会因驱动不存在而 404，但不能是 403）
+  // 同一路徑走 /d：不觸發 canProxy 門禁（這裡會因驅動不存在而 404，但不能是 403）
   const viaDirect = await app.request("/api/d/np/a.exe", { method: "GET" })
   assert.notEqual(
     viaDirect.status,
     403,
-    "/d 不应受 canProxy() 限制，否则非代理存储的下载/预览会全部 403",
+    "/d 不應受 canProxy() 限制，否則非代理儲存的下載/預覽會全部 403",
   )
 })

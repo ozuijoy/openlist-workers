@@ -22,7 +22,7 @@ export class DriverCnbReleases implements StorageDriver {
   async list(_virtualPath: string, physicalPath: string): Promise<FileItem[]> {
     const clean = physicalPath.split("/").filter(Boolean).join("/")
     if (!clean) {
-      // 根目录：所有 release
+      // 根目錄：所有 release
       const releases = await this.client.listReleases()
       return releases.map((r) => ({
         name: this.client.releaseName(r),
@@ -34,7 +34,7 @@ export class DriverCnbReleases implements StorageDriver {
         raw_url: "",
       }))
     }
-    // release 目录：assets
+    // release 目錄：assets
     const releaseId = clean.split("/")[0]
     const release = await this.client.getRelease(releaseId)
     return release.assets.map((a) => ({
@@ -53,7 +53,7 @@ export class DriverCnbReleases implements StorageDriver {
     const name = parts[parts.length - 1] || "root"
     const clean = parts.join("/")
 
-    // release 目录
+    // release 目錄
     if (parts.length === 1) {
       try {
         const release = await this.client.getRelease(parts[0])

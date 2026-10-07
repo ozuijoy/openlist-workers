@@ -80,10 +80,10 @@ export function canRemove(user?: UserPermissionObj | null): boolean {
 }
 
 /**
- * 计算用户请求路径对应的实际存储路径（结合用户的根目录 base_path）：
- * 1. 忽略以 /@s 开头的分享虚拟路径
- * 2. 若用户 base_path 为空或 "/"，直接返回规范化后的 reqPath
- * 3. 若用户 base_path 为非空路径（如 "/photos"），将 reqPath 拼接到 base_path 之后：
+ * 計算用戶請求路徑對應的實際儲存路徑（結合用戶的根目錄 base_path）：
+ * 1. 忽略以 /@s 開頭的分享虛擬路徑
+ * 2. 若用戶 base_path 為空或 "/"，直接返回規範化後的 reqPath
+ * 3. 若用戶 base_path 為非空路徑（如 "/photos"），將 reqPath 拼接到 base_path 之後：
  *    - reqPath = "/" 或 "" -> "/photos"
  *    - reqPath = "/sub" -> "/photos/sub"
  *    - reqPath = "sub" -> "/photos/sub"

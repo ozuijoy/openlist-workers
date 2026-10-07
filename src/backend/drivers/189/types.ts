@@ -1,19 +1,19 @@
-// 189 Cloud Drive (天翼云盘) driver types
+// 189 Cloud Drive (天翼雲盤) driver types
 // Based on: https://github.com/OpenListTeam/OpenList/tree/main/drivers/189
 
 export interface Cloud189Addition {
-  /** 手机号 / 账号 */
+  /** 手機號 / 賬號 */
   username: string
-  /** 密码 */
+  /** 密碼 */
   password: string
   /**
-   * Cookie（可选），用于遇到滑动验证码时手动填写；
-   * 自动登录成功后会自动持久化回此字段。
+   * Cookie（可選），用於遇到滑動驗證碼時手動填寫；
+   * 自動登入成功後會自動持久化回此欄位。
    */
   cookie?: string
-  /** 根文件夹 ID，默认 -11（个人云根目录） */
+  /** 根文件夾 ID，默認 -11（個人雲根目錄） */
   root_folder_id?: string
-  /** 排序字段 */
+  /** 排序欄位 */
   order_by?: "lastOpTime" | "filename" | "fileSize"
   /** 排序方向 */
   order_direction?: "asc" | "desc"

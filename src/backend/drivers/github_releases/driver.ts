@@ -6,7 +6,7 @@ import {
 import { DriverGithubReleasesAddition } from "./types"
 import { ClientGithubReleases } from "./util"
 
-/** 只读发布源驱动：不支持写入操作 */
+/** 只讀發佈源驅動：不支持寫入操作 */
 export class DriverGithubReleases implements StorageDriver {
   private client: ClientGithubReleases
 
@@ -35,7 +35,7 @@ export class DriverGithubReleases implements StorageDriver {
     const parts = physicalPath.split("/").filter(Boolean)
     const name = parts[parts.length - 1] || "root"
     const files = await this.client.list(physicalPath)
-    // 目录：list 成功返回非空或目录项
+    // 目錄：list 成功返回非空或目錄項
     if (files.length > 0 || physicalPath === "/") {
       const dir = files.find((f) => f.isDir && f.name === name)
       if (!dir && files.some((f) => !f.isDir)) {
@@ -51,7 +51,7 @@ export class DriverGithubReleases implements StorageDriver {
         raw_url: "",
       }
     }
-    // 文件：获取下载链接
+    // 文件：獲取下載鏈接
     const url = await this.client.getDownloadUrl(physicalPath)
     if (url) {
       return {

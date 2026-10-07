@@ -1,4 +1,4 @@
-// USS (又拍云) driver types
+// USS (又拍雲) driver types
 export interface UssAddition {
   bucket: string
   endpoint: string

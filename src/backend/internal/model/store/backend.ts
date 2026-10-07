@@ -1,12 +1,12 @@
 /**
- * 持久化后端工厂：按 DB_DRIVER 和 DB_FORMAT 环境变量选择驱动和格式。
+ * 持久化後端工廠：按 DB_DRIVER 和 DB_FORMAT 環境變量選擇驅動和格式。
  *
- * 新架构（驱动层 + 格式层分离）：
- * - DB_DRIVER: 底层存储驱动（auto/blob/cfkv/kv/d1/do/mysql）
- * - DB_FORMAT: 数据存储格式（map/key/sql）
+ * 新架構（驅動層 + 格式層分離）：
+ * - DB_DRIVER: 底層儲存驅動（auto/blob/cfkv/kv/d1/do/mysql）
+ * - DB_FORMAT: 資料儲存格式（map/key/sql）
  *
- * 向后兼容（旧配置自动映射）：
- * - DB_DRIVER=json → DB_FORMAT=map + 自动检测驱动
+ * 向後相容（舊配置自動映射）：
+ * - DB_DRIVER=json → DB_FORMAT=map + 自動檢測驅動
  */
 import type {
   Driver,
@@ -33,7 +33,7 @@ import {
 } from "../../../pkg/crypto"
 
 /**
- * 读取环境变量（支持 process.env 和 env 对象）。
+ * 讀取環境變量（支持 process.env 和 env 對象）。
  */
 function readEnv(key: string, defaultValue: string, env?: any): string {
   const e = env || (typeof process !== "undefined" ? process.env : {}) || {}
@@ -41,14 +41,14 @@ function readEnv(key: string, defaultValue: string, env?: any): string {
 }
 
 /**
- * 读取存储驱动配置。
+ * 讀取儲存驅動配置。
  */
 export function readDriver(env?: any): StorageDriver {
   const e = env || (typeof process !== "undefined" ? process.env : {}) || {}
 
   const driver = readEnv("DB_DRIVER", "auto", env) as StorageDriver
 
-  // 向后兼容：DB_DRIVER=json → auto（整对象 JSON 由 DB_FORMAT=map 表达）
+  // 向後相容：DB_DRIVER=json → auto（整對象 JSON 由 DB_FORMAT=map 表達）
   if ((driver as string) === "json") {
     console.warn(
       "[DEPRECATED] DB_DRIVER=json is deprecated. Use DB_FORMAT=map instead.",
@@ -60,23 +60,23 @@ export function readDriver(env?: any): StorageDriver {
 }
 
 /**
- * 读取存储格式配置。
+ * 讀取儲存格式配置。
  *
- * 契约（与官方文档一致）：DB_FORMAT 与 DB_DRIVER 是**正交**的两个维度 ——
- * 前者决定「怎么组织数据」（map / key / sql），后者决定「存到哪里」。
- * 因此 DB_FORMAT 缺省时**一律取全局默认 map**，绝不按驱动名改写：
+ * 契約（與官方文件一致）：DB_FORMAT 與 DB_DRIVER 是**正交**的兩個維度 ——
+ * 前者決定「怎麼組織資料」（map / key / sql），後者決定「存到哪裡」。
+ * 因此 DB_FORMAT 缺省時**一律取全局默認 map**，絕不按驅動名改寫：
  * kv / d1 / blob / do / mysql 的缺省格式都是 map。
  *
- * 历史遗留（已移除）：旧版 DB_DRIVER=kv 承担「分表存储」语义，重构为
- * 「驱动层 + 格式层分离」后曾加过一条 `DB_DRIVER=kv 且无 DB_FORMAT → key`
- * 的兼容映射。它的代价是「只设了 DB_DRIVER」的结果依赖驱动名（d1 得 map、
- * kv 得 key），且升级用户会静默从 map 布局切到 key 布局（两种布局的键名
- * 不同，互相读不到）。分表请显式配置 DB_FORMAT=key。
+ * 歷史遺留（已移除）：舊版 DB_DRIVER=kv 承擔「分表儲存」語義，重構為
+ * 「驅動層 + 格式層分離」後曾加過一條 `DB_DRIVER=kv 且無 DB_FORMAT → key`
+ * 的相容映射。它的代價是「只設了 DB_DRIVER」的結果依賴驅動名（d1 得 map、
+ * kv 得 key），且升級用戶會靜默從 map 佈局切到 key 佈局（兩種佈局的鍵名
+ * 不同，互相讀不到）。分表請顯式配置 DB_FORMAT=key。
  */
 export function readFormat(env?: any): StorageFormat {
   const e = env || (typeof process !== "undefined" ? process.env : {}) || {}
 
-  // 向后兼容：DB_DRIVER=json → map（旧驱动别名，与 readDriver 的 json→auto 成对）
+  // 向後相容：DB_DRIVER=json → map（舊驅動別名，與 readDriver 的 json→auto 成對）
   if (String(e.DB_DRIVER || "").trim().toLowerCase() === "json") {
     return "map"
   }
@@ -85,30 +85,30 @@ export function readFormat(env?: any): StorageFormat {
 }
 
 /**
- * 读取数据库字段加密算法（DB_CIPHER）。
+ * 讀取資料庫欄位加密算法（DB_CIPHER）。
  *
- * 契约（与 DB_DRIVER / DB_FORMAT 同为「正交的一维」）：只决定**敏感字段如何
- * 落盘**，不改变存储位置与数据组织方式。
+ * 契約（與 DB_DRIVER / DB_FORMAT 同為「正交的一維」）：只決定**敏感欄位如何
+ * 落盤**，不改變儲存位置與資料組織方式。
  *
- *   none（默认）              - 不加密，敏感字段与普通 JSON 一样明文落盘
- *   aes-256-gcm              - HKDF-SHA256 派生一把 AES-256-GCM 密钥（enc:v2:）
- *   aes-256-gcm-pbkdf2       - AES-256-GCM，PBKDF2-SHA256(10 万次) 派生（enc:v1:，慢）
+ *   none（默認）              - 不加密，敏感欄位與普通 JSON 一樣明文落盤
+ *   aes-256-gcm              - HKDF-SHA256 派生一把 AES-256-GCM 密鑰（enc:v2:）
+ *   aes-256-gcm-pbkdf2       - AES-256-GCM，PBKDF2-SHA256(10 萬次) 派生（enc:v1:，慢）
  *   aes-256-cbc-hmac         - AES-256-CBC + HMAC-SHA256（enc:v3:，Encrypt-then-MAC）
- *   chacha20-poly1305        - ChaCha20-Poly1305（enc:v4:，RFC 8439，纯 JS）
- *   des-cbc-hmac             - 单 DES-CBC + HMAC-SHA256（enc:v5:，**仅兼容，不安全**）
- *  3des-cbc-hmac             - 3DES-CBC + HMAC-SHA256（enc:v6:，**仅兼容，已弃用**）
+ *   chacha20-poly1305        - ChaCha20-Poly1305（enc:v4:，RFC 8439，純 JS）
+ *   des-cbc-hmac             - 單 DES-CBC + HMAC-SHA256（enc:v5:，**僅相容，不安全**）
+ *  3des-cbc-hmac             - 3DES-CBC + HMAC-SHA256（enc:v6:，**僅相容，已棄用**）
  *
- * 为什么默认 none：加密会让「共享库给 Go 后端 / 直接用 SQL 查询」变得不可读，
- * 且读取时需逐字段解密（详见 #69 的 CPU 优化）。需要静态加密的部署显式配置即可；
- * 历史密文带 `enc:vN:` 前缀，读取时按前缀自动解密，因此从加密切回 none
- * **不会导致数据不可读**，只会在下次写入时转为明文（自动迁移）。
+ * 為什麼默認 none：加密會讓「共享庫給 Go 後端 / 直接用 SQL 查詢」變得不可讀，
+ * 且讀取時需逐欄位解密（詳見 #69 的 CPU 優化）。需要靜態加密的部署顯式配置即可；
+ * 歷史密文帶 `enc:vN:` 前綴，讀取時按前綴自動解密，因此從加密切回 none
+ * **不會導致資料不可讀**，只會在下次寫入時轉為明文（自動遷移）。
  *
- * DES/3DES 只作为「非 AES 族」的兼容选项存在：单 DES 的 56-bit 密钥可被暴力破解，
- * 3DES 已被 NIST SP 800-131A 弃用，二者都不应保护真实数据（见 crypto.ts 的
- * WEAK_DB_CIPHERS 与一次性告警）。
+ * DES/3DES 只作為「非 AES 族」的相容選項存在：單 DES 的 56-bit 密鑰可被暴力破解，
+ * 3DES 已被 NIST SP 800-131A 棄用，二者都不應保護真實資料（見 crypto.ts 的
+ * WEAK_DB_CIPHERS 與一次性告警）。
  *
- * 取值无法识别时告警并回退 none（而不是静默启用某个算法）。注意：读取时
- * 解密算法由密文前缀决定，与本函数取值无关 —— 拼错变量只会影响**新写入**。
+ * 取值無法識別時告警並回退 none（而不是靜默啟用某個算法）。注意：讀取時
+ * 解密算法由密文前綴決定，與本函數取值無關 —— 拼錯變量只會影響**新寫入**。
  */
 export function readCipher(env?: any): DbCipher {
   const raw = readEnv("DB_CIPHER", DEFAULT_DB_CIPHER, env)
@@ -123,22 +123,22 @@ export function readCipher(env?: any): DbCipher {
 }
 
 /**
- * 是否处于 Serverless / Worker 类运行环境。
+ * 是否處於 Serverless / Worker 類運行環境。
  *
- * 判定目的：这些环境（Cloudflare Workers、EdgeOne Edge/Node 云函数、
- * 阿里云 ESA 函数等）多实例、随时冷启，**内存存储完全无法持久化**，
- * 且会给出「写入成功」的假象。因此在此类环境中永不使用内存后端。
+ * 判定目的：這些環境（Cloudflare Workers、EdgeOne Edge/Node 雲函數、
+ * 阿里雲 ESA 函數等）多實例、隨時冷啟，**記憶體儲存完全無法持久化**，
+ * 且會給出「寫入成功」的假象。因此在此類環境中永不使用記憶體後端。
  *
- * 判定依据全部为运行时特征（不依赖用户配置），命中任一即成立：
- *  1. EdgeOne：请求上下文标记、KV/Blob 相关绑定、EdgeOne 专属全局变量
- *  2. Cloudflare Workers：WebSocketPair / caches.default / CF 绑定
- *  3. 阿里云 ESA：ESA 全局对象与绑定
- *  4. 通用：注入型请求上下文（__requestOrigin / __requestContext）
+ * 判定依據全部為運行時特徵（不依賴用戶配置），命中任一即成立：
+ *  1. EdgeOne：請求上下文標記、KV/Blob 相關綁定、EdgeOne 專屬全局變量
+ *  2. Cloudflare Workers：WebSocketPair / caches.default / CF 綁定
+ *  3. 阿里雲 ESA：ESA 全局對象與綁定
+ *  4. 通用：注入型請求上下文（__requestOrigin / __requestContext）
  */
 export function isServerlessRuntime(env?: any): boolean {
   const g = globalThis as any
   try {
-    // ── 通用：请求上下文由平台注入 ──
+    // ── 通用：請求上下文由平台注入 ──
     if (env?.__requestOrigin || env?.__requestContext || env?.__makersContext) {
       return true
     }
@@ -153,12 +153,12 @@ export function isServerlessRuntime(env?: any): boolean {
     }
 
     // ── Cloudflare Workers ──
-    // WebSocketPair 是 Workers 运行时专有的全局构造函数
+    // WebSocketPair 是 Workers 運行時專有的全局構造函數
     if (typeof g.WebSocketPair === "function") return true
-    // caches.default 是 Workers 的 Cache API 形态
+    // caches.default 是 Workers 的 Cache API 形態
     if (typeof g.caches !== "undefined" && g.caches?.default) return true
 
-    // ── 阿里云 ESA ──
+    // ── 阿里雲 ESA ──
     if (
       env?.ESA_BLOB ||
       g?.ESA_BLOB ||
@@ -167,8 +167,8 @@ export function isServerlessRuntime(env?: any): boolean {
       return true
     }
 
-    // ── EdgeOne Node 云函数环境变量特征 ──
-    // 平台会注入 SCF 相关变量，可据此识别（固定变量名，平台自动注入）
+    // ── EdgeOne Node 雲函數環境變量特徵 ──
+    // 平台會注入 SCF 相關變量，可據此識別（固定變量名，平台自動注入）
     if (
       env?.TENCENTCLOUD_SCF_FUNCTIONNAME ||
       (typeof process !== "undefined" && process.env?.TENCENTCLOUD_SCF_FUNCTIONNAME)
@@ -176,27 +176,27 @@ export function isServerlessRuntime(env?: any): boolean {
       return true
     }
   } catch {
-    // 检测自身的异常不应影响判定；保守视为非 serverless（本地/容器）
+    // 檢測自身的異常不應影響判定；保守視為非 serverless（本地/容器）
   }
   return false
 }
 
 /**
- * 自动检测可用的驱动（优先级：mysql → d1 → kv → cfkv → blob → do）。
+ * 自動檢測可用的驅動（優先級：mysql → d1 → kv → cfkv → blob → do）。
  *
- * mysql 仅在显式配置连接信息时参与探测（详见 hasMysqlConfig）。
+ * mysql 僅在顯式配置連接信息時參與探測（詳見 hasMysqlConfig）。
  *
  * 若全部不可用：
- *  - 本地/容器环境：回退内存（便于开发调试）
- *  - Serverless / Worker 环境：**不回退内存**，抛错并引导用户配置，
- *    避免「操作成功但数据丢失」的假象
+ *  - 本地/容器環境：回退記憶體（便於開發調試）
+ *  - Serverless / Worker 環境：**不回退記憶體**，拋錯並引導用戶配置，
+ *    避免「操作成功但資料丟失」的假象
  */
 async function autoDetectDriver(env?: any): Promise<Driver> {
-  // 检测顺序：mysql → d1 → kv → cfkv → blob → do
+  // 檢測順序：mysql → d1 → kv → cfkv → blob → do
   //
-  // - mysql 需要网络连接，只有显式配置了连接信息才尝试，否则每次 auto 探测
-  //   都会先尝试建 TCP 连接（失败后继续），在 CF/EO 等边缘环境上纯属浪费。
-  // - kv 与 cfkv 同为 KV 语义：优先本地 binding（更直接、更快），
+  // - mysql 需要網路連接，只有顯式配置了連接信息才嘗試，否則每次 auto 探測
+  //   都會先嚐試建 TCP 連接（失敗後繼續），在 CF/EO 等邊緣環境上純屬浪費。
+  // - kv 與 cfkv 同為 KV 語義：優先本地 binding（更直接、更快），
   //   其次才走 Cloudflare REST API。
   const candidates: Driver[] = []
 
@@ -211,13 +211,13 @@ async function autoDetectDriver(env?: any): Promise<Driver> {
   }
 
   if (isServerlessRuntime(env)) {
-    // 禁止在 serverless 环境静默使用内存存储。
+    // 禁止在 serverless 環境靜默使用記憶體儲存。
     //
-    // 这里必须带上 hint（否则 hintOf(err) 为 null，上层会回退到「Bind a storage
-    // backend or set DB_DRIVER=auto」这句通用话术）。该话术在 auto 模式下会形成
-    // **循环建议**：用户本来就已经是 auto，却被告知「请设置 auto」。
-    // 能走到这里说明「auto 已探测过所有候选驱动且一个都不可用」，因此真正缺的是
-    // **绑定**，而不是改配置值 —— hint 要说清「绑什么」。
+    // 這裡必須帶上 hint（否則 hintOf(err) 為 null，上層會回退到「Bind a storage
+    // backend or set DB_DRIVER=auto」這句通用話術）。該話術在 auto 模式下會形成
+    // **循環建議**：用戶本來就已經是 auto，卻被告知「請設置 auto」。
+    // 能走到這裡說明「auto 已探測過所有候選驅動且一個都不可用」，因此真正缺的是
+    // **綁定**，而不是改配置值 —— hint 要說清「綁什麼」。
     throw storeError(
       "NO_STORAGE",
       NO_STORAGE_MESSAGE,
@@ -232,10 +232,10 @@ async function autoDetectDriver(env?: any): Promise<Driver> {
 }
 
 /**
- * 是否显式配置了 MySQL 连接信息。
+ * 是否顯式配置了 MySQL 連接信息。
  *
- * 用于决定 auto 模式是否尝试 mysql 驱动：MySQL 是网络连接，
- * 无配置时探测会产生无谓的 TCP 建连开销，必须由运维显式声明。
+ * 用於決定 auto 模式是否嘗試 mysql 驅動：MySQL 是網路連接，
+ * 無配置時探測會產生無謂的 TCP 建連開銷，必須由運維顯式聲明。
  */
 function hasMysqlConfig(env?: any): boolean {
   const e = env || {}
@@ -249,19 +249,19 @@ function hasMysqlConfig(env?: any): boolean {
 }
 
 /**
- * 无可用存储时的一句话修复建议（英文），随运行时平台给出「绑什么」。
+ * 無可用儲存時的一句話修復建議（英文），隨運行時平台給出「綁什麼」。
  *
- * ## 为什么不能复用「set DB_DRIVER=auto」
+ * ## 為什麼不能複用「set DB_DRIVER=auto」
  *
- * auto 模式下 `DB_DRIVER` **本来就是 auto**。此时还提示「set DB_DRIVER=auto」，
- * 用户会陷入循环：改也改过了、报错依旧。真实原因是「auto 已把所有候选驱动探测
- * 了一遍，一个都不可用」——缺的是**平台侧绑定**，不是配置值。
+ * auto 模式下 `DB_DRIVER` **本來就是 auto**。此時還提示「set DB_DRIVER=auto」，
+ * 用戶會陷入循環：改也改過了、報錯依舊。真實原因是「auto 已把所有候選驅動探測
+ * 了一遍，一個都不可用」——缺的是**平台側綁定**，不是配置值。
  *
- * 因此这里按平台给出可执行动作，并**明确点出 auto 已经试过了**，避免用户再去
- * 改那个已经正确的变量。
+ * 因此這裡按平台給出可執行動作，並**明確點出 auto 已經試過了**，避免用戶再去
+ * 改那個已經正確的變量。
  *
- * 与 `driverNotAvailableHint` 的区别：那个分支处理「显式指定了某个不可用的
- * 驱动」；本函数处理「未指定（或 auto）且没有任何驱动可用」。
+ * 與 `driverNotAvailableHint` 的區別：那個分支處理「顯式指定了某個不可用的
+ * 驅動」；本函數處理「未指定（或 auto）且沒有任何驅動可用」。
  */
 function noStorageHint(env?: any): string {
   const g = globalThis as any
@@ -274,7 +274,7 @@ function noStorageHint(env?: any): string {
           process.env?.TENCENTCLOUD_SCF_FUNCTIONNAME),
     )
   const isEsa = Boolean(env?.ESA_BLOB || g?.ESA_BLOB) || typeof g?.ESA !== "undefined"
-  // 无 CF 专属绑定特征时才可能是 CF；ESA/EdgeOne 已在上方排除
+  // 無 CF 專屬綁定特徵時才可能是 CF；ESA/EdgeOne 已在上方排除
   const isCloudflare = !isEdgeOne && !isEsa
 
   if (isEdgeOne) {
@@ -305,9 +305,9 @@ function noStorageHint(env?: any): string {
 }
 
 /**
- * 无可用存储驱动时的错误信息（英文）。
+ * 無可用儲存驅動時的錯誤信息（英文）。
  *
- * 面向用户，需说明「为什么失败」与「如何解决」。
+ * 面向用戶，需說明「為什麼失敗」與「如何解決」。
  */
 export const NO_STORAGE_MESSAGE =
   "No storage backend is available. Data cannot be persisted in this " +
@@ -322,22 +322,22 @@ export const NO_STORAGE_MESSAGE =
   "  DB_FORMAT=map | key | sql"
 
 /**
- * 显式指定 DB_DRIVER=memory 但运行在 serverless 环境时的错误文案。
+ * 顯式指定 DB_DRIVER=memory 但運行在 serverless 環境時的錯誤文案。
  *
- * 语义裁决：`memory` 是**合法驱动名**（不是拼写错误），但只在本地 Node 运行时
- * 有效。serverless（EdgeOne / Cloudflare / ESA）多实例、随时冷启，内存写入
- * 立刻随实例销毁而消失，却仍向调用方返回成功 —— 属于最危险的「静默数据丢失」，
- * 因此在此环境下一律判为「无可用存储」（NO_STORAGE）。
+ * 語義裁決：`memory` 是**合法驅動名**（不是拼寫錯誤），但只在本地 Node 運行時
+ * 有效。serverless（EdgeOne / Cloudflare / ESA）多實例、隨時冷啟，記憶體寫入
+ * 立刻隨實例銷燬而消失，卻仍向調用方返回成功 —— 屬於最危險的「靜默資料丟失」，
+ * 因此在此環境下一律判為「無可用儲存」（NO_STORAGE）。
  *
- * 文案约束（见 server/storage-error.ts 的 reasonLines）：诊断接口只透传前 3 行，
- * 因此结论、原因、下一步动作必须全部落在前 3 行内。
+ * 文案約束（見 server/storage-error.ts 的 reasonLines）：診斷介面只透傳前 3 行，
+ * 因此結論、原因、下一步動作必須全部落在前 3 行內。
  */
 export const MEMORY_SERVERLESS_MESSAGE =
   'DB_DRIVER="memory" is only valid on a local Node runtime.\n' +
   "This deployment is serverless, where in-memory storage loses all data immediately.\n" +
   "Set DB_DRIVER=auto, or bind a persistent backend (D1 / KV / Blob)."
 
-/** 驱动名 → 实现（memory 不在此表中，由 resolveDriver 单独处理，见下） */
+/** 驅動名 → 實現（memory 不在此表中，由 resolveDriver 單獨處理，見下） */
 const DRIVER_MAP: Record<string, Driver> = {
   blob: blobDriver,
   cfkv: cfkvDriver,
@@ -348,11 +348,11 @@ const DRIVER_MAP: Record<string, Driver> = {
 }
 
 /**
- * 存储配置类错误的机器可读分类。
+ * 儲存配置類錯誤的機器可讀分類。
  *
- * 供 /public/env_check 与 /public/init_status 把「为什么不能用」透给前端：
- * 只给一句 "Storage driver is not configured correctly." 用户无法区分
- * 「组合写错」「绑定没配」「密钥缺失」「后端读不到」。
+ * 供 /public/env_check 與 /public/init_status 把「為什麼不能用」透給前端：
+ * 只給一句 "Storage driver is not configured correctly." 用戶無法區分
+ * 「組合寫錯」「綁定沒配」「密鑰缺失」「後端讀不到」。
  */
 export type StoreConfigErrorCode =
   | "INVALID_COMBINATION"
@@ -364,13 +364,13 @@ export type StoreConfigErrorCode =
   | "DRIVER_ERROR"
 
 /**
- * 构造带分类码的错误，供 getStoreStatus 折叠成 configErrorCode。
+ * 構造帶分類碼的錯誤，供 getStoreStatus 摺疊成 configErrorCode。
  *
- * `hint` 是给用户看的**一句话修复建议**（「改什么」），与 `message`（完整排查
- * 说明）分开：
- *   - message 在诊断接口里会被截断（见 server/public.ts 的 reasonLines），
- *     只透传前 3 行，因此「答案」不能只放在 message 末尾；
- *   - 前端需要把建议放在显眼位置单独展示，靠解析 message 文案不可靠。
+ * `hint` 是給用戶看的**一句話修復建議**（「改什麼」），與 `message`（完整排查
+ * 說明）分開：
+ *   - message 在診斷介面裡會被截斷（見 server/public.ts 的 reasonLines），
+ *     只透傳前 3 行，因此「答案」不能只放在 message 末尾；
+ *   - 前端需要把建議放在顯眼位置單獨展示，靠解析 message 文案不可靠。
  */
 function storeError(
   code: StoreConfigErrorCode,
@@ -386,26 +386,26 @@ function storeError(
   return err
 }
 
-/** 读取错误上的一句话修复建议（没有则返回 null）。 */
+/** 讀取錯誤上的一句話修復建議（沒有則返回 null）。 */
 function hintOf(err: any): string | null {
   const hint = err?.storeHint
   return typeof hint === "string" && hint.trim() ? hint.trim() : null
 }
 
-/** 读取错误上的分类码（未标注时按 DRIVER_ERROR 处理）。 */
+/** 讀取錯誤上的分類碼（未標註時按 DRIVER_ERROR 處理）。 */
 function errorCodeOf(err: any): StoreConfigErrorCode {
   return (err?.storeCode as StoreConfigErrorCode) || "DRIVER_ERROR"
 }
 
-/** 存储配置文档（与 server 层的 DOC_DRIVER 指向同一页） */
+/** 儲存配置文件（與 server 層的 DOC_DRIVER 指向同一頁） */
 const STORAGE_DOC = "https://doc.oplist.org/ecosystem/official_worker/guide"
 
 /**
- * 显式指定驱动不可用时的针对性提示。
+ * 顯式指定驅動不可用時的針對性提示。
  *
- * 只报「driver is not available」会让用户困惑于「我明明绑了」：每种驱动
- * 需要的前置条件差异很大（KV 还区分 CF 原生绑定与 EdgeOne 代理），因此
- * 逐驱动写清「需要什么」与替代方案。
+ * 只報「driver is not available」會讓用戶困惑於「我明明綁了」：每種驅動
+ * 需要的前置條件差異很大（KV 還區分 CF 原生綁定與 EdgeOne 代理），因此
+ * 逐驅動寫清「需要什麼」與替代方案。
  */
 const DRIVER_UNAVAILABLE_HINTS: Record<string, string> = {
   kv:
@@ -439,23 +439,23 @@ const DRIVER_UNAVAILABLE_HINTS: Record<string, string> = {
 }
 
 /**
- * 诊断缓存：显式驱动不可用时，「auto 探测会选中哪个后端」。
+ * 診斷快取：顯式驅動不可用時，「auto 探測會選中哪個後端」。
  *
- * 为什么要缓存：得到这个答案要跑一次真实探测（KV 代理会发 HTTP 探测请求），
- * 而配置错误期间每个请求都会走到这里。以 env 指纹做键，配置一变即失效；
- * 冷启动后重新计算。
+ * 為什麼要快取：得到這個答案要跑一次真實探測（KV 代理會發 HTTP 探測請求），
+ * 而配置錯誤期間每個請求都會走到這裡。以 env 指紋做鍵，配置一變即失效；
+ * 冷啟動後重新計算。
  */
 let autoPickCache: { key: string; driver: Driver | null } | null = null
 
 /**
- * 显式驱动不可用时，auto 会选中哪个可用后端（没有则 null）。
+ * 顯式驅動不可用時，auto 會選中哪個可用後端（沒有則 null）。
  *
- * **只用于提示，绝不改变语义**：显式配置了 DB_DRIVER 就绝不回退 —— 回退会把
- * 数据写到用户没有指定的后端上，而且「暂时性不可用」（KV 代理 401、网络抖动）
- * 也会触发切换，恢复后读路径又切回去，造成数据分裂。这里只是把「那你该改成
- * 什么」算出来，直接写进错误文案与诊断字段，用户抄一下即可。
+ * **只用於提示，絕不改變語義**：顯式配置了 DB_DRIVER 就絕不回退 —— 回退會把
+ * 資料寫到用戶沒有指定的後端上，而且「暫時性不可用」（KV 代理 401、網路抖動）
+ * 也會觸發切換，恢復後讀路徑又切回去，造成資料分裂。這裡只是把「那你該改成
+ * 什麼」算出來，直接寫進錯誤文案與診斷欄位，用戶抄一下即可。
  *
- * 内存兜底（本地开发）不算可用后端：避免把生产部署引导到易失存储上。
+ * 記憶體兜底（本地開發）不算可用後端：避免把生產部署引導到易失儲存上。
  */
 async function autoPickDriver(
   env: any,
@@ -469,13 +469,13 @@ async function autoPickDriver(
     const auto = await autoDetectDriver(env)
     if (auto && auto !== memoryDriver && auto.name !== requested) driver = auto
   } catch {
-    // auto 也探测不到任何后端：保持原有提示（NO_STORAGE_MESSAGE 已在别处给出）
+    // auto 也探測不到任何後端：保持原有提示（NO_STORAGE_MESSAGE 已在別處給出）
   }
   autoPickCache = { key, driver }
   return driver
 }
 
-/** 「auto 会选谁」的一行文案（没有可用后端时为空串）。 */
+/** 「auto 會選誰」的一行文案（沒有可用後端時為空串）。 */
 function autoPickHint(driver: Driver | null): string {
   return driver
     ? `Auto-detection would pick: DB_DRIVER=${driver.name} ` +
@@ -484,30 +484,30 @@ function autoPickHint(driver: Driver | null): string {
 }
 
 /**
- * 驱动 × 格式组合校验。
+ * 驅動 × 格式組合校驗。
  *
- * 历史上非法组合（如 DB_FORMAT=sql + DB_DRIVER=kv）要到真正读写时才在
- * sqlFormat 内抛 "Driver kv does not support SQL queries"：此时 env_check
- * 仍报 ready，用户看到「环境一切正常」却在初始化时 500。
- * 这里在解析阶段就拒绝，并列出该驱动支持的格式。
+ * 歷史上非法組合（如 DB_FORMAT=sql + DB_DRIVER=kv）要到真正讀寫時才在
+ * sqlFormat 內拋 "Driver kv does not support SQL queries"：此時 env_check
+ * 仍報 ready，用戶看到「環境一切正常」卻在初始化時 500。
+ * 這裡在解析階段就拒絕，並列出該驅動支持的格式。
  *
- * ## 为什么需要「显式白名单」，而不仅是能力探测
+ * ## 為什麼需要「顯式白名單」，而不僅是能力探測
  *
- * 能力探测（有没有 get/put/delete/list）只能区分「KV 语义 / 关系语义」，
- * 无法表达某个驱动**只支持其中一种 KV 格式**。典型是 blob：
+ * 能力探測（有沒有 get/put/delete/list）只能區分「KV 語義 / 關係語義」，
+ * 無法表達某個驅動**只支持其中一種 KV 格式**。典型是 blob：
  *
- *   - blob 的 `get/put/delete/list` 齐备，因此按能力探测它能通过 map **和** key；
- *   - 但 blob 存储的实质是「一整个 JSON 文档」，只有 map 是自洽的：
- *     key 格式会把对象摊平成多条 `prefix:key` 记录，而 blob 只能整存整取，
- *     落到 blob 上既写不出多个键、也 list 不出真实结构 —— 运行时才炸。
+ *   - blob 的 `get/put/delete/list` 齊備，因此按能力探測它能通過 map **和** key；
+ *   - 但 blob 儲存的實質是「一整個 JSON 文件」，只有 map 是自洽的：
+ *     key 格式會把對象攤平成多條 `prefix:key` 記錄，而 blob 只能整存整取，
+ *     落到 blob 上既寫不出多個鍵、也 list 不出真實結構 —— 運行時才炸。
  *
- * 因此这里叠加一层白名单：能表达「blob 仅 map」这种细粒度约束，
- * 且未来若某驱动支持 map/sql 但**不支持** key，也能直接声明。
+ * 因此這裡疊加一層白名單：能表達「blob 僅 map」這種細粒度約束，
+ * 且未來若某驅動支持 map/sql 但**不支持** key，也能直接聲明。
  */
 const DRIVER_FORMAT_WHITELIST: Record<string, StorageFormat[]> = {
-  // blob：单文档存储，只支持整存整取的 map
+  // blob：單文件儲存，只支持整存整取的 map
   blob: ["map"],
-  // 显式列出其余驱动，避免新增驱动时「忘了加白名单 = 全放行」的静默风险。
+  // 顯式列出其餘驅動，避免新增驅動時「忘了加白名單 = 全放行」的靜默風險。
   kv: ["map", "key"],
   cfkv: ["map", "key"],
   d1: ["map", "key", "sql"],
@@ -517,18 +517,18 @@ const DRIVER_FORMAT_WHITELIST: Record<string, StorageFormat[]> = {
 }
 
 function validateDriverFormat(driver: Driver, format: FormatAdapter): void {
-  // get/put/delete/list 在接口上是必选，但运行时仍可能缺失（第三方/降级实现），
-  // 因此这里按能力探测而非依赖类型声明。
+  // get/put/delete/list 在介面上是必選，但運行時仍可能缺失（第三方/降級實現），
+  // 因此這裡按能力探測而非依賴類型聲明。
   const d = driver as any
   const supportsKv = Boolean(d.get && d.put && d.delete && d.list)
   const supportsSql = Boolean(driver.query && driver.execute && driver.batch)
 
-  // ① 能力探测：先排除与驱动**语义**根本不符的格式（如给 kv 配 sql）。
+  // ① 能力探測：先排除與驅動**語義**根本不符的格式（如給 kv 配 sql）。
   const capabilityOk = format.name === "sql" ? supportsSql : supportsKv
 
-  // ② 白名单：再排除「语义上属于该类、但该驱动并不支持」的格式（如 blob + key）。
-  //    未登记的驱动按「不限制」处理（保留第三方驱动的可扩展性），
-  //    但内置驱动全部显式登记，见上表。
+  // ② 白名單：再排除「語義上屬於該類、但該驅動並不支持」的格式（如 blob + key）。
+  //    未登記的驅動按「不限制」處理（保留第三方驅動的可擴展性），
+  //    但內置驅動全部顯式登記，見上表。
   const whitelist = DRIVER_FORMAT_WHITELIST[driver.name]
   const whitelistOk = !whitelist || whitelist.includes(format.name as StorageFormat)
 
@@ -550,9 +550,9 @@ function validateDriverFormat(driver: Driver, format: FormatAdapter): void {
         : `The "${format.name}" format needs a key-value driver ` +
           "(get/put/delete/list): kv | cfkv | d1 | do | mysql.\n") +
       `Fix DB_FORMAT or DB_DRIVER. See ${STORAGE_DOC}`,
-    // 非法组合通常只差一个变量，直接给出「改成什么」。
-    // 优先建议改 DB_FORMAT（保持用户已选定的驱动），因为驱动往往是被平台
-    // 唯一支持的（如 ESA 上只有 blob），而格式才是用户可自由选择的维度。
+    // 非法組合通常只差一個變量，直接給出「改成什麼」。
+    // 優先建議改 DB_FORMAT（保持用戶已選定的驅動），因為驅動往往是被平台
+    // 唯一支持的（如 ESA 上只有 blob），而格式才是用戶可自由選擇的維度。
     format.name === "sql"
       ? `Set DB_FORMAT=map (or key), or switch to a relational driver ` +
         `(DB_DRIVER=d1 | do | mysql).`
@@ -562,20 +562,20 @@ function validateDriverFormat(driver: Driver, format: FormatAdapter): void {
 }
 
 /**
- * 解析驱动。
+ * 解析驅動。
  *
- * 语义约定：
- *  - `auto`：按优先级探测，全部不可用时：worker 环境报错，本地回退内存。
- *  - `memory`：合法驱动名，**仅本地 Node 有效**；serverless 下抛 NO_STORAGE
- *    （内存写入会静默丢失，且接口仍返回成功）。
- *  - 其它显式指定（如 DB_DRIVER=kv）：**不回退**。若该驱动不可用则直接报错，
- *    避免用户以为在用 KV、实际却落到别的后端或内存里。
+ * 語義約定：
+ *  - `auto`：按優先級探測，全部不可用時：worker 環境報錯，本地回退記憶體。
+ *  - `memory`：合法驅動名，**僅本地 Node 有效**；serverless 下拋 NO_STORAGE
+ *    （記憶體寫入會靜默丟失，且介面仍返回成功）。
+ *  - 其它顯式指定（如 DB_DRIVER=kv）：**不回退**。若該驅動不可用則直接報錯，
+ *    避免用戶以為在用 KV、實際卻落到別的後端或記憶體裡。
  */
 async function resolveDriver(
-  // 形参类型放宽为 string：`DB_DRIVER=memory` 是合法用户输入，但 `StorageDriver`
-  // 联合类型**故意不含 "memory"**（它不参与「驱动名 → 实现」查表，见下方注释）。
-  // 若在此收窄为 StorageDriver，下面的 `name === "memory"` 会被 TS 判为
-  // 「永不成立的比较」，而这条分支恰恰是 `memory` 的唯一处理入口。
+  // 形參類型放寬為 string：`DB_DRIVER=memory` 是合法用戶輸入，但 `StorageDriver`
+  // 聯合類型**故意不含 "memory"**（它不參與「驅動名 → 實現」查表，見下方註釋）。
+  // 若在此收窄為 StorageDriver，下面的 `name === "memory"` 會被 TS 判為
+  // 「永不成立的比較」，而這條分支恰恰是 `memory` 的唯一處理入口。
   name: StorageDriver | "memory",
   env?: any,
 ): Promise<Driver> {
@@ -583,17 +583,17 @@ async function resolveDriver(
     return await autoDetectDriver(env)
   }
 
-  // ── 显式 DB_DRIVER=memory ──────────────────────────────────────────────
+  // ── 顯式 DB_DRIVER=memory ──────────────────────────────────────────────
   //
-  // memory 是**合法驱动名**（用户意图明确：不要持久化），但只在本地 Node
-  // 运行时有效。因此不能像以前那样走到 DRIVER_MAP 查表、拿到 UNKNOWN_DRIVER
-  // 「未知驱动」——那既否定了用户的合法输入，也给不出任何修复建议
-  // （suggestion 为 null，安装向导无从展示下一步动作）。
+  // memory 是**合法驅動名**（用戶意圖明確：不要持久化），但只在本地 Node
+  // 運行時有效。因此不能像以前那樣走到 DRIVER_MAP 查表、拿到 UNKNOWN_DRIVER
+  // 「未知驅動」——那既否定了用戶的合法輸入，也給不出任何修復建議
+  // （suggestion 為 null，安裝嚮導無從展示下一步動作）。
   //
-  // 这里在查表**之前**单独处理：
-  //   - 本地：直接返回 memoryDriver（行为与 auto 回退内存一致）；
-  //   - serverless：抛 NO_STORAGE（语义是「本运行时没有可用存储」，而不是
-  //     「你写错了一个变量」），并带上「改成什么」的一句话建议。
+  // 這裡在查表**之前**單獨處理：
+  //   - 本地：直接返回 memoryDriver（行為與 auto 回退記憶體一致）；
+  //   - serverless：拋 NO_STORAGE（語義是「本運行時沒有可用儲存」，而不是
+  //     「你寫錯了一個變量」），並帶上「改成什麼」的一句話建議。
   if (name === "memory") {
     if (!isServerlessRuntime(env)) {
       console.log("[DB] Using explicitly configured driver: memory")
@@ -616,7 +616,7 @@ async function resolveDriver(
     )
   }
 
-  // 显式指定时必须可用，否则报错（不回退）
+  // 顯式指定時必須可用，否則報錯（不回退）
   let available = false
   try {
     available = await driver.isAvailable(env)
@@ -625,22 +625,22 @@ async function resolveDriver(
   }
 
   if (!available) {
-    // ── 显式配置的驱动不可用：直接报错，绝不回退 ──
+    // ── 顯式配置的驅動不可用：直接報錯，絕不回退 ──
     //
-    // 回退（哪怕是回退到 auto 会选中的那个后端）都会把数据写到用户没有指定的
-    // 后端上，而且「暂时性不可用」（KV 代理 401、网络抖动）同样会触发切换，
-    // 等它恢复后读路径又切回去，造成数据分裂。因此显式配置一律硬失败。
+    // 回退（哪怕是回退到 auto 會選中的那個後端）都會把資料寫到用戶沒有指定的
+    // 後端上，而且「暫時性不可用」（KV 代理 401、網路抖動）同樣會觸發切換，
+    // 等它恢復後讀路徑又切回去，造成資料分裂。因此顯式配置一律硬失敗。
     //
-    // 代价：校验期间每个依赖存储的 API 请求都会被 503 拦截（前端会停在初始化
-    // 向导并展示下面的原因），所以文案必须自己说清怎么办 ——
-    //   * 「auto 会选谁」排进前 3 行：诊断接口只透传前 3 行（见
-    //     server/public.ts 的 reasonLines，那里也写了这条约束）；
-    //   * 另外单独给出结构化 suggestion，供前端显眼展示。
+    // 代價：校驗期間每個依賴儲存的 API 請求都會被 503 攔截（前端會停在初始化
+    // 嚮導並展示下面的原因），所以文案必須自己說清怎麼辦 ——
+    //   * 「auto 會選誰」排進前 3 行：診斷介面只透傳前 3 行（見
+    //     server/public.ts 的 reasonLines，那裡也寫了這條約束）；
+    //   * 另外單獨給出結構化 suggestion，供前端顯眼展示。
     const auto = await autoPickDriver(env, name)
     throw storeError(
       "DRIVER_UNAVAILABLE",
-      // 首行必须是完整的一句短原因：界面只展示首行摘要（见 storage-error.ts
-      // 的 storageErrorSummary），混入后续说明会变成被截断的半句话。
+      // 首行必須是完整的一句短原因：界面只展示首行摘要（見 storage-error.ts
+      // 的 storageErrorSummary），混入後續說明會變成被截斷的半句話。
       `DB_DRIVER is set to "${name}", but that driver is not available in this runtime.\n` +
         `No fallback is performed for an explicitly configured driver.\n` +
         autoPickHint(auto) +
@@ -676,21 +676,21 @@ function resolveFormat(name: StorageFormat): FormatAdapter {
 }
 
 /**
- * 全局缓存。
+ * 全局快取。
  */
 let cachedDriver: Driver | null = null
 let cachedFormat: FormatAdapter | null = null
 let cachedConfig: string | null = null
 
 /**
- * env 对象的稳定身份编号。
+ * env 對象的穩定身份編號。
  *
- * 为什么需要：auto 模式下驱动探测结果取决于「该 env 里有哪些绑定」。
- * 若仅以 driverName:formatName 做缓存键，同一个进程内先后出现两个不同
- * env（一个有 Blob、一个只有 KV）时会串味。这里给每个 env 对象分配一个
- * 稳定的自增 ID（WeakMap，不阻止 GC），把「是否同一个 env」纳入缓存键。
+ * 為什麼需要：auto 模式下驅動探測結果取決於「該 env 裡有哪些綁定」。
+ * 若僅以 driverName:formatName 做快取鍵，同一個進程內先後出現兩個不同
+ * env（一個有 Blob、一個只有 KV）時會串味。這裡給每個 env 對象分配一個
+ * 穩定的自增 ID（WeakMap，不阻止 GC），把「是否同一個 env」納入快取鍵。
  *
- * 代价极低：同一 env 对象多次调用恒得同一 ID；不同对象则重探测一次。
+ * 代價極低：同一 env 對象多次調用恆得同一 ID；不同對象則重探測一次。
  */
 const envIds = new WeakMap<object, number>()
 let envIdSeq = 0
@@ -707,18 +707,18 @@ function envFingerprint(env?: any): string {
 }
 
 /**
- * 获取存储后端（驱动 + 格式）。
+ * 獲取儲存後端（驅動 + 格式）。
  */
 export async function getStorageBackend(
   env?: any,
 ): Promise<{ driver: Driver; format: FormatAdapter }> {
   const driverName = readDriver(env)
   const formatName = readFormat(env)
-  // 缓存键必须包含「影响探测结果的环境特征」。
-  // 仅用 driverName:formatName 是不够的：当 DB_DRIVER=auto 时，不同 env
-  // 可能探测出不同驱动（如本地 env 回退 memory、serverless env 报错，
-  // 或一个 env 有 Blob 绑定、另一个只有 KV），共用缓存会返回错误结果。
-  // 因此额外纳入「运行时类型 + env 身份」。
+  // 快取鍵必須包含「影響探測結果的環境特徵」。
+  // 僅用 driverName:formatName 是不夠的：當 DB_DRIVER=auto 時，不同 env
+  // 可能探測出不同驅動（如本地 env 回退 memory、serverless env 報錯，
+  // 或一個 env 有 Blob 綁定、另一個只有 KV），共用快取會返回錯誤結果。
+  // 因此額外納入「運行時類型 + env 身份」。
   const runtimeTag = isServerlessRuntime(env) ? "sl" : "local"
   const config = `${driverName}:${formatName}:${runtimeTag}:${envFingerprint(env)}`
 
@@ -729,11 +729,11 @@ export async function getStorageBackend(
   const driver = await resolveDriver(driverName, env)
   const format = resolveFormat(formatName)
 
-  // 非法「驱动 × 格式」组合立即拒绝：否则要到真正读写时才报错，
-  // 而 env_check 会显示 ready，用户看到「环境正常」却在初始化时 500。
+  // 非法「驅動 × 格式」組合立即拒絕：否則要到真正讀寫時才報錯，
+  // 而 env_check 會顯示 ready，用戶看到「環境正常」卻在初始化時 500。
   validateDriverFormat(driver, format)
 
-  // 初始化驱动（建表等，幂等）
+  // 初始化驅動（建表等，冪等）
   if (driver.init) {
     try {
       await driver.init(env)
@@ -751,7 +751,7 @@ export async function getStorageBackend(
 }
 
 /**
- * 获取存储后端（StoreBackend 旧接口，供 db.ts 使用）。
+ * 獲取儲存後端（StoreBackend 舊介面，供 db.ts 使用）。
  */
 export async function getStoreBackend(env?: any): Promise<StoreBackend> {
   const { driver, format } = await getStorageBackend(env)
@@ -766,10 +766,10 @@ export async function getStoreBackend(env?: any): Promise<StoreBackend> {
 }
 
 /**
- * 当前后端的健康/连接状态，用于 /debug/info 与 /admin/kv/status。
+ * 當前後端的健康/連接狀態，用於 /debug/info 與 /admin/kv/status。
  *
- * 若为 EdgeOne KV 代理模式且缺少必需的密钥，会返回 configError，
- * 由上层接口透传给前端，避免用户只看到莫名的 401。
+ * 若為 EdgeOne KV 代理模式且缺少必需的密鑰，會返回 configError，
+ * 由上層介面透傳給前端，避免用戶只看到莫名的 401。
  */
 export async function getStoreStatus(env?: any): Promise<any> {
   let driver: any = null
@@ -782,8 +782,8 @@ export async function getStoreStatus(env?: any): Promise<any> {
     driver = resolved.driver
     format = resolved.format
   } catch (err: any) {
-    // 无可用存储（如 serverless 环境未配置）时不应让状态接口崩溃，
-    // 而是返回可读的配置错误（含机器可读的分类码，供前端展示具体原因）。
+    // 無可用儲存（如 serverless 環境未配置）時不應讓狀態介面崩潰，
+    // 而是返回可讀的配置錯誤（含機器可讀的分類碼，供前端展示具體原因）。
     const msg = String(err?.message || err)
     const isNoStorage = msg.includes("No storage backend is available")
     return {
@@ -792,10 +792,10 @@ export async function getStoreStatus(env?: any): Promise<any> {
       available: false,
       configError: isNoStorage ? NO_STORAGE_MESSAGE : msg,
       configErrorCode: errorCodeOf(err),
-      /** 一句话修复建议（前端在显眼位置单独展示，不依赖解析 message） */
-      // NO_STORAGE 现在自带平台感知的 hint（见 noStorageHint），
-      // 因此这里不再需要「or set DB_DRIVER=auto」那句循环话术兜底。
-      // 保留兜底仅用于「老代码/异常路径没有带 hint」的情形，且文案不再提 auto。
+      /** 一句話修復建議（前端在顯眼位置單獨展示，不依賴解析 message） */
+      // NO_STORAGE 現在自帶平台感知的 hint（見 noStorageHint），
+      // 因此這裡不再需要「or set DB_DRIVER=auto」那句循環話術兜底。
+      // 保留兜底僅用於「老代碼/異常路徑沒有帶 hint」的情形，且文案不再提 auto。
       configSuggestion:
         hintOf(err) ||
         (isNoStorage ? "Bind a persistent storage backend, then redeploy." : null),
@@ -809,21 +809,21 @@ export async function getStoreStatus(env?: any): Promise<any> {
     health = { connected: false, error: err?.message || String(err) }
   }
 
-  // 注意：这里**刻意不**再做一次 checkProxyConfig 探测。
+  // 注意：這裡**刻意不**再做一次 checkProxyConfig 探測。
   //
-  // 能走到这里说明 resolveDriver 已成功返回 kv 实例，而 kv 能成功只有两条路：
+  // 能走到這裡說明 resolveDriver 已成功返回 kv 實例，而 kv 能成功只有兩條路：
   //   1. 有原生 KV binding        → checkProxyConfig 首行即 return null
-  //   2. 无 binding 但代理可用
-  //        （probeProxy 返回 ok 或 401，表示 secret + origin 至少齐全）
-  //                                → checkProxyConfig 同样为 null
-  //   3. 无 binding 且缺 secret   → 已在 resolveDriver 抛 DRIVER_UNAVAILABLE，
-  //                                  根本到不了这里
-  // 即：能到这里 ⇒ checkProxyConfig 必为 null，这个分支永远不会命中。
-  // KV 代理的真实问题（缺密钥 / 401）由 getStoreConfigErrorDetail 统一负责，
-  // 那里才有完整的「原因 + 一句话建议」。
+  //   2. 無 binding 但代理可用
+  //        （probeProxy 返回 ok 或 401，表示 secret + origin 至少齊全）
+  //                                → checkProxyConfig 同樣為 null
+  //   3. 無 binding 且缺 secret   → 已在 resolveDriver 拋 DRIVER_UNAVAILABLE，
+  //                                  根本到不了這裡
+  // 即：能到這裡 ⇒ checkProxyConfig 必為 null，這個分支永遠不會命中。
+  // KV 代理的真實問題（缺密鑰 / 401）由 getStoreConfigErrorDetail 統一負責，
+  // 那裡才有完整的「原因 + 一句話建議」。
   //
-  // 这里只保留 health() 的结论：401 在 health 中视为不健康，
-  // 因此下面 `...health` 会把 connected=false + error 透出去。
+  // 這裡只保留 health() 的結論：401 在 health 中視為不健康，
+  // 因此下面 `...health` 會把 connected=false + error 透出去。
   return {
     driver: driver.name,
     format: format.name,
@@ -832,20 +832,20 @@ export async function getStoreStatus(env?: any): Promise<any> {
 }
 
 /**
- * 判断当前环境是否拥有「可持久化」的存储。
+ * 判斷當前環境是否擁有「可持久化」的儲存。
  *
- * 判定为不可用的情况：
- *   - 没有任何驱动（driver 为 none / 空）
- *   - 退化为内存驱动（重启即丢，serverless 下不可接受）
- *   - 驱动配置存在错误
- *   - 驱动自报不健康（连接失败、鉴权失败等）
+ * 判定為不可用的情況：
+ *   - 沒有任何驅動（driver 為 none / 空）
+ *   - 退化為記憶體驅動（重啟即丟，serverless 下不可接受）
+ *   - 驅動配置存在錯誤
+ *   - 驅動自報不健康（連接失敗、鑑權失敗等）
  */
 export async function isPersistentStorageAvailable(env?: any): Promise<boolean> {
   const status = await getStorageStatusSafe(env)
   return isPersistentStatus(status)
 }
 
-/** 存储状态查询，任何异常都折叠成「不可用」状态而非抛出。 */
+/** 儲存狀態查詢，任何異常都摺疊成「不可用」狀態而非拋出。 */
 async function getStorageStatusSafe(env?: any): Promise<any> {
   try {
     return await getStoreStatus(env)
@@ -861,42 +861,42 @@ async function getStorageStatusSafe(env?: any): Promise<any> {
 }
 
 /**
- * 持久化可用性的统一判定（单一来源）。
+ * 持久化可用性的統一判定（單一來源）。
  *
- * 供 isPersistentStorageAvailable() 与 getStoreConfigErrorDetail() 共用，
- * 避免两处规则漂移导致「自检说不可用、实际请求却放行」。
+ * 供 isPersistentStorageAvailable() 與 getStoreConfigErrorDetail() 共用，
+ * 避免兩處規則漂移導致「自檢說不可用、實際請求卻放行」。
  */
 function isPersistentStatus(status: any): boolean {
   const driver = String(status?.driver ?? "none")
   const hasDriver = driver !== "none" && driver !== ""
   const isMemory = driver === "memory"
   const hasConfigError = Boolean(status?.configError)
-  // health 失败时 getStoreStatus 会带 available:false
+  // health 失敗時 getStoreStatus 會帶 available:false
   const driverHealthy = status?.available !== false
   return hasDriver && !isMemory && !hasConfigError && driverHealthy
 }
 
 /**
- * 同一份配置错误只打印一次（按实例）。
+ * 同一份配置錯誤只打印一次（按實例）。
  *
- * 配置错误期间**每个** API 请求都会走到这里（全局 503 拦截），逐请求打印会把
- * 日志刷满、淹没其它信息（用户看到的「反复报错」多半就是它）。文案变化时
- * （配置改动或换了一种错）会重新打印；错误消失后重置，便于下次复现。
- * 需要实时状态时用 /api/public/env_check（它豁免拦截且始终返回最新结论）。
+ * 配置錯誤期間**每個** API 請求都會走到這裡（全局 503 攔截），逐請求打印會把
+ * 日誌刷滿、淹沒其它信息（用戶看到的「反覆報錯」多半就是它）。文案變化時
+ * （配置改動或換了一種錯）會重新打印；錯誤消失後重置，便於下次復現。
+ * 需要實時狀態時用 /api/public/env_check（它豁免攔截且始終返回最新結論）。
  */
 let lastConfigErrorLog: string | null = null
 
 /**
- * 存储配置错误的「原因 + 分类码 + 一句话修复建议」。
+ * 儲存配置錯誤的「原因 + 分類碼 + 一句話修復建議」。
  *
- * 供全局中间件（503 拦截）与诊断接口（/public/env_check、/public/init_status）
- * 共用同一判定，避免两处规则漂移。
+ * 供全局中間件（503 攔截）與診斷介面（/public/env_check、/public/init_status）
+ * 共用同一判定，避免兩處規則漂移。
  *
- * @param opts.silent 不打印日志。诊断接口会被前端轮询（安装向导每秒一次），
- *        由调用方决定是否需要日志，避免刷屏。
+ * @param opts.silent 不打印日誌。診斷介面會被前端輪詢（安裝嚮導每秒一次），
+ *        由調用方決定是否需要日誌，避免刷屏。
  *
- * 不额外做缓存：getStorageBackend 内部已按 env 指纹缓存驱动解析，
- * 而 checkProxyConfig 是纯同步读取 env，开销可忽略。
+ * 不額外做快取：getStorageBackend 內部已按 env 指紋快取驅動解析，
+ * 而 checkProxyConfig 是純同步讀取 env，開銷可忽略。
  */
 export async function getStoreConfigErrorDetail(
   env?: any,
@@ -904,7 +904,7 @@ export async function getStoreConfigErrorDetail(
 ): Promise<{
   code: StoreConfigErrorCode | null
   message: string | null
-  /** 一句话修复建议（「改什么」）；无建议时为 null */
+  /** 一句話修復建議（「改什麼」）；無建議時為 null */
   suggestion: string | null
 }> {
   const log = (label: string, msg: string) => {
@@ -917,15 +917,15 @@ export async function getStoreConfigErrorDetail(
   if (!env || typeof env !== "object")
     return { code: null, message: null, suggestion: null }
 
-  // 缺代理密钥时优先给出「补密钥」这种可操作提示，而不是笼统的驱动错误。
-  // checkProxyConfig 是纯同步读取，开销可忽略。
+  // 缺代理密鑰時優先給出「補密鑰」這種可操作提示，而不是籠統的驅動錯誤。
+  // checkProxyConfig 是純同步讀取，開銷可忽略。
   //
-  // 两种入口都要覆盖：
-  //   1. 显式 DB_DRIVER=kv
-  //   2. auto 模式最终选中 kv 驱动（否则用户只会看到不可读的 "HTTP 401"，
-  //      而真正原因是 X-Internal-Call 的密钥与 Edge Function 不一致）
+  // 兩種入口都要覆蓋：
+  //   1. 顯式 DB_DRIVER=kv
+  //   2. auto 模式最終選中 kv 驅動（否則用戶只會看到不可讀的 "HTTP 401"，
+  //      而真正原因是 X-Internal-Call 的密鑰與 Edge Function 不一致）
   //
-  // 两处返回的 code / suggestion 完全相同，故抽成局部函数，避免文案漂移。
+  // 兩處返回的 code / suggestion 完全相同，故抽成局部函數，避免文案漂移。
   const proxyConfigError = (kvIssue: string) => {
     log("[DB] KV proxy configuration error:\n", kvIssue)
     return {
@@ -945,15 +945,15 @@ export async function getStoreConfigErrorDetail(
 
   const status = await getStorageStatusSafe(env)
 
-  // 配置齐全且健康：无错误（重置去重状态，便于下次复现时仍能看到日志）
+  // 配置齊全且健康：無錯誤（重置去重狀態，便於下次復現時仍能看到日誌）
   if (isPersistentStatus(status)) {
     lastConfigErrorLog = null
     return { code: null, message: null, suggestion: null }
   }
 
-  // 选中了 kv 但代理不可用：区分「缺密钥」与「密钥不匹配」。
-  // 后者表现为 HTTP 401 —— 代理已部署，只是 JWT_SECRET 与 Edge Function
-  // 不一致或被轮换过，需要明确指出来才能排查。
+  // 選中了 kv 但代理不可用：區分「缺密鑰」與「密鑰不匹配」。
+  // 後者表現為 HTTP 401 —— 代理已部署，只是 JWT_SECRET 與 Edge Function
+  // 不一致或被輪換過，需要明確指出來才能排查。
   if (!isKvRequested && String(status?.driver ?? "") === "kv") {
     const kvIssue = checkProxyConfig(env)
     if (kvIssue) return proxyConfigError(kvIssue)
@@ -973,7 +973,7 @@ export async function getStoreConfigErrorDetail(
     }
   }
 
-  // 已有明确原因（缺密钥 / 驱动解析失败 / 组合非法 / 健康检查失败）
+  // 已有明確原因（缺密鑰 / 驅動解析失敗 / 組合非法 / 健康檢查失敗）
   const reason: string | null = status?.configError
     ? String(status.configError)
     : null
@@ -982,12 +982,12 @@ export async function getStoreConfigErrorDetail(
     return {
       code: (status?.configErrorCode as StoreConfigErrorCode) || "DRIVER_ERROR",
       message: reason,
-      // 「改什么」由驱动解析层给出（如 DRIVER_UNAVAILABLE 会带上 auto 的探测结论）
+      // 「改什麼」由驅動解析層給出（如 DRIVER_UNAVAILABLE 會帶上 auto 的探測結論）
       suggestion: (status?.configSuggestion as string) || null,
     }
   }
 
-  // 内存兜底：serverless 下写入会静默丢失，需要可操作提示
+  // 記憶體兜底：serverless 下寫入會靜默丟失，需要可操作提示
   if (String(status?.driver ?? "none") === "memory") {
     log("[DB] Storage configuration error:\n", NO_STORAGE_MESSAGE)
     return {
@@ -1009,10 +1009,10 @@ export async function getStoreConfigErrorDetail(
     }
   }
 
-  // 走到这里说明 isPersistentStatus 判为「不可用」但没有任何具体原因字段
-  // （例如驱动自报 available:false 却未提供 error 文本）。此时**不能返回 null**，
-  // 否则 503 拦截会静默失效，请求继续以「看似成功」的方式写进不可用后端。
-  // 给出一条基于驱动名的兜底错误，保证判定与拦截始终一致。
+  // 走到這裡說明 isPersistentStatus 判為「不可用」但沒有任何具體原因欄位
+  // （例如驅動自報 available:false 卻未提供 error 文本）。此時**不能返回 null**，
+  // 否則 503 攔截會靜默失效，請求繼續以「看似成功」的方式寫進不可用後端。
+  // 給出一條基於驅動名的兜底錯誤，保證判定與攔截始終一致。
   const driverName = String(status?.driver ?? "none")
   const fallback =
     driverName === "none" || driverName === ""
@@ -1030,7 +1030,7 @@ export async function getStoreConfigErrorDetail(
   }
 }
 
-// 说明：曾有一个只返回 message 的 getStoreConfigError()，在全局 503 拦截改用
-// getStoreConfigErrorDetail()（需要 code/reason/suggestion）后已无调用者，故删除。
-// 若将来确需「只要原因」的场景，用 getStoreConfigErrorDetail().message 即可，
-// 不要重新引入并行实现 —— 两条规则容易漂移。
+// 說明：曾有一個只返回 message 的 getStoreConfigError()，在全局 503 攔截改用
+// getStoreConfigErrorDetail()（需要 code/reason/suggestion）後已無調用者，故刪除。
+// 若將來確需「只要原因」的場景，用 getStoreConfigErrorDetail().message 即可，
+// 不要重新引入並行實現 —— 兩條規則容易漂移。

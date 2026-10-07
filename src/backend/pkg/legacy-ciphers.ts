@@ -1,31 +1,31 @@
 /**
- * DES / 3DES-CBC（PKCS#7）纯 JS 实现。
+ * DES / 3DES-CBC（PKCS#7）純 JS 實現。
  *
- * ## 为什么用 crypto-js 而不是 WebCrypto
+ * ## 為什麼用 crypto-js 而不是 WebCrypto
  *
- * WebCrypto（CF Workers / 浏览器 / Node 的 `crypto.subtle`）**都不提供 DES/3DES**
- * （DES 早已从 WebCrypto 规范中移除）；本仓库的边缘构建还会把 `node:crypto`
- * 换成抛错 shim（见 `scripts/node-shim.mjs`）。而 `crypto-js` 已在本仓库依赖里
- * （多个网盘驱动在用，已被打进产物），其 `TripleDES` 支持 8 / 16 / 24 字节密钥：
+ * WebCrypto（CF Workers / 瀏覽器 / Node 的 `crypto.subtle`）**都不提供 DES/3DES**
+ * （DES 早已從 WebCrypto 規範中移除）；本倉庫的邊緣構建還會把 `node:crypto`
+ * 換成拋錯 shim（見 `scripts/node-shim.mjs`）。而 `crypto-js` 已在本倉庫依賴裡
+ * （多個網盤驅動在用，已被打進產物），其 `TripleDES` 支持 8 / 16 / 24 字節密鑰：
  *
- *   - 8 字节  → 单 DES（EDE(K,K,K) ≡ DES，已与 OpenSSL `des-ede3-cbc` 交叉验证一致）
- *   - 24 字节 → 3-key 3DES（168-bit，已与 OpenSSL 交叉验证一致）
+ *   - 8 字節  → 單 DES（EDE(K,K,K) ≡ DES，已與 OpenSSL `des-ede3-cbc` 交叉驗證一致）
+ *   - 24 字節 → 3-key 3DES（168-bit，已與 OpenSSL 交叉驗證一致）
  *
- * ## 安全性提醒（务必知悉）
+ * ## 安全性提醒（務必知悉）
  *
- * 两者都**只应作为兼容手段**，不应用于保护真实数据：
- *   - 单 DES 有效密钥仅 56-bit，可被专用硬件在小时级暴力破解；
- *   - 3DES 的 64-bit 分组在数据量大时受 Sweet32 攻击影响，NIST SP 800-131A
- *     已不再认可其用于加密。
- * 因此本项目把 `des-cbc-hmac` / `3des-cbc-hmac` 实现为「CBC + 独立的
- * HMAC-SHA256（Encrypt-then-MAC）」以保证**完整性**，但**不提供**任何强度承诺；
- * 需要真正的静态加密请使用 `aes-256-gcm` 或 `chacha20-poly1305`。
+ * 兩者都**只應作為相容手段**，不應用於保護真實資料：
+ *   - 單 DES 有效密鑰僅 56-bit，可被專用硬件在小時級暴力破解；
+ *   - 3DES 的 64-bit 分組在資料量大時受 Sweet32 攻擊影響，NIST SP 800-131A
+ *     已不再認可其用於加密。
+ * 因此本項目把 `des-cbc-hmac` / `3des-cbc-hmac` 實現為「CBC + 獨立的
+ * HMAC-SHA256（Encrypt-then-MAC）」以保證**完整性**，但**不提供**任何強度承諾；
+ * 需要真正的靜態加密請使用 `aes-256-gcm` 或 `chacha20-poly1305`。
  *
- * 该模块只做「字节进、字节出」，十六进制编解码与密钥派生由 `crypto.ts` 负责。
+ * 該模塊只做「字節進、字節出」，十六進制編解碼與密鑰派生由 `crypto.ts` 負責。
  */
 import CryptoJS from "crypto-js"
 
-/** Uint8Array → crypto-js WordArray（按字节，不依赖 lib-typedarrays） */
+/** Uint8Array → crypto-js WordArray（按字節，不依賴 lib-typedarrays） */
 function bytesToWordArray(bytes: Uint8Array): any {
   const words: number[] = []
   for (let i = 0; i < bytes.length; i++) {
@@ -50,8 +50,8 @@ const DES_BLOCK = 8
 /**
  * DES / 3DES-CBC 加密（PKCS#7 填充）。
  *
- * @param keyBytes 8 字节 → 单 DES；16 字节 → 2-key 3DES；24 字节 → 3-key 3DES
- * @param iv 必须为 8 字节（DES 分组长度）
+ * @param keyBytes 8 字節 → 單 DES；16 字節 → 2-key 3DES；24 字節 → 3-key 3DES
+ * @param iv 必須為 8 字節（DES 分組長度）
  */
 export function desCbcEncrypt(
   plain: Uint8Array,
@@ -71,7 +71,7 @@ export function desCbcEncrypt(
   return wordArrayToBytes(out.ciphertext)
 }
 
-/** DES / 3DES-CBC 解密（校验并去除 PKCS#7 填充） */
+/** DES / 3DES-CBC 解密（校驗並去除 PKCS#7 填充） */
 export function desCbcDecrypt(
   cipher: Uint8Array,
   keyBytes: Uint8Array,

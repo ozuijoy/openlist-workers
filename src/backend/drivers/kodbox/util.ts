@@ -1,4 +1,4 @@
-// KodBox API 客户端
+// KodBox API 客戶端
 import { DriverKodboxAddition, KodboxCommonResp, KodboxListData, KodboxFolderOrFile } from "./types"
 
 export class ClientKodbox {
@@ -45,7 +45,7 @@ export class ClientKodbox {
       redirect: "follow",
     })
     const data: KodboxCommonResp = await resp.json().catch(() => ({ code: false }))
-    // token 过期：code === "10001" 时重新登录重试一次
+    // token 過期：code === "10001" 時重新登入重試一次
     if (data.code === "10001") {
       await this.getToken()
       return this.request(endpoint, formData)

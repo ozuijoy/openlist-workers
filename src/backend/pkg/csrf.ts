@@ -1,11 +1,11 @@
 /**
- * CSRF (Cross-Site Request Forgery) 防护模块
+ * CSRF (Cross-Site Request Forgery) 防護模塊
  * 添加日期: 2026-09-05
  * 
- * 实现基于 Token 的 CSRF 防护
- * 支持两种模式：
- * 1. Double Submit Cookie - Cookie + Header 双重验证
- * 2. Synchronizer Token - Session 存储的 Token
+ * 實現基於 Token 的 CSRF 防護
+ * 支持兩種模式：
+ * 1. Double Submit Cookie - Cookie + Header 雙重驗證
+ * 2. Synchronizer Token - Session 儲存的 Token
  */
 
 import { createMiddleware } from "hono/factory"
@@ -15,9 +15,9 @@ import type { Context } from "hono"
  * CSRF Token 配置
  */
 export interface CSRFOptions {
-  // Cookie 名称
+  // Cookie 名稱
   cookieName?: string
-  // Header 名称
+  // Header 名稱
   headerName?: string
   // Token 有效期（秒）
   maxAge?: number
@@ -28,16 +28,16 @@ export interface CSRFOptions {
     sameSite?: "strict" | "lax" | "none"
     path?: string
   }
-  // 豁免路径（不需要 CSRF 保护）
+  // 豁免路徑（不需要 CSRF 保護）
   ignorePaths?: string[]
-  // 豁免方法（默认只保护 POST/PUT/DELETE/PATCH）
+  // 豁免方法（默認只保護 POST/PUT/DELETE/PATCH）
   ignoreMethods?: string[]
 }
 
 const DEFAULT_OPTIONS: Required<Omit<CSRFOptions, "ignorePaths" | "ignoreMethods">> = {
   cookieName: "csrf_token",
   headerName: "x-csrf-token",
-  maxAge: 3600, // 1 小时
+  maxAge: 3600, // 1 小時
   cookieOptions: {
     httpOnly: true,
     secure: true,
@@ -47,14 +47,14 @@ const DEFAULT_OPTIONS: Required<Omit<CSRFOptions, "ignorePaths" | "ignoreMethods
 }
 
 /**
- * 生成随机 CSRF Token
- * @param length Token 长度（默认 32 字节）
- * @returns Base64 编码的 Token
+ * 生成隨機 CSRF Token
+ * @param length Token 長度（默認 32 字節）
+ * @returns Base64 編碼的 Token
  */
 export function generateCSRFToken(length: number = 32): string {
   const bytes = new Uint8Array(length)
   crypto.getRandomValues(bytes)
-  // 使用 Base64 URL-safe 编码
+  // 使用 Base64 URL-safe 編碼
   return btoa(String.fromCharCode(...bytes))
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
@@ -62,22 +62,22 @@ export function generateCSRFToken(length: number = 32): string {
 }
 
 /**
- * 验证 CSRF Token
- * @param token1 来自 Cookie 的 Token
- * @param token2 来自 Header 的 Token
+ * 驗證 CSRF Token
+ * @param token1 來自 Cookie 的 Token
+ * @param token2 來自 Header 的 Token
  * @returns 是否匹配
  */
 export function verifyCSRFToken(token1: string, token2: string): boolean {
   if (!token1 || !token2) return false
   if (token1.length !== token2.length) return false
 
-  // 使用时间安全的字符串比较（防止时序攻击）
+  // 使用時間安全的字符串比較（防止時序攻擊）
   return timingSafeEqual(token1, token2)
 }
 
 /**
- * 时间安全的字符串比较
- * 防止时序攻击（Timing Attack）
+ * 時間安全的字符串比較
+ * 防止時序攻擊（Timing Attack）
  */
 function timingSafeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false
@@ -90,7 +90,7 @@ function timingSafeEqual(a: string, b: string): boolean {
 }
 
 /**
- * CSRF 中间件（Hono）
+ * CSRF 中間件（Hono）
  * 
  * 使用方式：
  * ```typescript
@@ -110,13 +110,13 @@ export function csrfMiddleware(options: CSRFOptions = {}) {
     const method = c.req.method
     const path = c.req.path
 
-    // 1. 豁免的方法（GET/HEAD/OPTIONS 默认不需要 CSRF）
+    // 1. 豁免的方法（GET/HEAD/OPTIONS 默認不需要 CSRF）
     if (ignoreMethods.includes(method)) {
       await next()
       return
     }
 
-    // 2. 豁免的路径（公开 API 不需要 CSRF）
+    // 2. 豁免的路徑（公開 API 不需要 CSRF）
     for (const pattern of ignorePaths) {
       if (matchPath(path, pattern)) {
         await next()
@@ -124,7 +124,7 @@ export function csrfMiddleware(options: CSRFOptions = {}) {
       }
     }
 
-    // 3. 检查 CSRF Token
+    // 3. 檢查 CSRF Token
     const cookieToken = getCookie(c, opts.cookieName)
     const headerToken = c.req.header(opts.headerName)
 
@@ -150,14 +150,14 @@ export function csrfMiddleware(options: CSRFOptions = {}) {
       )
     }
 
-    // 4. 验证通过，继续处理请求
+    // 4. 驗證通過，繼續處理請求
     await next()
   })
 }
 
 /**
- * 生成并设置 CSRF Token
- * 在登录成功后调用
+ * 生成並設置 CSRF Token
+ * 在登入成功後調用
  * 
  * 使用方式：
  * ```typescript
@@ -169,7 +169,7 @@ export function setCSRFToken(c: Context, options: CSRFOptions = {}): string {
   const opts = { ...DEFAULT_OPTIONS, ...options }
   const token = generateCSRFToken()
 
-  // 设置 Cookie
+  // 設置 Cookie
   setCookie(c, opts.cookieName, token, {
     maxAge: opts.maxAge,
     ...opts.cookieOptions,
@@ -180,7 +180,7 @@ export function setCSRFToken(c: Context, options: CSRFOptions = {}): string {
 
 /**
  * 清除 CSRF Token
- * 在登出时调用
+ * 在登出時調用
  */
 export function clearCSRFToken(c: Context, options: CSRFOptions = {}) {
   const opts = { ...DEFAULT_OPTIONS, ...options }
@@ -191,8 +191,8 @@ export function clearCSRFToken(c: Context, options: CSRFOptions = {}) {
 }
 
 /**
- * 路径匹配（支持通配符 *）
- * @param path 实际路径
+ * 路徑匹配（支持通配符 *）
+ * @param path 實際路徑
  * @param pattern 匹配模式（支持 * 通配符）
  * @returns 是否匹配
  * 
@@ -202,7 +202,7 @@ export function clearCSRFToken(c: Context, options: CSRFOptions = {}) {
  * - matchPath("/api/users", "/api/users/*") => false
  */
 function matchPath(path: string, pattern: string): boolean {
-  // 精确匹配
+  // 精確匹配
   if (path === pattern) return true
 
   // 通配符匹配
@@ -217,7 +217,7 @@ function matchPath(path: string, pattern: string): boolean {
 }
 
 /**
- * 获取 Cookie（兼容 Cloudflare Workers）
+ * 獲取 Cookie（相容 Cloudflare Workers）
  */
 function getCookie(c: Context, name: string): string | undefined {
   const cookieHeader = c.req.header("cookie")
@@ -232,7 +232,7 @@ function getCookie(c: Context, name: string): string | undefined {
 }
 
 /**
- * 设置 Cookie（兼容 Cloudflare Workers）
+ * 設置 Cookie（相容 Cloudflare Workers）
  */
 function setCookie(
   c: Context,
@@ -272,7 +272,7 @@ function setCookie(
 }
 
 /**
- * Express/Koa 风格的中间件（如果需要）
+ * Express/Koa 風格的中間件（如果需要）
  */
 export function csrfProtection(options: CSRFOptions = {}) {
   return async (req: any, res: any, next: any) => {
@@ -287,14 +287,14 @@ export function csrfProtection(options: CSRFOptions = {}) {
       return next()
     }
 
-    // 豁免的路径
+    // 豁免的路徑
     for (const pattern of ignorePaths) {
       if (matchPath(path, pattern)) {
         return next()
       }
     }
 
-    // 检查 Token
+    // 檢查 Token
     const opts = { ...DEFAULT_OPTIONS, ...options }
     const cookieToken = req.cookies?.[opts.cookieName]
     const headerToken = req.headers?.[opts.headerName]

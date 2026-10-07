@@ -1,4 +1,4 @@
-// 联想 NAS 分享 API 客户端
+// 聯想 NAS 分享 API 客戶端
 import {
   DriverLenovoNasShareAddition,
   LenovoFile,

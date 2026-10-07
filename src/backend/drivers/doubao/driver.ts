@@ -63,7 +63,7 @@ export class DriverDoubao implements StorageDriver {
       }
     } catch {}
 
-    // Fallback: 目录
+    // Fallback: 目錄
     try {
       await this.resolveDirId(physicalPath)
       return {

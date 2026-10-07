@@ -23,7 +23,7 @@ import {
   entityToRow,
 } from "./schema"
 
-/** 基于局部 Map 的内存 KV 驱动（隔离测试）。 */
+/** 基於局部 Map 的記憶體 KV 驅動（隔離測試）。 */
 function createMockKvDriver(): Driver {
   const store = new Map<string, string>()
   return {
@@ -43,9 +43,9 @@ function createMockKvDriver(): Driver {
   }
 }
 
-/** 基于局部 Map 的简易 SQL 驱动（隔离测试，支持 sqlFormat 用到的 SQL）。 */
+/** 基於局部 Map 的簡易 SQL 驅動（隔離測試，支持 sqlFormat 用到的 SQL）。 */
 function createMockSqlDriver(name = "mock-sql"): Driver {
-  // table -> rows (对象数组)
+  // table -> rows (對象數組)
   const tables = new Map<string, any[]>()
   // schema_info: k -> v
   const schemaInfo = new Map<string, string>()
@@ -76,7 +76,7 @@ function createMockSqlDriver(name = "mock-sql"): Driver {
       throw new Error(`mock-sql unsupported query: ${sql}`)
     },
     async execute(_sql: string, _params: any[]): Promise<void> {
-      // 单条 execute 在测试中不直接调用，保留空实现
+      // 單條 execute 在測試中不直接調用，保留空實現
     },
     async batch(
       statements: Array<{ sql: string; params: any[] }>,
@@ -89,7 +89,7 @@ function createMockSqlDriver(name = "mock-sql"): Driver {
           tables.set(delAll[1], [])
           continue
         }
-        // DELETE FROM `table` WHERE `key` NOT IN (?, ?, ...)（UPSERT 后清理已删行）
+        // DELETE FROM `table` WHERE `key` NOT IN (?, ?, ...)（UPSERT 後清理已刪行）
         const delNotIn = trimmed.match(
           /^DELETE FROM `?(\w+)`? WHERE `?(\w+)`? NOT IN \(([^)]*)\)/i,
         )
@@ -103,7 +103,7 @@ function createMockSqlDriver(name = "mock-sql"): Driver {
           )
           continue
         }
-        // schema_info 的 UPSERT 必须先于通用 INSERT 匹配，否则会被当作数据行。
+        // schema_info 的 UPSERT 必須先於通用 INSERT 匹配，否則會被當作資料行。
         // SQLite 方言：INSERT OR REPLACE INTO `schema_info` (`k`, `v`) VALUES (?, ?)
         if (/^INSERT OR REPLACE INTO `?schema_info`?/i.test(trimmed)) {
           schemaInfo.set(String(params[0]), String(params[1]))
@@ -117,11 +117,11 @@ function createMockSqlDriver(name = "mock-sql"): Driver {
           schemaInfo.set(String(params[0]), String(params[1]))
           continue
         }
-        // 数据行 UPSERT（SQLite）：INSERT OR REPLACE INTO `table` (...) VALUES (...)
+        // 資料行 UPSERT（SQLite）：INSERT OR REPLACE INTO `table` (...) VALUES (...)
         const upSqlite = trimmed.match(
           /^INSERT OR REPLACE INTO `?(\w+)`? \(([^)]+)\) VALUES \(([^)]+)\)/i,
         )
-        // 数据行 UPSERT（MySQL）：INSERT INTO `table` (...) VALUES (...) ON DUPLICATE KEY UPDATE ...
+        // 資料行 UPSERT（MySQL）：INSERT INTO `table` (...) VALUES (...) ON DUPLICATE KEY UPDATE ...
         const upMysql = trimmed.match(
           /^INSERT INTO `?(\w+)`? \(([^)]+)\) VALUES \(([^)]+)\)/i,
         )
@@ -133,7 +133,7 @@ function createMockSqlDriver(name = "mock-sql"): Driver {
           cols.forEach((c, i) => {
             row[c] = params[i]
           })
-          // UPSERT 语义：按首列（主键）替换同键行
+          // UPSERT 語義：按首列（主鍵）替換同鍵行
           const pkCol = cols[0]
           const rows = ensureTable(table)
           const idx = rows.findIndex(
@@ -162,47 +162,47 @@ const SAMPLE_DB = {
 }
 
 test("schema: columnar tables match Go backend structure", () => {
-  // 往返表 6 张（sshkeys 不参与，避免清空 Go 的 x_ssh_public_keys）
+  // 往返表 6 張（sshkeys 不參與，避免清空 Go 的 x_ssh_public_keys）
   assert.equal(TABLE_NAMES.length, 6)
-  // DDL 表 7 张（含 sshkeys，保持与 Go 共享库的结构一致）
+  // DDL 表 7 張（含 sshkeys，保持與 Go 共享庫的結構一致）
   assert.equal(DDL_TABLE_NAMES.length, 7)
   assert.equal(TABLE_KEY.settings, "key")
   assert.equal(TABLE_KEY.users, "id")
   assert.equal(keyOf("settings", { key: "site_title" }), "site_title")
   assert.equal(keyOf("users", { id: 2 }), "2")
 
-  // 列式表：每个字段独立成列，不再是「data JSON」宽表
+  // 列式表：每個欄位獨立成列，不再是「data JSON」寬表
   assert.ok(TABLES.users.columns.some((c) => c.name === "username"))
   assert.ok(TABLES.users.columns.some((c) => c.name === "base_path"))
   assert.ok(TABLES.storages.columns.some((c) => c.name === "mount_path"))
   assert.ok(TABLES.metas.columns.some((c) => c.name === "read_users"))
   assert.ok(TABLES.plugins.columns.some((c) => c.name === "script_content"))
   assert.ok(TABLES.sshkeys.columns.some((c) => c.name === "key_str"))
-  // 不应再有宽表的 data 列
+  // 不應再有寬表的 data 列
   assert.ok(!TABLES.users.columns.some((c) => c.name === "data"))
-  // DDL 幂等生成（schema_info + 7 张业务表）
+  // DDL 冪等生成（schema_info + 7 張業務表）
   assert.ok(D1_SCHEMA.length >= 8)
   assert.ok(MYSQL_SCHEMA.length >= 8)
 })
 
 test("schema: SQL table names align with Go GORM naming", () => {
-  // 复数名映射（对齐 Go 的 GORM snake_case + 复数）
+  // 複數名映射（對齊 Go 的 GORM snake_case + 複數）
   assert.equal(TABLE_SQL_NAMES.settings, "setting_items")
   assert.equal(TABLE_SQL_NAMES.shares, "sharing_dbs")
   assert.equal(TABLE_SQL_NAMES.storages, "storages")
   assert.equal(TABLE_SQL_NAMES.users, "users")
   assert.equal(TABLE_SQL_NAMES.metas, "metas")
 
-  // 表前缀固定 x_（对齐 Go 的默认值）
+  // 表前綴固定 x_（對齊 Go 的默認值）
   assert.equal(getTablePrefix({}), "x_")
   assert.equal(getTablePrefix({ TABLE_PREFIX: "abc_" }), "x_")
 
-  // 完整表名 = 前缀 + 复数名
+  // 完整表名 = 前綴 + 複數名
   assert.equal(tableSqlName("settings", {}), "x_setting_items")
   assert.equal(tableSqlName("shares", {}), "x_sharing_dbs")
   assert.equal(tableSqlName("settings", { TABLE_PREFIX: "abc_" }), "x_setting_items")
 
-  // DDL 里应包含带前缀的复数表名
+  // DDL 裡應包含帶前綴的複數表名
   assert.ok(D1_SCHEMA.some((d) => d.includes("x_setting_items")))
   assert.ok(D1_SCHEMA.some((d) => d.includes("x_sharing_dbs")))
 })
@@ -235,10 +235,10 @@ test("backend factory: readDriver/readFormat backward compat", () => {
   assert.equal(readDriver({ DB_DRIVER: "d1" }), "d1")
   assert.equal(readDriver({ DB_DRIVER: "MYSQL" }), "mysql")
   assert.equal(readDriver({ DB_DRIVER: "cfkv" }), "cfkv")
-  // DB_DRIVER=json → auto（旧整对象语义）
+  // DB_DRIVER=json → auto（舊整對象語義）
   assert.equal(readDriver({ DB_DRIVER: "json" }), "auto")
 
-  // 默认格式 map
+  // 默認格式 map
   assert.equal(readFormat({}), "map")
   assert.equal(readFormat({ DB_FORMAT: "sql" }), "sql")
   assert.equal(readFormat({ DB_FORMAT: "KEY" }), "key")
@@ -268,22 +268,22 @@ test("sql format: roundtrip via mock SQL driver (columnar)", async () => {
 })
 
 test("sql format: MySQL dialect uses ON DUPLICATE KEY UPDATE (no INSERT OR REPLACE)", async () => {
-  // 回归防护：MySQL 不支持 INSERT OR REPLACE，若方言分支失效，
-  // mock 驱动会在收到该语句时抛错，从而让本测试失败。
+  // 迴歸防護：MySQL 不支持 INSERT OR REPLACE，若方言分支失效，
+  // mock 驅動會在收到該語句時拋錯，從而讓本測試失敗。
   const driver = createMockSqlDriver("mysql")
   assert.equal(await sqlFormat.save(SAMPLE_DB, driver), true)
   assert.deepEqual(await sqlFormat.load(driver), SAMPLE_DB)
 })
 
 /**
- * 构造一个最小可用的 D1 绑定桩（只实现 kv 表相关的 prepare 语义）。
+ * 構造一個最小可用的 D1 綁定樁（只實現 kv 表相關的 prepare 語義）。
  *
- * 用于回归验证：密钥读写必须能走 d1 驱动，而不是只在 KV 绑定存在时才成功。
+ * 用於迴歸驗證：密鑰讀寫必須能走 d1 驅動，而不是隻在 KV 綁定存在時才成功。
  */
 function createMockD1Binding() {
   const store = new Map<string, string>()
   return {
-    /** 暴露底层 Map，便于断言密钥确实落盘（而不是仅存在于内存缓存）。 */
+    /** 暴露底層 Map，便於斷言密鑰確實落盤（而不是僅存在於記憶體快取）。 */
     store,
     prepare(sql: string) {
       let params: any[] = []
@@ -328,10 +328,10 @@ function createMockD1Binding() {
 }
 
 test("secret persistence: write/read works with explicit DB_DRIVER=d1", async () => {
-  // 回归：此前 readPersistedSecret/writePersistedSecret 只走 getKvBinding，
-  // 而 getKvBinding 不识别 D1，导致 DB_DRIVER=d1 时密钥既读不到也写不进，
-  // 每次冷启动都会生成新的随机 JWT_SECRET，使多实例签发/验签密钥不一致，
-  // 表现为下载与播放报 "sign verify failed"（401）。
+  // 迴歸：此前 readPersistedSecret/writePersistedSecret 只走 getKvBinding，
+  // 而 getKvBinding 不識別 D1，導致 DB_DRIVER=d1 時密鑰既讀不到也寫不進，
+  // 每次冷啟動都會生成新的隨機 JWT_SECRET，使多實例簽發/驗籤密鑰不一致，
+  // 表現為下載與播放報 "sign verify failed"（401）。
   const d1 = createMockD1Binding()
   const env = { DB_DRIVER: "d1", DB_FORMAT: "key", DB: d1 }
 
@@ -346,18 +346,18 @@ test("secret persistence: write/read works with explicit DB_DRIVER=d1", async ()
     "stable-secret-value-with-enough-length",
   )
 
-  // 写进去必须能读回来（修复前该断言会失败）
+  // 寫進去必須能讀回來（修復前該斷言會失敗）
   assert.equal(
     await readPersistedSecret(env, "openlist_jwt_secret"),
     "stable-secret-value-with-enough-length",
   )
 
-  // 不存在的键返回 null，且不得抛错
+  // 不存在的鍵返回 null，且不得拋錯
   assert.equal(await readPersistedSecret(env, "missing-key"), null)
 })
 
 test("secret persistence: degrades gracefully when no backend is available", async () => {
-  // 未配置任何存储时：读返回 null、写返回 false，不得抛错。
+  // 未配置任何儲存時：讀返回 null、寫返回 false，不得拋錯。
   const env = { DB_DRIVER: "kv" }
   assert.equal(await readPersistedSecret(env, "openlist_jwt_secret"), null)
   assert.equal(
@@ -366,11 +366,11 @@ test("secret persistence: degrades gracefully when no backend is available", asy
   )
 })
 
-test("getKvBinding: 同一 env 只解析一次（含 mode=none），重复调用返回同一缓存对象", async () => {
-  // 回归：此前只有「成功」的绑定会被缓存，`mode=none` 直接 return，于是每次
-  // 调用都会重新探测 env.KV / globalThis.KV、重试 Blob SDK 初始化，并重新打印
-  // 一次告警。登录失败计数、注销黑名单、审计日志读写都在这条路径上
-  // （serverless 日志被同一行刷屏的来源之一）。
+test("getKvBinding: 同一 env 只解析一次（含 mode=none），重複調用返回同一快取對象", async () => {
+  // 迴歸：此前只有「成功」的綁定會被快取，`mode=none` 直接 return，於是每次
+  // 調用都會重新探測 env.KV / globalThis.KV、重試 Blob SDK 初始化，並重新打印
+  // 一次告警。登入失敗計數、註銷黑名單、審計日誌讀寫都在這條路徑上
+  // （serverless 日誌被同一行刷屏的來源之一）。
   const { getKvBinding } = await import("./json")
   const env: any = { DB_DRIVER: "auto" }
 
@@ -382,15 +382,15 @@ test("getKvBinding: 同一 env 只解析一次（含 mode=none），重复调用
   try {
     const first = await getKvBinding(env)
     const second = await getKvBinding(env)
-    // 关键断言：同一 env 的第二次调用命中缓存（同一对象引用），
-    // 因此既不重复探测，也不重复告警。
-    assert.equal(second, first, "同一 env 应返回同一缓存对象")
+    // 關鍵斷言：同一 env 的第二次調用命中快取（同一對象引用），
+    // 因此既不重複探測，也不重複告警。
+    assert.equal(second, first, "同一 env 應返回同一快取對象")
   } finally {
     console.warn = origWarn
   }
 
   assert.ok(
     warns.filter((w) => w.includes("getKvBinding")).length <= 1,
-    "「未探测到 KV 绑定」的告警每个进程最多打印一次",
+    "「未探測到 KV 綁定」的告警每個進程最多打印一次",
   )
 })

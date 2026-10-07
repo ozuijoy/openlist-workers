@@ -217,9 +217,9 @@ export class WpsDriver implements StorageDriver {
     srcPhys: string,
     dstPhys: string,
   ): Promise<void> {
-    // srcPhys/dstPhys 已是源/目标项自身的物理路径（op/storage.ts moveItems 逐项调用），
-    // 参数即项路径：源直接用 srcPath，目标文件夹取 dstPath 去掉末段的父目录；
-    // 不得再拼 name，否则会指向 <item>/<name>。
+    // srcPhys/dstPhys 已是源/目標項自身的物理路徑（op/storage.ts moveItems 逐項調用），
+    // 參數即項路徑：源直接用 srcPath，目標文件夾取 dstPath 去掉末段的父目錄；
+    // 不得再拼 name，否則會指向 <item>/<name>。
     const srcPath = this.cleanPath(srcPhys)
     const dstPath = this.cleanPath(dstPhys)
     const dstParentPath = dstPath.substring(0, dstPath.lastIndexOf("/")) || "/"
@@ -258,9 +258,9 @@ export class WpsDriver implements StorageDriver {
     srcPhys: string,
     dstPhys: string,
   ): Promise<void> {
-    // srcPhys/dstPhys 已是源/目标项自身的物理路径（op/storage.ts copyItems 逐项调用），
-    // 参数即项路径：源直接用 srcPath，目标文件夹取 dstPath 去掉末段的父目录；
-    // 不得再拼 name，否则会指向 <item>/<name>。
+    // srcPhys/dstPhys 已是源/目標項自身的物理路徑（op/storage.ts copyItems 逐項調用），
+    // 參數即項路徑：源直接用 srcPath，目標文件夾取 dstPath 去掉末段的父目錄；
+    // 不得再拼 name，否則會指向 <item>/<name>。
     const srcPath = this.cleanPath(srcPhys)
     const dstPath = this.cleanPath(dstPhys)
     const dstParentPath = dstPath.substring(0, dstPath.lastIndexOf("/")) || "/"
@@ -284,9 +284,9 @@ export class WpsDriver implements StorageDriver {
     physicalPath: string,
     names: string[],
   ): Promise<void> {
-    // physicalPath 是目标项自身的物理路径（op/storage.ts removeItems 逐项调用），
-    // 参数即项路径，直接解析它即可；再拼 name 会指向 <item>/<name>，resolvePath 返回 null
-    // 后被静默跳过，接口成功但文件仍在。
+    // physicalPath 是目標項自身的物理路徑（op/storage.ts removeItems 逐項調用），
+    // 參數即項路徑，直接解析它即可；再拼 name 會指向 <item>/<name>，resolvePath 返回 null
+    // 後被靜默跳過，介面成功但文件仍在。
     const node = await this.resolvePath(this.cleanPath(physicalPath))
     if (node && node.kind !== "root" && node.kind !== "group") {
       await this.client.delete(node.groupId, node.fileId)

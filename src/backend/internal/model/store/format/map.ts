@@ -1,10 +1,10 @@
 /**
- * Map 格式适配器
+ * Map 格式適配器
  * 
- * 将整个数据对象序列化为单个 JSON 字符串，存储在单个键中。
- * 适用于 KV/Blob 等简单存储系统。
+ * 將整個資料對象序列化為單個 JSON 字符串，儲存在單個鍵中。
+ * 適用於 KV/Blob 等簡單儲存系統。
  * 
- * 存储格式：
+ * 儲存格式：
  * - key: "openlist_config"
  * - value: JSON.stringify(data)
  */

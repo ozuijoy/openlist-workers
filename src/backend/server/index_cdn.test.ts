@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import app, { setSpaFallbackHtml } from "../index"
 
-/** 本地构建的 index.html（含构建期版本戳） */
+/** 本地構建的 index.html（含構建期版本戳） */
 const INDEX_HTML = `<!doctype html>
 <html>
   <head>
@@ -21,15 +21,15 @@ const INDEX_HTML = `<!doctype html>
   <body><div id="root"></div></body>
 </html>`
 
-/** 模拟 CDN 上的 index.html：哈希与本地不同（正是修复前 404 的根源） */
+/** 模擬 CDN 上的 index.html：哈希與本地不同（正是修復前 404 的根源） */
 const CDN_HTML = INDEX_HTML.replace("index-LOCAL.js", "index-CDN.js")
 
-// 模拟 Cloudflare Workers 的 ASSETS 静态资源绑定
+// 模擬 Cloudflare Workers 的 ASSETS 靜態資源綁定
 function makeFakeAssets() {
   return {
     fetch(req: Request) {
       const url = new URL(req.url)
-      // / 与 /index.html 返回 SPA 壳；其它路径 404（触发 SPA 兜底）
+      // / 與 /index.html 返回 SPA 殼；其它路徑 404（觸發 SPA 兜底）
       if (url.pathname === "/" || url.pathname === "/index.html") {
         return new Response(INDEX_HTML, {
           status: 200,
@@ -43,7 +43,7 @@ function makeFakeAssets() {
 
 const headers = { accept: "text/html,application/xhtml+xml" }
 
-/** 在指定 fetch 实现下运行 fn（模拟 Worker 对 CDN 的外呼），结束后恢复 */
+/** 在指定 fetch 實現下運行 fn（模擬 Worker 對 CDN 的外呼），結束後恢復 */
 async function withFetch(fn: any, impl: any) {
   const original = globalThis.fetch
   globalThis.fetch = impl as any
@@ -55,9 +55,9 @@ async function withFetch(fn: any, impl: any) {
 }
 
 /**
- * 模拟 CDN 外呼。
- *   HEAD <cdn>/<asset>     → 资产存在性探测（asset=false 时 404）
- *   GET  <cdn>/index.html  → html=null 时 404，否则返回该 HTML
+ * 模擬 CDN 外呼。
+ *   HEAD <cdn>/<asset>     → 資產存在性探測（asset=false 時 404）
+ *   GET  <cdn>/index.html  → html=null 時 404，否則返回該 HTML
  */
 function cdnImpl(opts: { asset?: boolean; html?: string | null; log?: string[] }) {
   return async (url: string, init?: any) => {
@@ -74,8 +74,8 @@ function cdnImpl(opts: { asset?: boolean; html?: string | null; log?: string[] }
   }
 }
 
-test("集成[本地 HTML 路径]: CDN 有本地哈希时用本地 HTML，不拉 CDN 的 index.html", async () => {
-  // npmmirror 等禁止访问 .html 的 CDN 只能靠这条路径（等价 Go Release 版行为）
+test("集成[本地 HTML 路徑]: CDN 有本地哈希時用本地 HTML，不拉 CDN 的 index.html", async () => {
+  // npmmirror 等禁止訪問 .html 的 CDN 只能靠這條路徑（等價 Go Release 版行為）
   const log: string[] = []
   const env = {
     ASSETS: makeFakeAssets(),
@@ -98,7 +98,7 @@ test("集成[本地 HTML 路径]: CDN 有本地哈希时用本地 HTML，不拉 
   )
 })
 
-test("集成[CDN HTML 路径]: 本地哈希不在 CDN 上时改用 CDN 的 index.html（哈希同源）", async () => {
+test("集成[CDN HTML 路徑]: 本地哈希不在 CDN 上時改用 CDN 的 index.html（哈希同源）", async () => {
   const log: string[] = []
   const env = { ASSETS: makeFakeAssets(), ASSET_URLS: "https://cdn-i1.example.com/dist" }
   const res = await withFetch(
@@ -111,14 +111,14 @@ test("集成[CDN HTML 路径]: 本地哈希不在 CDN 上时改用 CDN 的 index
     "GET https://cdn-i1.example.com/dist/index.html",
   ])
   const html = await res.text()
-  // 下发的必须是 CDN 的 HTML（含 CDN 的哈希），而非本地 HTML
+  // 下發的必須是 CDN 的 HTML（含 CDN 的哈希），而非本地 HTML
   assert.match(html, /index-CDN\.js/)
   assert.doesNotMatch(html, /cdn: undefined/)
   assert.match(html, /cdn: 'https:\/\/cdn-i1\.example\.com\/dist'/)
   assert.match(html, /window\.__dynamic_base__/)
 })
 
-test("集成[静态资源兜底]: 源站缺失的 /assets/* 302 到 CDN（对齐 Go 版）", async () => {
+test("集成[靜態資源兜底]: 源站缺失的 /assets/* 302 到 CDN（對齊 Go 版）", async () => {
   const env = {
     ASSETS: makeFakeAssets(),
     ASSET_URLS: "https://cdn-redirect.example.com/dist",
@@ -131,7 +131,7 @@ test("集成[静态资源兜底]: 源站缺失的 /assets/* 302 到 CDN（对齐
         env as any,
       ),
     async () => {
-      throw new Error("302 不应外呼 CDN")
+      throw new Error("302 不應外呼 CDN")
     },
   )
   assert.equal(res.status, 302)
@@ -141,7 +141,7 @@ test("集成[静态资源兜底]: 源站缺失的 /assets/* 302 到 CDN（对齐
   )
 })
 
-test("集成[静态资源兜底]: 前端路由不重定向，仍走 SPA 兜底", async () => {
+test("集成[靜態資源兜底]: 前端路由不重定向，仍走 SPA 兜底", async () => {
   const env = {
     ASSETS: makeFakeAssets(),
     ASSET_URLS: "https://cdn-redirect2.example.com/dist",
@@ -154,7 +154,7 @@ test("集成[静态资源兜底]: 前端路由不重定向，仍走 SPA 兜底",
   assert.match(await res.text(), /cdn: 'https:\/\/cdn-redirect2\.example\.com\/dist'/)
 })
 
-test("集成[降级]: 两条路径都不可用（CDN 拦截 .html）时不注入 cdn", async () => {
+test("集成[降級]: 兩條路徑都不可用（CDN 攔截 .html）時不注入 cdn", async () => {
   const env = {
     ASSETS: makeFakeAssets(),
     ASSET_URLS: "https://registry.npmmirror.com/@pkg/9.9.9/files/dist",
@@ -165,15 +165,15 @@ test("集成[降级]: 两条路径都不可用（CDN 拦截 .html）时不注入
   )
   assert.equal(res.status, 200)
   const html = await res.text()
-  assert.match(html, /cdn: undefined/, "两条路径都不可用时必须回退源站资源")
+  assert.match(html, /cdn: undefined/, "兩條路徑都不可用時必須回退源站資源")
 })
 
-test("集成[ASSETS 路径]: 未配置 ASSET_URLS 时 / 原样返回（cdn: undefined 保留）", async () => {
+test("集成[ASSETS 路徑]: 未配置 ASSET_URLS 時 / 原樣返回（cdn: undefined 保留）", async () => {
   const env = { ASSETS: makeFakeAssets() }
   const res = await withFetch(
     () => app.request("/", { headers }, env as any),
     async () => {
-      throw new Error("不应发起网络请求")
+      throw new Error("不應發起網路請求")
     },
   )
   assert.equal(res.status, 200)
@@ -181,9 +181,9 @@ test("集成[ASSETS 路径]: 未配置 ASSET_URLS 时 / 原样返回（cdn: unde
   assert.match(html, /cdn: undefined/)
 })
 
-test("集成[零开销直通]: 未配置 ASSET_URLS 时 HTML 入口流式透传（不缓冲 body）", async () => {
-  // 未配置 CDN 时不应把 HTML 读成字符串再重建：那会让每次页面导航都白付一次
-  // 缓冲与解析。这里断言 body 流被原样透传（同一对象），证明没有走 text()。
+test("集成[零開銷直通]: 未配置 ASSET_URLS 時 HTML 入口流式透傳（不緩衝 body）", async () => {
+  // 未配置 CDN 時不應把 HTML 讀成字符串再重建：那會讓每次頁面導航都白付一次
+  // 緩衝與解析。這裡斷言 body 流被原樣透傳（同一對象），證明沒有走 text()。
   const stream = new ReadableStream({
     start(controller) {
       controller.enqueue(new TextEncoder().encode(INDEX_HTML))
@@ -202,19 +202,19 @@ test("集成[零开销直通]: 未配置 ASSET_URLS 时 HTML 入口流式透传�
   const res = await withFetch(
     () => app.request("/", { headers }, env as any),
     async () => {
-      throw new Error("不应发起网络请求")
+      throw new Error("不應發起網路請求")
     },
   )
   assert.equal(res.status, 200)
-  assert.equal(res.body, stream, "必须透传静态层的 body 流")
+  assert.equal(res.body, stream, "必須透傳靜態層的 body 流")
   assert.equal(res.headers.get("cache-control"), "no-cache, must-revalidate")
   assert.equal(res.headers.get("content-type"), "text/html; charset=utf-8")
   assert.match(await res.text(), /cdn: undefined/)
 })
 
-test("集成[编码头]: 注入 cdn 时清掉 content-encoding/content-length", async () => {
-  // HTML 被读成字符串后重新构造响应，若保留 content-encoding: gzip，
-  // 浏览器会把明文按 gzip 解析而报错；content-length 同理必须重算。
+test("集成[編碼頭]: 注入 cdn 時清掉 content-encoding/content-length", async () => {
+  // HTML 被讀成字符串後重新構造響應，若保留 content-encoding: gzip，
+  // 瀏覽器會把明文按 gzip 解析而報錯；content-length 同理必須重算。
   const env = {
     ASSETS: {
       fetch: () =>
@@ -242,7 +242,7 @@ test("集成[编码头]: 注入 cdn 时清掉 content-encoding/content-length", 
   )
 })
 
-test("集成[降级]: CDN 不可达时回退本地 HTML 且不注入 cdn（不白屏）", async () => {
+test("集成[降級]: CDN 不可達時回退本地 HTML 且不注入 cdn（不白屏）", async () => {
   const env = { ASSETS: makeFakeAssets(), ASSET_URLS: "https://cdn-down.example.com/dist" }
   const res = await withFetch(
     () => app.request("/", { headers }, env as any),
@@ -252,12 +252,12 @@ test("集成[降级]: CDN 不可达时回退本地 HTML 且不注入 cdn（不�
   )
   assert.equal(res.status, 200)
   const html = await res.text()
-  assert.match(html, /cdn: undefined/, "CDN 故障时必须回退源站资源，而非注入失效地址")
+  assert.match(html, /cdn: undefined/, "CDN 故障時必須回退源站資源，而非注入失效地址")
 })
 
-test("集成[ASSETS 兜底]: SPA 路由 /login 同样注入 cdn", async () => {
+test("集成[ASSETS 兜底]: SPA 路由 /login 同樣注入 cdn", async () => {
   const env = { ASSETS: makeFakeAssets(), ASSET_URLS: "https://cdn-i2.example.com/dist" }
-  // /login 在 ASSETS 里 404 -> 走 SPA 兜底 fetch "/" -> 再走 CDN 注入
+  // /login 在 ASSETS 裡 404 -> 走 SPA 兜底 fetch "/" -> 再走 CDN 注入
   const res = await withFetch(
     () => app.request("/login", { headers }, env as any),
     cdnImpl({ asset: true }),
@@ -267,7 +267,7 @@ test("集成[ASSETS 兜底]: SPA 路由 /login 同样注入 cdn", async () => {
   assert.match(html, /cdn: 'https:\/\/cdn-i2\.example\.com\/dist'/)
 })
 
-test("集成[spaFallbackHtml 路径]: EdgeOne/ESA 无 ASSETS 绑定时注入 cdn", async () => {
+test("集成[spaFallbackHtml 路徑]: EdgeOne/ESA 無 ASSETS 綁定時注入 cdn", async () => {
   setSpaFallbackHtml(INDEX_HTML)
   const env = { ASSET_URLS: "https://cdn-i3.example.com/dist" }
   const res = await withFetch(
@@ -280,7 +280,7 @@ test("集成[spaFallbackHtml 路径]: EdgeOne/ESA 无 ASSETS 绑定时注入 cdn
   assert.match(html, /cdn: 'https:\/\/cdn-i3\.example\.com\/dist'/)
 })
 
-test("集成: $version 用构建期版本戳解析（不再落 latest）", async () => {
+test("集成: $version 用構建期版本戳解析（不再落 latest）", async () => {
   const log: string[] = []
   const env = {
     ASSETS: makeFakeAssets(),
@@ -302,10 +302,10 @@ test("集成: $version 用构建期版本戳解析（不再落 latest）", async
   )
 })
 
-test("集成[SPA 兜底]: 未配置 ASSET_URLS 时流式透传 body 与状态码", async () => {
-  // /login 在 ASSETS 里 404 -> 走 SPA 兜底 fetch "/"。
-  // 兜底不应把 body 读成字符串再重建：那会让每次深链刷新都白付一次缓冲，
-  // 并丢掉静态层的流式透传。
+test("集成[SPA 兜底]: 未配置 ASSET_URLS 時流式透傳 body 與狀態碼", async () => {
+  // /login 在 ASSETS 裡 404 -> 走 SPA 兜底 fetch "/"。
+  // 兜底不應把 body 讀成字符串再重建：那會讓每次深鏈刷新都白付一次緩衝，
+  // 並丟掉靜態層的流式透傳。
   const stream = new ReadableStream({
     start(controller) {
       controller.enqueue(new TextEncoder().encode(INDEX_HTML))
@@ -326,18 +326,18 @@ test("集成[SPA 兜底]: 未配置 ASSET_URLS 时流式透传 body 与状态码
   const res = await withFetch(
     () => app.request("/login", { headers }, env as any),
     async () => {
-      throw new Error("不应发起网络请求")
+      throw new Error("不應發起網路請求")
     },
   )
   assert.equal(res.status, 200)
-  assert.equal(res.body, stream, "必须透传静态层的 body 流")
+  assert.equal(res.body, stream, "必須透傳靜態層的 body 流")
   assert.equal(res.headers.get("cache-control"), "no-cache, must-revalidate")
   assert.match(await res.text(), /cdn: undefined/)
 })
 
-test("集成[SPA 兜底]: 非 2xx 保留原状态码，不包装成 200 空壳", async () => {
-  // 兜底子请求（fetch "/"）返回 404 时，若仍构造 status: 200 的响应，会把真实
-  // 错误掩盖成「一个 200 的 HTML 空壳」，让 4xx/5xx 排查失去线索。
+test("集成[SPA 兜底]: 非 2xx 保留原狀態碼，不包裝成 200 空殼", async () => {
+  // 兜底子請求（fetch "/"）返回 404 時，若仍構造 status: 200 的響應，會把真實
+  // 錯誤掩蓋成「一個 200 的 HTML 空殼」，讓 4xx/5xx 排查失去線索。
   const env = {
     ASSETS: {
       fetch: () =>
@@ -350,13 +350,13 @@ test("集成[SPA 兜底]: 非 2xx 保留原状态码，不包装成 200 空壳",
   const res = await withFetch(
     () => app.request("/login", { headers }, env as any),
     async () => {
-      throw new Error("未配置 ASSET_URLS，不应发起网络请求")
+      throw new Error("未配置 ASSET_URLS，不應發起網路請求")
     },
   )
   assert.equal(res.status, 404)
 })
 
-test("集成[SPA 兜底]: 配置 ASSET_URLS 时非 2xx 也不改写（307 透传）", async () => {
+test("集成[SPA 兜底]: 配置 ASSET_URLS 時非 2xx 也不改寫（307 透傳）", async () => {
   const env = {
     ASSETS: {
       fetch: () =>
@@ -367,7 +367,7 @@ test("集成[SPA 兜底]: 配置 ASSET_URLS 时非 2xx 也不改写（307 透传
   const res = await withFetch(
     () => app.request("/login", { headers }, env as any),
     async () => {
-      throw new Error("非 2xx 不应触发 CDN 注入")
+      throw new Error("非 2xx 不應觸發 CDN 注入")
     },
   )
   assert.equal(res.status, 307)

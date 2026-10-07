@@ -106,7 +106,7 @@ export class DriverGooglePhoto implements StorageDriver {
     throw new Error("[GooglePhoto] upload not supported")
   }
 
-  /** 物理路径 → 目录 ID（根目录返回 "root"） */
+  /** 物理路徑 → 目錄 ID（根目錄返回 "root"） */
   private async pathToId(physicalPath: string): Promise<string> {
     const clean = physicalPath.split("/").filter(Boolean).join("/")
     if (!clean) return "root"

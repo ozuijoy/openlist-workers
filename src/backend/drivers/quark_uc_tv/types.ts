@@ -1,4 +1,4 @@
-// quark_uc_tv (夸克/UC TV 版网盘，只读) - 签名认证
+// quark_uc_tv (夸克/UC TV 版網盤，只讀) - 簽名認證
 // API reference: Go drivers/quark_uc_tv
 
 export interface DriverQuarkUcTvAddition {
@@ -7,7 +7,7 @@ export interface DriverQuarkUcTvAddition {
   order_by?: string // "file_name" | "updated_at"
   order_direction?: string // "asc" | "desc"
   link_method?: "download" | "streaming"
-  /** "quark" 或 "uc"，决定内置 clientID/signKey */
+  /** "quark" 或 "uc"，決定內置 clientID/signKey */
   variant?: "quark" | "uc"
 }
 
@@ -16,7 +16,7 @@ export interface QuarkTvFile {
   parent_fid?: string
   filename: string
   size: number
-  isdir: number // 1 = 目录
+  isdir: number // 1 = 目錄
   category: number
   thumbnail_url?: string
   created_at?: number

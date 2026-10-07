@@ -21,10 +21,10 @@ import { ssoRouter } from "./sso"
 import { webauthnRouter } from "./webauthn"
 import { updatePwdHandler } from "./user"
 
-// --- 尽力而为的进程内限流 ---
-// 实现管理后台的 ip_limit（每 IP 每分钟请求数）与 traffic_limit（每 IP 每小时
-// 响应流量 MB）。Cloudflare Workers 多实例下各隔离区独立计数（非全局精确），
-// 但能显著限制单实例上的滥用/拉流/暴力请求；配合登录防爆破共同生效。
+// --- 盡力而為的進程內限流 ---
+// 實現管理後台的 ip_limit（每 IP 每分鐘請求數）與 traffic_limit（每 IP 每小時
+// 響應流量 MB）。Cloudflare Workers 多實例下各隔離區獨立計數（非全局精確），
+// 但能顯著限制單實例上的濫用/拉流/暴力請求；配合登入防爆破共同生效。
 const ipReqCounts = new Map<string, { start: number; count: number }>()
 const ipTraffic = new Map<string, { start: number; bytes: number }>()
 
@@ -65,7 +65,7 @@ async function rateLimitMiddleware(c: any, next: () => Promise<void>) {
   } catch {}
   cleanupMaps()
 
-  // 1) IP 请求速率限制（每分钟）
+  // 1) IP 請求速率限制（每分鐘）
   if (ipLimit > 0) {
     const rec = ipReqCounts.get(ip)
     if (!rec || now - rec.start > 60000) {
@@ -81,7 +81,7 @@ async function rateLimitMiddleware(c: any, next: () => Promise<void>) {
     }
   }
 
-  // 2) 流量限制（每小时，按响应 Content-Length 估算；超限后拒绝后续请求）
+  // 2) 流量限制（每小時，按響應 Content-Length 估算；超限後拒絕後續請求）
   if (trafficLimitMb > 0) {
     const tRec = ipTraffic.get(ip)
     const limitBytes = trafficLimitMb * 1024 * 1024
@@ -95,8 +95,8 @@ async function rateLimitMiddleware(c: any, next: () => Promise<void>) {
 
   await next()
 
-  // Query-token 泄露缓解：URL 携带 token/access_token 的响应禁用缓存并
-  // 阻止 Referer 外泄（防止 token 经浏览器历史/Referer/代理缓存泄露）
+  // Query-token 洩露緩解：URL 攜帶 token/access_token 的響應禁用快取並
+  // 阻止 Referer 外洩（防止 token 經瀏覽器歷史/Referer/代理快取洩露）
   if (c.req.query("token") || c.req.query("access_token")) {
     c.res?.headers?.set("Referrer-Policy", "no-referrer")
     c.res?.headers?.set("Cache-Control", "no-store, no-cache, must-revalidate")
@@ -117,16 +117,16 @@ async function rateLimitMiddleware(c: any, next: () => Promise<void>) {
 }
 
 export function setupRouter(app: Hono) {
-  // 限流：读取管理后台 ip_limit / traffic_limit 设置，尽力而为
+  // 限流：讀取管理後台 ip_limit / traffic_limit 設置，盡力而為
   app.use("*", rateLimitMiddleware)
 
-  // 审计日志：记录所有状态修改操作 (添加日期: 2026-09-05)
+  // 審計日誌：記錄所有狀態修改操作 (添加日期: 2026-09-05)
   app.use("*", async (c, next) => {
     const { auditMiddleware } = await import("./middlewares")
     return auditMiddleware(c, next)
   })
 
-  // 安全响应头：防止点击劫持 / MIME 嗅探 / XSS / 引用泄露
+  // 安全響應頭：防止點擊劫持 / MIME 嗅探 / XSS / 引用洩露
   app.use("*", async (c, next) => {
     await next()
     c.res.headers.set("X-Frame-Options", "DENY")
@@ -143,10 +143,10 @@ export function setupRouter(app: Hono) {
   })
 
   // CORS Middleware
-  // 安全策略：不再回显任意 Origin。
-  // 1) 若配置了环境变量 ALLOW_URLS（逗号分隔），仅放行白名单来源；
-  // 2) 否则仅放行同源请求（Origin 与请求 Host 一致，即浏览器直连本站）。
-  //    跨域来源的浏览器请求将被拒绝，降低 CSRF/凭证滥用风险。
+  // 安全策略：不再回顯任意 Origin。
+  // 1) 若配置了環境變量 ALLOW_URLS（逗號分隔），僅放行白名單來源；
+  // 2) 否則僅放行同源請求（Origin 與請求 Host 一致，即瀏覽器直連本站）。
+  //    跨域來源的瀏覽器請求將被拒絕，降低 CSRF/憑證濫用風險。
   app.use(
     "*",
     cors({
@@ -166,7 +166,7 @@ export function setupRouter(app: Hono) {
         if (allowedOrigins.length > 0) {
           return allowedOrigins.includes(origin) ? origin : null
         }
-        // 无白名单配置时：仅同源
+        // 無白名單配置時：僅同源
         const host = c.req.header("host") || ""
         try {
           const u = new URL(origin)

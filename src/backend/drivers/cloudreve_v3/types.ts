@@ -1,4 +1,4 @@
-// cloudreve (Cloudreve V3 自建网盘) - session cookie 认证
+// cloudreve (Cloudreve V3 自建網盤) - session cookie 認證
 // API reference: Go drivers/cloudreve
 
 export interface DriverCloudreveV3Addition {

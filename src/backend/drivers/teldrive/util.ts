@@ -1,4 +1,4 @@
-// TelDrive API 客户端
+// TelDrive API 客戶端
 import { DriverTeldriveAddition, TeldriveFile } from "./types"
 
 export class ClientTeldrive {

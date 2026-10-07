@@ -1,4 +1,4 @@
-// IPFS API 客户端
+// IPFS API 客戶端
 import { DriverIpfsAddition, IpfsLsResp, IpfsFilesStatResp, IpfsAddResp } from "./types"
 
 export class ClientIpfs {
@@ -66,7 +66,7 @@ export class ClientIpfs {
     return `${this.gateway}/ipfs/${cid}?filename=${encodeURIComponent(name)}`
   }
 
-  /** 将 mode + 路径解析为 /ipfs/{cid} */
+  /** 將 mode + 路徑解析為 /ipfs/{cid} */
   async resolveIpfsPath(rawPath: string, cid?: string): Promise<string> {
     if (cid) return `/ipfs/${cid}`
     const clean = rawPath.replace(/^\/+|\/+$/g, "")

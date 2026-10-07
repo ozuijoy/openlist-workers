@@ -44,7 +44,7 @@ export class DriverOpenlist implements StorageDriver {
         raw_url: data.raw_url || "",
       }
     } catch {
-      // Fallback: 可能是目录
+      // Fallback: 可能是目錄
       try {
         await this.client.list(physicalPath)
         const parts = physicalPath.split("/").filter(Boolean)

@@ -3,10 +3,10 @@ import type { UserPermissionObj } from "./permission"
 import { isAdmin } from "./permission"
 
 /**
- * Meta 消费层（对齐 Go server/common/check.go）。
+ * Meta 消費層（對齊 Go server/common/check.go）。
  *
- * Meta 定义了路径级别的权限、密码、隐藏、自定义内容等规则，
- * 本模块提供判断用户是否能访问/读/写某路径、以及获取 readme/header 的函数。
+ * Meta 定義了路徑級別的權限、密碼、隱藏、自定義內容等規則，
+ * 本模塊提供判斷用戶是否能訪問/讀/寫某路徑、以及獲取 readme/header 的函數。
  */
 
 export interface Meta {
@@ -29,8 +29,8 @@ export interface Meta {
 }
 
 /**
- * 获取覆盖指定路径的最近祖先 meta（向上递归查找）。
- * 对齐 Go op.GetNearestMeta (internal/op/meta.go:27-65)。
+ * 獲取覆蓋指定路徑的最近祖先 meta（向上遞歸查找）。
+ * 對齊 Go op.GetNearestMeta (internal/op/meta.go:27-65)。
  */
 export async function getNearestMeta(
   path: string,
@@ -47,7 +47,7 @@ export async function getNearestMeta(
   )
   if (exact) return exact
 
-  // 向上递归查找祖先
+  // 向上遞歸查找祖先
   let current = cleanPath
   while (current !== "/") {
     const parent = current.substring(0, current.lastIndexOf("/")) || "/"
@@ -59,8 +59,8 @@ export async function getNearestMeta(
 }
 
 /**
- * 判断 meta 是否覆盖目标路径（相等或祖先 + sub 开关）。
- * 对齐 Go common.MetaCoversPath (server/common/check.go:83-99)。
+ * 判斷 meta 是否覆蓋目標路徑（相等或祖先 + sub 開關）。
+ * 對齊 Go common.MetaCoversPath (server/common/check.go:83-99)。
  */
 export function metaCoversPath(
   metaPath: string,
@@ -90,8 +90,8 @@ function fixAndCleanPath(p: string): string {
 }
 
 /**
- * 判断用户能否访问路径（密码 + read_users）。
- * 对齐 Go common.CanAccess (server/common/check.go:57-65)。
+ * 判斷用戶能否訪問路徑（密碼 + read_users）。
+ * 對齊 Go common.CanAccess (server/common/check.go:57-65)。
  */
 export function canAccess(
   user: UserPermissionObj | null,
@@ -99,12 +99,12 @@ export function canAccess(
   path: string,
   password: string = "",
 ): boolean {
-  // 管理员无视所有限制
+  // 管理員無視所有限制
   if (user && isAdmin(user)) return true
 
   if (!meta) return true
 
-  // 密码保护：meta.password 非空 + 覆盖路径 → 需密码
+  // 密碼保護：meta.password 非空 + 覆蓋路徑 → 需密碼
   if (
     meta.password &&
     meta.password.trim() !== "" &&
@@ -113,7 +113,7 @@ export function canAccess(
     if (password !== meta.password) return false
   }
 
-  // read_users 白名单：非空 + 覆盖路径 → 用户必须在列表
+  // read_users 白名單：非空 + 覆蓋路徑 → 用戶必須在列表
   if (
     meta.read_users &&
     meta.read_users.length > 0 &&
@@ -126,15 +126,15 @@ export function canAccess(
 }
 
 /**
- * 判断用户能否读取路径（read_users 白名单）。
- * 对齐 Go common.CanRead (server/common/check.go:21-28)。
+ * 判斷用戶能否讀取路徑（read_users 白名單）。
+ * 對齊 Go common.CanRead (server/common/check.go:21-28)。
  */
 export function canRead(
   user: UserPermissionObj | null,
   meta: Meta | null,
   path: string,
 ): boolean {
-  // nil user（内部/系统上下文）无视限制
+  // nil user（內部/系統上下文）無視限制
   if (user === null) return true
   if (user && isAdmin(user)) return true
 
@@ -150,8 +150,8 @@ export function canRead(
 }
 
 /**
- * 判断用户能否写入路径（write_users 白名单）。
- * 对齐 Go common.CanWrite (server/common/check.go:30-41)。
+ * 判斷用戶能否寫入路徑（write_users 白名單）。
+ * 對齊 Go common.CanWrite (server/common/check.go:30-41)。
  */
 export function canWrite(
   user: UserPermissionObj | null,
@@ -173,10 +173,10 @@ export function canWrite(
 }
 
 /**
- * 判断路径能否绕过用户写权限开关（meta.write + w_sub）。
- * 对齐 Go common.CanWriteContentBypassUserPerms (server/common/check.go:43-51)。
+ * 判斷路徑能否繞過用戶寫權限開關（meta.write + w_sub）。
+ * 對齊 Go common.CanWriteContentBypassUserPerms (server/common/check.go:43-51)。
  *
- * 返回 true 表示即使用户无写权限也可写（目录管理员强制开启）。
+ * 返回 true 表示即使用戶無寫權限也可寫（目錄管理員強制開啟）。
  */
 export function canWriteContentBypassUserPerms(
   meta: Meta | null,
@@ -187,8 +187,8 @@ export function canWriteContentBypassUserPerms(
 }
 
 /**
- * 获取路径的 readme（meta.readme + r_sub）。
- * 对齐 Go handles/fsread.go:187-192 getReadme。
+ * 獲取路徑的 readme（meta.readme + r_sub）。
+ * 對齊 Go handles/fsread.go:187-192 getReadme。
  */
 export function getReadme(meta: Meta | null, path: string): string {
   if (!meta || !meta.readme) return ""
@@ -199,8 +199,8 @@ export function getReadme(meta: Meta | null, path: string): string {
 }
 
 /**
- * 获取路径的 header（meta.header + header_sub）。
- * 对齐 Go handles/fsread.go:194-199 getHeader。
+ * 獲取路徑的 header（meta.header + header_sub）。
+ * 對齊 Go handles/fsread.go:194-199 getHeader。
  */
 export function getHeader(meta: Meta | null, path: string): string {
   if (!meta || !meta.header) return ""
@@ -211,10 +211,10 @@ export function getHeader(meta: Meta | null, path: string): string {
 }
 
 /**
- * 判断文件名是否被 meta.hide 正则隐藏（h_sub 控制子目录）。
- * 对齐 Go common.CanSeeHides (server/common/check.go:67-81)。
+ * 判斷文件名是否被 meta.hide 正則隱藏（h_sub 控制子目錄）。
+ * 對齊 Go common.CanSeeHides (server/common/check.go:67-81)。
  *
- * 返回 true = 被隐藏（需过滤掉）。
+ * 返回 true = 被隱藏（需過濾掉）。
  */
 export function isHidden(
   meta: Meta | null,
@@ -233,15 +233,15 @@ export function isHidden(
       const re = new RegExp(pattern)
       if (re.test(fileName)) return true
     } catch {
-      // 忽略非法正则
+      // 忽略非法正則
     }
   }
   return false
 }
 
 /**
- * 校验 hide 字段正则合法性（对齐 Go handles/meta.go:71-80 validHide）。
- * 返回 null = 合法；返回错误正则行 = 非法。
+ * 校驗 hide 欄位正則合法性（對齊 Go handles/meta.go:71-80 validHide）。
+ * 返回 null = 合法；返回錯誤正則行 = 非法。
  */
 export function validateHide(hide: string): string | null {
   if (!hide || hide.trim() === "") return null

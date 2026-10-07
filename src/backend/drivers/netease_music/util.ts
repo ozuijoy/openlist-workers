@@ -1,4 +1,4 @@
-// 网易云音乐 API 客户端
+// 網易雲音樂 API 客戶端
 import {
   DriverNeteaseMusicAddition,
   NeteaseSongItem,

@@ -22,7 +22,7 @@ function pkcs7Pad(buf: Uint8Array): Buffer {
 }
 
 test("chaoxing login AES-CBC matches Node crypto (auto-pad path)", async () => {
-  const cases = ["testuser", "admin", "密码123", "a".repeat(17)]
+  const cases = ["testuser", "admin", "密碼123", "a".repeat(17)]
   for (const plain of cases) {
     const actual = await aesCbcEncryptBase64(plain, LOGIN_KEY)
     const expected = nodeCbcAutoPad(plain, LOGIN_KEY)
@@ -34,7 +34,7 @@ test("chaoxing login AES-CBC manual PKCS7 equals auto-pad (Workers path)", () =>
   // In Cloudflare Workers, WebCrypto does NOT auto-pad; our helper pads
   // manually. The manual-pad + no-auto-pad ciphertext must equal the
   // Node auto-pad ciphertext (both apply PKCS#7 to the same message).
-  const cases = ["testuser", "admin", "密码123", "a".repeat(17)]
+  const cases = ["testuser", "admin", "密碼123", "a".repeat(17)]
   for (const plain of cases) {
     const auto = nodeCbcAutoPad(plain, LOGIN_KEY)
 

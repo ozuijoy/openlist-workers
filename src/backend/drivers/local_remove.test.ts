@@ -23,7 +23,7 @@ async function makeDir(): Promise<string> {
   return await mkdtemp(path.join(tmpdir(), "openlist-local-test-"))
 }
 
-test("LocalDriver.remove 删除目标项自身", async (t) => {
+test("LocalDriver.remove 刪除目標項自身", async (t) => {
   const dir = await makeDir()
   t.after(() => rm(dir, { recursive: true, force: true }))
   const file = path.join(dir, "a.txt")
@@ -32,10 +32,10 @@ test("LocalDriver.remove 删除目标项自身", async (t) => {
   const driver = new LocalDriver()
   await driver.remove("/d/a.txt", file, ["a.txt"])
 
-  assert.equal(await exists(file), false, "目标文件应被删除")
+  assert.equal(await exists(file), false, "目標文件應被刪除")
 })
 
-test("LocalDriver.remove 删除目录", async (t) => {
+test("LocalDriver.remove 刪除目錄", async (t) => {
   const dir = await makeDir()
   t.after(() => rm(dir, { recursive: true, force: true }))
   const sub = path.join(dir, "sub")
@@ -45,11 +45,11 @@ test("LocalDriver.remove 删除目录", async (t) => {
   const driver = new LocalDriver()
   await driver.remove("/d/sub", sub, ["sub"])
 
-  assert.equal(await exists(path.join(sub, "inner.txt")), false, "目录应被删除")
-  assert.equal(await exists(sub), false, "目录应被删除")
+  assert.equal(await exists(path.join(sub, "inner.txt")), false, "目錄應被刪除")
+  assert.equal(await exists(sub), false, "目錄應被刪除")
 })
 
-test("LocalDriver.move 移动目标项自身", async (t) => {
+test("LocalDriver.move 移動目標項自身", async (t) => {
   const dir = await makeDir()
   t.after(() => rm(dir, { recursive: true, force: true }))
   const src = path.join(dir, "a.txt")
@@ -60,15 +60,15 @@ test("LocalDriver.move 移动目标项自身", async (t) => {
   const driver = new LocalDriver()
   await driver.move("/d", "/d/dst", ["a.txt"], src, path.join(dstDir, "a.txt"))
 
-  assert.equal(await exists(src), false, "源文件应被移走")
+  assert.equal(await exists(src), false, "源文件應被移走")
   assert.equal(
     await readFile(path.join(dstDir, "a.txt"), "utf8"),
     "hello",
-    "目标位置应有文件",
+    "目標位置應有文件",
   )
 })
 
-test("LocalDriver.copy 复制目标项自身", async (t) => {
+test("LocalDriver.copy 複製目標項自身", async (t) => {
   const dir = await makeDir()
   t.after(() => rm(dir, { recursive: true, force: true }))
   const src = path.join(dir, "a.txt")
@@ -79,10 +79,10 @@ test("LocalDriver.copy 复制目标项自身", async (t) => {
   const driver = new LocalDriver()
   await driver.copy("/d", "/d/dst", ["a.txt"], src, path.join(dstDir, "a.txt"))
 
-  assert.equal(await exists(src), true, "源文件应保留")
+  assert.equal(await exists(src), true, "源文件應保留")
   assert.equal(
     await readFile(path.join(dstDir, "a.txt"), "utf8"),
     "hello",
-    "目标位置应有副本",
+    "目標位置應有副本",
   )
 })

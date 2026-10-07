@@ -116,16 +116,16 @@ const assertShareTemplateUsable = (tpl: string) => {
 }
 
 /**
- * 上一版曾采用的上游 Go 分享摘要文案（与 db.ts 的 LEGACY_SHARE_SUMMARY_GO 一致）。
- * 迁移必须把这类已落盘的值换成纯链接。
+ * 上一版曾採用的上游 Go 分享摘要文案（與 db.ts 的 LEGACY_SHARE_SUMMARY_GO 一致）。
+ * 遷移必須把這類已落盤的值換成純鏈接。
  */
 const LEGACY_GO_BLURB = `@{{creator}} shared {{#each files}}{{#if @first}}"{{filename this}}"{{/if}}{{#if @last}}{{#unless (eq @index 0)}} and {{@index}} more files{{/unless}}{{/if}}{{/each}} from {{site_title}}: {{base_url}}/@s/{{id}}{{#if pwd}} , the share code is {{pwd}}{{/if}}{{#if expires}}, please access before {{dateLocaleString expires}}.{{/if}}`
 
 /**
- * 模拟已部署实例：某个值已经落盘，之后通过 loadDb() 读取（该路径会执行
- * ensureDefaultSettings 的 LEGACY_SETTING_MIGRATIONS 迁移）。
- * 直接 saveDb() 的结果会写进 dbCache，短 TTL 内 getDb() 不会走 loadDb，
- * 所以先落盘、等缓存过期，再取迁移后的值。
+ * 模擬已部署實例：某個值已經落盤，之後通過 loadDb() 讀取（該路徑會執行
+ * ensureDefaultSettings 的 LEGACY_SETTING_MIGRATIONS 遷移）。
+ * 直接 saveDb() 的結果會寫進 dbCache，短 TTL 內 getDb() 不會走 loadDb，
+ * 所以先落盤、等快取過期，再取遷移後的值。
  */
 const readMigratedShareSummary = async (persistedValue: string) => {
   const env: any = {

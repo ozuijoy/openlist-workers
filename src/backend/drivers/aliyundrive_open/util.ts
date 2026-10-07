@@ -8,9 +8,9 @@ import { assertSafeUrl } from "../../pkg/http"
 const ALI_OPEN_API = "https://openapi.aliyundrive.com/adrive/v1.0"
 
 // ============================================================
-// AliyunOpenClient - 阿里云盘 OAuth2 OpenAPI 客户端
-// 优先通过在线 API 中转（GET + query params），
-// 备用直连 OAuth 端点（需要 client_id + client_secret）
+// AliyunOpenClient - 阿里雲盤 OAuth2 OpenAPI 客戶端
+// 優先通過在線 API 中轉（GET + query params），
+// 備用直連 OAuth 端點（需要 client_id + client_secret）
 // ============================================================
 export class AliyunOpenClient {
   private addition: AliyundriveOpenAddition
@@ -88,13 +88,13 @@ export class AliyunOpenClient {
     }
     const token = this.refreshTokenVal.trim()
 
-    // 策略1: 通过在线 API 中转（GET + query params）
+    // 策略1: 通過在線 API 中轉（GET + query params）
     const onlineApis: string[] = []
     if (this.addition.api_url_address && this.addition.api_url_address.trim()) {
       const customApi = this.addition.api_url_address.trim()
-      // FIX(H-2): api_url_address 是管理员可配置字段，会把用户 refresh_token
-      // 发给该 URL。必须先做 SSRF 校验，否则可被配置成内网/元数据地址导致
-      // token 外泄。不安全时跳过该自定义地址，继续使用内置受信地址。
+      // FIX(H-2): api_url_address 是管理員可配置欄位，會把用戶 refresh_token
+      // 發給該 URL。必須先做 SSRF 校驗，否則可被配置成內網/元資料地址導致
+      // token 外洩。不安全時跳過該自定義地址，繼續使用內置受信地址。
       try {
         assertSafeUrl(customApi, "AliyundriveOpen api_url_address")
         onlineApis.push(customApi)
@@ -153,7 +153,7 @@ export class AliyunOpenClient {
       }
     }
 
-    // 策略2: 直连 OpenAPI OAuth（需要 client_id + client_secret，或默认 Client ID）
+    // 策略2: 直連 OpenAPI OAuth（需要 client_id + client_secret，或默認 Client ID）
     const clientId =
       (this.addition.client_id || "").trim() ||
       "25ab4837190e48718a28f80073574a4d"
@@ -217,7 +217,7 @@ export class AliyunOpenClient {
   ): Promise<T> {
     await this.ensureToken()
     const url = path.startsWith("http") ? path : `${ALI_OPEN_API}${path}`
-    // FIX(H-2): path 以 http 开头时是调用方传入的绝对 URL，必须做 SSRF 校验
+    // FIX(H-2): path 以 http 開頭時是調用方傳入的絕對 URL，必須做 SSRF 校驗
     try {
       assertSafeUrl(url, "AliyundriveOpen openApiRequest")
     } catch (e: any) {

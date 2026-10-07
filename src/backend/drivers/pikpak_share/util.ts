@@ -42,7 +42,7 @@ export class PikPakShareApiClient {
       }
       u.searchParams.set("thumbnail_size", "SIZE_LARGE")
 
-      // X-Client-ID 为 PikPak Web 客户端公开标识（非 secret），分享接口固定要求，保持默认。
+      // X-Client-ID 為 PikPak Web 客戶端公開標識（非 secret），分享介面固定要求，保持默認。
       const headers: Record<string, string> = {
         "X-Client-ID": "YUMx5nI8ZU8Ap8pm",
         "X-Device-ID": this.deviceId,

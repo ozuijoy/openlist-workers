@@ -8,7 +8,7 @@ import { ClientQuarkUcTv } from "./util"
 
 const DEFAULT_ROOT = "0"
 
-/** 只读驱动：仅 list + get（下载） */
+/** 只讀驅動：僅 list + get（下載） */
 export class DriverQuarkUcTv implements StorageDriver {
   private client: ClientQuarkUcTv
   private pathCache = new Map<string, string>()
@@ -64,7 +64,7 @@ export class DriverQuarkUcTv implements StorageDriver {
       }
     } catch {}
 
-    // Fallback: 目录
+    // Fallback: 目錄
     try {
       await this.resolveDirId(physicalPath)
       return {

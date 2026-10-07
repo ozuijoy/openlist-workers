@@ -4,8 +4,8 @@ import { adminAuthMiddleware } from "./middlewares"
 
 export const mcpRouter = new Hono()
 
-// MCP 端点要求管理员鉴权（当前为占位实现，仅暴露工具 schema；
-// 加鉴权防止未授权探测 / 未来接入真实能力时的越权访问）
+// MCP 端點要求管理員鑑權（當前為佔位實現，僅暴露工具 schema；
+// 加鑑權防止未授權探測 / 未來接入真實能力時的越權訪問）
 mcpRouter.use("*", adminAuthMiddleware)
 
 mcpRouter.get("/sse", (c) => {

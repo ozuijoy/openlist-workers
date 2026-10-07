@@ -1,8 +1,8 @@
-// Crypt driver — 加密目录驱动
+// Crypt driver — 加密目錄驅動
 // 移植自 OpenList Go 版 drivers/crypt。
-// 将文件内容用 AES-256-CTR 加密后写入底层存储（remote_path 指向另一个挂载的存储）。
-// 当前支持 filename_encryption=off（默认）：文件名不加密、仅加 encrypted_suffix 后缀，
-// 内容加密（rclone crypt v1 兼容）。standard / obfuscate 文件名加密为后续增强。
+// 將文件內容用 AES-256-CTR 加密後寫入底層儲存（remote_path 指向另一個掛載的儲存）。
+// 當前支持 filename_encryption=off（默認）：文件名不加密、僅加 encrypted_suffix 後綴，
+// 內容加密（rclone crypt v1 相容）。standard / obfuscate 文件名加密為後續增強。
 import {
   StorageDriver,
   FileItem,
@@ -39,16 +39,16 @@ export class CryptDriver implements StorageDriver {
     const mode = this.addition.filename_encryption || "off"
     if (mode !== "off") {
       throw new Error(
-        `[Crypt] filename_encryption='${mode}' 尚未实现，当前仅支持 off 模式（内容加密、文件名仅加后缀）`,
+        `[Crypt] filename_encryption='${mode}' 尚未實現，當前僅支持 off 模式（內容加密、文件名僅加後綴）`,
       )
     }
-    // 动态 import，避免与 internal/op/storage.ts 的循环依赖
+    // 動態 import，避免與 internal/op/storage.ts 的循環依賴
     const { resolvePath } = await import("../../internal/model/db")
     const { getDriver } = await import("../../internal/op/storage")
     const resolved = await resolvePath(this.addition.remote_path || "/")
     if (resolved.isVirtual || !resolved.storage) {
       throw new Error(
-        `[Crypt] remote_path 未匹配到有效存储: ${this.addition.remote_path}`,
+        `[Crypt] remote_path 未匹配到有效儲存: ${this.addition.remote_path}`,
       )
     }
     this.remoteRoot = resolved.physical || "/"
@@ -68,7 +68,7 @@ export class CryptDriver implements StorageDriver {
     }
   }
 
-  /** crypt 物理路径 → 底层物理路径 */
+  /** crypt 物理路徑 → 底層物理路徑 */
   private joinRemote(physicalPath: string): string {
     const p = String(physicalPath || "/")
     const base = this.remoteRoot === "/" ? "" : this.remoteRoot
@@ -109,7 +109,7 @@ export class CryptDriver implements StorageDriver {
       name,
       size: this.cipher!.decryptedSize(item.size),
       type: calcFileType(name, false),
-      raw_url: "", // 不返回直链，强制 raw.ts 走 createReadStream 解密下载
+      raw_url: "", // 不返回直鏈，強制 raw.ts 走 createReadStream 解密下載
     }
   }
 
@@ -208,9 +208,9 @@ export class CryptDriver implements StorageDriver {
   }
 
   /**
-   * 解密下载：拉取底层密文 → 解密 → 按 range 切片返回。
-   * TODO(流式)：当前整体读入内存后一次性解密，超大文件会占用较多内存，
-   * 后续可改为 TransformStream 流式 AES-CTR 解密（counter 按 16 字节块递增）。
+   * 解密下載：拉取底層密文 → 解密 → 按 range 切片返回。
+   * TODO(流式)：當前整體讀入記憶體後一次性解密，超大文件會佔用較多記憶體，
+   * 後續可改為 TransformStream 流式 AES-CTR 解密（counter 按 16 字節塊遞增）。
    */
   async createReadStream(
     physicalPath: string,
@@ -220,11 +220,11 @@ export class CryptDriver implements StorageDriver {
     const remotePhysical = this.joinRemote(physicalPath) + this.suffix
     const item = await this.remoteDriver!.get("", remotePhysical)
     if (!item.raw_url) {
-      throw new Error("[Crypt] 底层驱动未返回下载链接，无法解密下载")
+      throw new Error("[Crypt] 底層驅動未返回下載鏈接，無法解密下載")
     }
     const resp = await fetch(item.raw_url)
     if (!resp.ok) {
-      throw new Error(`[Crypt] 底层下载失败: HTTP ${resp.status}`)
+      throw new Error(`[Crypt] 底層下載失敗: HTTP ${resp.status}`)
     }
     const buf = new Uint8Array(await resp.arrayBuffer())
     const plain = await this.cipher!.decrypt(buf)
@@ -239,7 +239,7 @@ export class CryptDriver implements StorageDriver {
     })
   }
 
-  /** 判断底层路径是文件还是目录：文件带 suffix */
+  /** 判斷底層路徑是文件還是目錄：文件帶 suffix */
   private async isFile(remotePhysical: string): Promise<boolean> {
     if (!this.suffix) return false
     try {

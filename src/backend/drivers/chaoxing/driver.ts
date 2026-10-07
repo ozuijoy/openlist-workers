@@ -125,7 +125,7 @@ export class DriverChaoXing implements StorageDriver {
   ): Promise<void> {
     const entry = await this.resolveEntry(physicalPath)
     if (!entry.isDir) {
-      throw new Error("[ChaoXing] 此网盘不支持修改文件名")
+      throw new Error("[ChaoXing] 此網盤不支持修改文件名")
     }
     await this.client.renameFolder(entry.id, newName)
     this.pathCache.clear()
@@ -185,7 +185,7 @@ export class DriverChaoXing implements StorageDriver {
     return { id: String(target.id), isDir: !!target.content.folderName }
   }
 
-  /** 物理路径 → 目录 ID（根目录返回 "-1"） */
+  /** 物理路徑 → 目錄 ID（根目錄返回 "-1"） */
   private async pathToId(physicalPath: string): Promise<string> {
     const clean = physicalPath.split("/").filter(Boolean).join("/")
     if (!clean) return "-1"

@@ -161,11 +161,11 @@ export async function download(
  * 1. Protocol must be http: or https:
  * 2. Hostname/IP must not point to loopback, private RFC 1918 networks, link-local, or cloud metadata endpoints.
  * 
- * 2026-09-08 安全增强：
- * - 扩展 IPv6 检测（包括 IPv4-mapped IPv6）
- * - 检测 DNS 重绑定特征
- * - 阻止整数/十六进制 IP 表示
- * - 检测混淆 IP 格式
+ * 2026-09-08 安全增強：
+ * - 擴展 IPv6 檢測（包括 IPv4-mapped IPv6）
+ * - 檢測 DNS 重綁定特徵
+ * - 阻止整數/十六進制 IP 表示
+ * - 檢測混淆 IP 格式
  */
 export function isSafeUrl(
   urlStr: string,
@@ -180,16 +180,16 @@ export function isSafeUrl(
     const host = parsed.hostname.toLowerCase().trim()
     if (!host) return false
 
-    // 白名单：管理员在存储配置里主动填写的 endpoint host（可能是内网/私有地址）
-    // 视为受信。SSRF 防护只针对用户/第三方可控的 URL，不应拦截管理员自己的
-    // 内网存储（自建 MinIO / 内网 S3 / 内网 WebDAV 等）。仅做精确 host 匹配，
-    // 不放过子域名，避免被「受信域名下的任意子域」绕过。
+    // 白名單：管理員在儲存配置裡主動填寫的 endpoint host（可能是內網/私有地址）
+    // 視為受信。SSRF 防護只針對用戶/第三方可控的 URL，不應攔截管理員自己的
+    // 內網儲存（自建 MinIO / 內網 S3 / 內網 WebDAV 等）。僅做精確 host 匹配，
+    // 不放過子域名，避免被「受信域名下的任意子域」繞過。
     if (allowHosts) {
       const allow = new Set(allowHosts)
       if (allow.has(host)) return true
     }
 
-    // 1. 检查危险主机名
+    // 1. 檢查危險主機名
     const dangerousHosts = [
       "localhost",
       ".localhost",
@@ -206,7 +206,7 @@ export function isSafeUrl(
       }
     }
 
-    // 2. 扩展 IPv6 检测（包括 IPv4-mapped IPv6）
+    // 2. 擴展 IPv6 檢測（包括 IPv4-mapped IPv6）
     const ipv6Patterns = [
       "::1", // loopback
       "[::1]",
@@ -228,7 +228,7 @@ export function isSafeUrl(
       }
     }
 
-    // 3. 检测前导零八进制绕过（0177.0.0.1 = 127.0.0.1）
+    // 3. 檢測前導零八進制繞過（0177.0.0.1 = 127.0.0.1）
     if (
       /^\d{1,3}(\.\d{1,3}){1,3}$/.test(host) &&
       /(^|\.)0\d+/.test(host)
@@ -236,7 +236,7 @@ export function isSafeUrl(
       return false
     }
 
-    // 4. 检测 IPv4 地址
+    // 4. 檢測 IPv4 地址
     const ipv4Regex = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/
     const match = host.match(ipv4Regex)
     if (match) {
@@ -247,7 +247,7 @@ export function isSafeUrl(
       const d = parseInt(dStr, 10)
       if (a > 255 || b > 255 || c > 255 || d > 255) return false
 
-      // RFC 1918 私有网络和特殊用途地址
+      // RFC 1918 私有網路和特殊用途地址
       if (a === 0) return false // 0.0.0.0/8 (This network)
       if (a === 127) return false // 127.0.0.0/8 (Loopback)
       if (a === 10) return false // 10.0.0.0/8 (Private)
@@ -260,20 +260,20 @@ export function isSafeUrl(
       if (a >= 240) return false // 240.0.0.0/4 (Reserved)
     }
 
-    // 5. 阻止整数/十六进制 IP 表示（2130706433 = 127.0.0.1, 0x7f000001 = 127.0.0.1）
+    // 5. 阻止整數/十六進制 IP 表示（2130706433 = 127.0.0.1, 0x7f000001 = 127.0.0.1）
     if (/^\d{8,}$/.test(host) || /^0x[0-9a-fA-F]{6,}$/i.test(host)) {
       return false
     }
 
-    // 6. 检测 DNS 重绑定特征域名（攻击者常用模式）
-    // 注意：整数/十六进制 IP 检测必须锚定到「完整的 label」，不能做子串匹配。
-    // 例如腾讯云 COS 的 hostname 形如 {bucket}-{10位AppID}.cos.{region}.myqcloud.com，
-    // 其中 AppID 就是连续的 10 位数字；若用 /\d{10}/ 子串匹配会误判为整数 IP，
-    // 导致正常公网下载被 SSRF 拦截。这里只拦截「某个 label 整体是整数/十六进制 IP」。
+    // 6. 檢測 DNS 重綁定特徵域名（攻擊者常用模式）
+    // 注意：整數/十六進制 IP 檢測必須錨定到「完整的 label」，不能做子串匹配。
+    // 例如騰訊雲 COS 的 hostname 形如 {bucket}-{10位AppID}.cos.{region}.myqcloud.com，
+    // 其中 AppID 就是連續的 10 位數字；若用 /\d{10}/ 子串匹配會誤判為整數 IP，
+    // 導致正常公網下載被 SSRF 攔截。這裡只攔截「某個 label 整體是整數/十六進制 IP」。
     const dnsRebindPatterns = [
       /(^|\.)\d{1,3}-\d{1,3}-\d{1,3}-\d{1,3}(\.|$)/, // 127-0-0-1.example.com
-      /(^|\.)0x[0-9a-f]{6,8}(\.|$)/i, // 0x7f000001.example.com (十六进制IP label)
-      /(^|\.)\d{8,}(\.|$)/, // 2130706433.example.com (整数IP label)
+      /(^|\.)0x[0-9a-f]{6,8}(\.|$)/i, // 0x7f000001.example.com (十六進制IP label)
+      /(^|\.)\d{8,}(\.|$)/, // 2130706433.example.com (整數IP label)
       /(^|\.)127\.0\.0\.1\.nip\.io$/, // nip.io DNS rebinding service
       /(^|\.)localtest\.me$/, // localtest.me resolves to 127.0.0.1
       /(^|\.)vcap\.me$/, // vcap.me resolves to 127.0.0.1
@@ -304,16 +304,16 @@ export function assertSafeUrl(
 }
 
 /**
- * 从存储配置 addition 中提取管理员配置的受信 host。
+ * 從儲存配置 addition 中提取管理員配置的受信 host。
  *
- * 背景：SSRF 防护针对的是「用户/第三方可控」的 URL。而 addition 的所有字段都是
- * 管理员在后台主动填写的（S3 的 endpoint、WebDAV 的 address、阿里云中转的
- * api_url_address 等），属于受信输入。管理员完全可能配置内网自建存储（MinIO、
- * 内网 S3、内网 WebDAV），此时驱动生成的 raw_url host 就是内网地址，会命中 SSRF
- * 拦截。因此把这些 host 加入白名单，使管理员自己的内网存储能正常下载。
+ * 背景：SSRF 防護針對的是「用戶/第三方可控」的 URL。而 addition 的所有欄位都是
+ * 管理員在後台主動填寫的（S3 的 endpoint、WebDAV 的 address、阿里雲中轉的
+ * api_url_address 等），屬於受信輸入。管理員完全可能配置內網自建儲存（MinIO、
+ * 內網 S3、內網 WebDAV），此時驅動生成的 raw_url host 就是內網地址，會命中 SSRF
+ * 攔截。因此把這些 host 加入白名單，使管理員自己的內網儲存能正常下載。
  *
- * 实现：只扫描「字段名含 url/host/address/endpoint/server/domain/site/base 等
- * 关键词」的字段（避免把 username 之类的普通字符串误当 host），且值必须能解析成
+ * 實現：只掃描「欄位名含 url/host/address/endpoint/server/domain/site/base 等
+ * 關鍵詞」的欄位（避免把 username 之類的普通字符串誤當 host），且值必須能解析成
  * http(s) URL 或裸 host[:port]，提取其 hostname。
  */
 export function extractTrustedHosts(addition: any): Set<string> {
@@ -351,13 +351,13 @@ export function extractTrustedHosts(addition: any): Set<string> {
 }
 
 /**
- * 从一段字符串（完整 URL 或裸 host[:port]）提取 hostname。
- * 失败返回 undefined。
+ * 從一段字符串（完整 URL 或裸 host[:port]）提取 hostname。
+ * 失敗返回 undefined。
  */
 function hostFromValue(raw: string): string | undefined {
   const val = raw.trim()
   if (!val) return undefined
-  // 有 scheme 直接用，没有则补 http://（覆盖 "192.168.1.10:9000" 这类 endpoint）
+  // 有 scheme 直接用，沒有則補 http://（覆蓋 "192.168.1.10:9000" 這類 endpoint）
   const candidates = /^[a-z][a-z0-9+.-]*:\/\//i.test(val)
     ? [val]
     : [`http://${val}`]
@@ -368,14 +368,14 @@ function hostFromValue(raw: string): string | undefined {
       const h = u.hostname.toLowerCase().trim()
       if (h) return h
     } catch {
-      // 不是合法 URL，继续尝试下一个候选
+      // 不是合法 URL，繼續嘗試下一個候選
     }
   }
   return undefined
 }
 
 /**
- * 解析 SSRF_ALLOWED_HOSTS 环境变量的值：逗号 / 空格 / 分号分隔的
+ * 解析 SSRF_ALLOWED_HOSTS 環境變量的值：逗號 / 空格 / 分號分隔的
  * URL 或裸 host[:port] 列表，提取出 hostname 集合。
  * 例如："192.168.1.10:9000, https://minio.internal, 10.0.0.5"
  */
@@ -390,11 +390,11 @@ export function parseAllowHostsEnv(raw: string): Set<string> {
 }
 
 /**
- * 合并所有受信 host 白名单来源：
- * 1. 存储配置 addition 中管理员填写的 endpoint host（内网自建 S3/WebDAV/MinIO）
- * 2. 全局环境变量 SSRF_ALLOWED_HOSTS（手动追加，逗号/空格分隔的 URL 或裸 host[:port]）
+ * 合併所有受信 host 白名單來源：
+ * 1. 儲存配置 addition 中管理員填寫的 endpoint host（內網自建 S3/WebDAV/MinIO）
+ * 2. 全局環境變量 SSRF_ALLOWED_HOSTS（手動追加，逗號/空格分隔的 URL 或裸 host[:port]）
  *
- * env 参数优先取 Cloudflare Workers 的 c.env，Node 环境回退 process.env。
+ * env 參數優先取 Cloudflare Workers 的 c.env，Node 環境回退 process.env。
  */
 export function getTrustedHosts(addition: any, env?: any): Set<string> {
   const hosts = extractTrustedHosts(addition)

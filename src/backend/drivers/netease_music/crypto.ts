@@ -1,5 +1,5 @@
-// 网易云音乐 API 加密（weapi / linuxapi）
-// 参考 Go drivers/netease_music/crypto.go
+// 網易雲音樂 API 加密（weapi / linuxapi）
+// 參考 Go drivers/netease_music/crypto.go
 
 const PRESET_KEY = "0CoJUm6Qyw8W8jud"
 const LINUXAPI_KEY = "rFgB&h#%2?^eDg:Q"
@@ -7,7 +7,7 @@ const IV = "0102030405060708"
 const STD_CHARS =
   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-// 网易 weapi RSA 公钥（modulus 128 字节，exponent 65537）
+// 網易 weapi RSA 公鑰（modulus 128 字節，exponent 65537）
 const N_HEX =
   "e0b509f6259df8642dbc35662901477df22677ec152b5ff68ace615bb7b725152b3ab17a876aea8a5aa76d2e417629ec4ee341f56135fccf695280104e0312ecbda92557c93870114af6c9d05c4f7f0c3685b7a46bee255932575cce10b424d813cfe4875d3e82047b97ddef52741d546b8e289dc6935b3ece0462db0a22b8e7"
 const RSA_E = 65537n
@@ -39,7 +39,7 @@ function bytesToHex(bytes: Uint8Array): string {
     .join("")
 }
 
-/** AES-CBC 加密（PKCS7 padding），返回字节 */
+/** AES-CBC 加密（PKCS7 padding），返回字節 */
 async function aesCbcEncrypt(
   src: Uint8Array,
   key: Uint8Array,
@@ -72,7 +72,7 @@ async function aesCbcEncrypt(
   return new Uint8Array(cipherBuf)
 }
 
-/** AES-ECB 加密（PKCS7 padding），返回字节 */
+/** AES-ECB 加密（PKCS7 padding），返回字節 */
 async function aesEcbEncrypt(
   src: Uint8Array,
   key: Uint8Array,
@@ -84,7 +84,7 @@ async function aesEcbEncrypt(
       Buffer.concat([cipher.update(Buffer.from(src)), cipher.final()]),
     )
   }
-  // Workers: Web Crypto 无 ECB，逐 block 用 AES-CBC + zero IV 模拟
+  // Workers: Web Crypto 無 ECB，逐 block 用 AES-CBC + zero IV 模擬
   const keyMat = await crypto.subtle.importKey(
     "raw",
     key as any,
@@ -139,7 +139,7 @@ function modPow(base: bigint, exp: bigint, mod: bigint): bigint {
   return result
 }
 
-/** 网易 raw RSA 加密（无 padding），返回 128 字节 */
+/** 網易 raw RSA 加密（無 padding），返回 128 字節 */
 export function rsaRawEncrypt(secretKey: Uint8Array): Uint8Array {
   const full = new Uint8Array(128)
   full.set(secretKey, 112)
@@ -161,7 +161,7 @@ function getSecretKey(): { key: Uint8Array; reversed: Uint8Array } {
   return { key, reversed }
 }
 
-/** weapi 加密：AES-CBC 两层 + raw RSA */
+/** weapi 加密：AES-CBC 兩層 + raw RSA */
 export async function weapi(
   data: Record<string, string>,
 ): Promise<Record<string, string>> {
@@ -181,7 +181,7 @@ export async function weapi(
   }
 }
 
-/** linuxapi 加密：AES-ECB，输出大写 hex */
+/** linuxapi 加密：AES-ECB，輸出大寫 hex */
 export async function linuxapi(
   data: Record<string, unknown>,
 ): Promise<Record<string, string>> {
@@ -190,7 +190,7 @@ export async function linuxapi(
   return { eparams: bytesToHex(enc).toUpperCase() }
 }
 
-// 导出供测试使用
+// 導出供測試使用
 export const __internal = {
   aesCbcEncrypt,
   aesEcbEncrypt,

@@ -4,15 +4,15 @@ import { Hono } from "hono"
 import { setupRouter } from "./router"
 
 /**
- * 初始化流程回归测试（对应 issue #62）。
+ * 初始化流程迴歸測試（對應 issue #62）。
  *
- * 三个必须长期成立的不变量：
- *   1. 「读取持久化后端成功但为空」（全新部署）**必须允许** POST /init/setup，
- *      否则会出现「读不到 → 不许初始化 → 永远读不到」的死锁；
- *   2. 「读取持久化后端失败」**必须拒绝**初始化，避免把兜底空壳写回存储、
- *      覆盖真实配置（数据库被清空）；
- *   3. 配置了 ADMIN_PASS 时，安装页只轮询 /init_status 也应能完成初始化
- *      （否则表现为「配了 ADMIN_PASS 仍反复跳 /@init」）。
+ * 三個必須長期成立的不變量：
+ *   1. 「讀取持久化後端成功但為空」（全新部署）**必須允許** POST /init/setup，
+ *      否則會出現「讀不到 → 不許初始化 → 永遠讀不到」的死鎖；
+ *   2. 「讀取持久化後端失敗」**必須拒絕**初始化，避免把兜底空殼寫回儲存、
+ *      覆蓋真實配置（資料庫被清空）；
+ *   3. 配置了 ADMIN_PASS 時，安裝頁只輪詢 /init_status 也應能完成初始化
+ *      （否則表現為「配了 ADMIN_PASS 仍反覆跳 /@init」）。
  */
 
 const buildApp = () => {
@@ -23,7 +23,7 @@ const buildApp = () => {
   return app
 }
 
-/** 一个符合 Web KV 形态、内容可控的 KV binding 替身。 */
+/** 一個符合 Web KV 形態、內容可控的 KV binding 替身。 */
 function fakeKv(overrides: Partial<Record<"get" | "put" | "delete" | "list", any>> = {}) {
   const store = new Map<string, string>()
   return {
@@ -58,7 +58,7 @@ const setupRequest = (body: Record<string, any>) =>
     body: JSON.stringify(body),
   }) as any
 
-test("init/setup：全新空存储首次初始化必须成功并真正落盘", async () => {
+test("init/setup：全新空儲存首次初始化必須成功並真正落盤", async () => {
   const env: any = kvEnv()
   const res = await buildApp().request(
     "/api/public/init/setup",
@@ -69,7 +69,7 @@ test("init/setup：全新空存储首次初始化必须成功并真正落盘", a
   assert.equal(
     res.status,
     200,
-    "empty-but-readable backend must be initializable (issue #62 现象 3)",
+    "empty-but-readable backend must be initializable (issue #62 現象 3)",
   )
   const json: any = await res.json()
   assert.equal(json.code, 200)
@@ -77,10 +77,10 @@ test("init/setup：全新空存储首次初始化必须成功并真正落盘", a
   assert.equal(
     env.KV.__store.has("openlist_config"),
     true,
-    "初始化必须真正写入持久化后端",
+    "初始化必須真正寫入持久化後端",
   )
 
-  // 初始化完成后 init_status 必须报告已初始化 + 密钥就绪。
+  // 初始化完成後 init_status 必須報告已初始化 + 密鑰就緒。
   const status = await buildApp().request(
     "/api/public/init_status",
     { method: "GET" },
@@ -91,7 +91,7 @@ test("init/setup：全新空存储首次初始化必须成功并真正落盘", a
   assert.equal(statusJson.data.ready, true)
 })
 
-test("init/setup：读取持久化后端失败时必须拒绝（不得用空壳覆盖真实配置）", async () => {
+test("init/setup：讀取持久化後端失敗時必須拒絕（不得用空殼覆蓋真實配置）", async () => {
   const env: any = kvEnv({
     KV: fakeKv({
       get: async () => {
@@ -111,7 +111,7 @@ test("init/setup：读取持久化后端失败时必须拒绝（不得用空壳�
   assert.match(String(json.message), /not readable/)
 })
 
-test("init_status：配置 ADMIN_PASS 时，安装页轮询即可完成初始化", async () => {
+test("init_status：配置 ADMIN_PASS 時，安裝頁輪詢即可完成初始化", async () => {
   const env: any = kvEnv({ ADMIN_PASS: "auto-init-pass" })
 
   const res = await buildApp().request(
@@ -124,15 +124,15 @@ test("init_status：配置 ADMIN_PASS 时，安装页轮询即可完成初始化
   assert.equal(
     json.data.initialized,
     true,
-    "ADMIN_PASS must take effect on the init page (issue #62 现象 2)",
+    "ADMIN_PASS must take effect on the init page (issue #62 現象 2)",
   )
   assert.equal(
     env.KV.__store.has("openlist_config"),
     true,
-    "自动初始化必须真正落盘",
+    "自動初始化必須真正落盤",
   )
 
-  // 幂等：再次轮询不应产生额外变化，也不应报错。
+  // 冪等：再次輪詢不應產生額外變化，也不應報錯。
   const again = await buildApp().request(
     "/api/public/init_status",
     { method: "GET" },
@@ -141,23 +141,23 @@ test("init_status：配置 ADMIN_PASS 时，安装页轮询即可完成初始化
   assert.equal((await again.json()).data.initialized, true)
 })
 
-test("init_status：未配置 ADMIN_PASS 时不得写入占位库", async () => {
+test("init_status：未配置 ADMIN_PASS 時不得寫入佔位庫", async () => {
   const env: any = kvEnv()
   await buildApp().request("/api/public/init_status", { method: "GET" }, env)
 
-  // 注：initialized 的取值不做断言 —— isolate 级内存里可能已有别的 env 建立
-  // 过的可信快照（loadDb 会保留它以避免误判为「未初始化」），这是刻意行为。
-  // 本用例只锁定「未配置 ADMIN_PASS 时不产生任何写入」这一不变量。
+  // 注：initialized 的取值不做斷言 —— isolate 級記憶體裡可能已有別的 env 建立
+  // 過的可信快照（loadDb 會保留它以避免誤判為「未初始化」），這是刻意行為。
+  // 本用例只鎖定「未配置 ADMIN_PASS 時不產生任何寫入」這一不變量。
   assert.equal(
     env.KV.__store.size,
     0,
-    "未配置 ADMIN_PASS 时应等待安装向导，而不是抢写未初始化的占位库",
+    "未配置 ADMIN_PASS 時應等待安裝嚮導，而不是搶寫未初始化的佔位庫",
   )
 })
 
-test("KV 探测日志：DB_DRIVER 为非 KV 驱动时不再输出误导性告警", async () => {
-  // 该告警曾被误读为 500 的根因（审计日志等路径会触发 KV 探测）。
-  // 对 d1 部署而言 KV 探测本就无关，不应再产生这条日志。
+test("KV 探測日誌：DB_DRIVER 為非 KV 驅動時不再輸出誤導性告警", async () => {
+  // 該告警曾被誤讀為 500 的根因（審計日誌等路徑會觸發 KV 探測）。
+  // 對 d1 部署而言 KV 探測本就無關，不應再產生這條日誌。
   const warns: string[] = []
   const original = console.warn
   console.warn = (...args: any[]) => {
@@ -173,6 +173,6 @@ test("KV 探测日志：DB_DRIVER 为非 KV 驱动时不再输出误导性告警
   assert.equal(
     warns.some((w) => w.includes("no KV-style binding found")),
     false,
-    "d1 部署不应看到 KV 探测告警",
+    "d1 部署不應看到 KV 探測告警",
   )
 })

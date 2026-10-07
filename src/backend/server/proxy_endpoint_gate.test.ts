@@ -5,13 +5,13 @@ import { rawRouter } from "./raw"
 import { saveDb } from "../internal/model/db"
 
 /**
- * `/p` 公开代理端点的准入判定 —— 对齐 Go server/handles/down.go 的 canProxy()：
- * 未开启代理、且扩展名也不在 proxy_types / text_types 里时返回
- * 403 `proxy not allowed`（Go 只对 /p 与归档 /ap 做该检查，/d、/sd 不做）。
+ * `/p` 公開代理端點的准入判定 —— 對齊 Go server/handles/down.go 的 canProxy()：
+ * 未開啟代理、且擴展名也不在 proxy_types / text_types 裡時返回
+ * 403 `proxy not allowed`（Go 只對 /p 與歸檔 /ap 做該檢查，/d、/sd 不做）。
  *
- * 这里只覆盖**拒绝**路径：拒绝发生在取上游下载链接之前，因此不会访问网络。
- * 「允许」路径（web_proxy / MustProxy / text_types / proxy_types / use_proxy_url）
- * 由 internal/driver/proxy.test.ts 的 canUseProxyEndpoint 单测覆盖。
+ * 這裡只覆蓋**拒絕**路徑：拒絕發生在取上游下載鏈接之前，因此不會訪問網路。
+ * 「允許」路徑（web_proxy / MustProxy / text_types / proxy_types / use_proxy_url）
+ * 由 internal/driver/proxy.test.ts 的 canUseProxyEndpoint 單測覆蓋。
  */
 
 const dbWith = (storage: any, settings: any[] = []) => ({
@@ -52,7 +52,7 @@ const appOf = () => {
   return app
 }
 
-test("/p：未开启代理的存储 + 非文本扩展名 → 403 proxy not allowed", async () => {
+test("/p：未開啟代理的儲存 + 非文本擴展名 → 403 proxy not allowed", async () => {
   const env: any = {}
   await saveDb(dbWith({}), env)
   const res = await appOf().request("/p/one/movie.mp4", { method: "GET" }, env)
@@ -60,16 +60,16 @@ test("/p：未开启代理的存储 + 非文本扩展名 → 403 proxy not allow
   assert.match(await res.text(), /proxy not allowed/)
 })
 
-test("/p：无扩展名的路径同样被拒绝", async () => {
+test("/p：無擴展名的路徑同樣被拒絕", async () => {
   const env: any = {}
   await saveDb(dbWith({}), env)
   const res = await appOf().request("/p/one/binaryblob", { method: "GET" }, env)
   assert.equal(res.status, 403)
 })
 
-test("/p：关闭代理但属于 text_types 的文本文件仍然放行（不再 403）", async () => {
-  // 放行后进入下游逻辑（取链接），此处只断言「没有被准入检查拦下」；
-  // 使用不会产生网络请求的路径：目录式结尾会让后续逻辑直接返回 4xx。
+test("/p：關閉代理但屬於 text_types 的文本文件仍然放行（不再 403）", async () => {
+  // 放行後進入下游邏輯（取鏈接），此處只斷言「沒有被准入檢查攔下」；
+  // 使用不會產生網路請求的路徑：目錄式結尾會讓後續邏輯直接返回 4xx。
   const env: any = {}
   await saveDb(dbWith({ driver: "NotADriver" }), env)
   const res = await appOf().request("/p/one/readme.md", { method: "GET" }, env)

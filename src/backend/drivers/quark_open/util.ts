@@ -1,4 +1,4 @@
-// 夸克网盘开放平台 API 客户端
+// 夸克網盤開放平台 API 客戶端
 import {
   DriverQuarkOpenAddition,
   QuarkFile,
@@ -41,7 +41,7 @@ export class ClientQuarkOpen {
       throw new Error("[QuarkOpen] refresh_token is required")
   }
 
-  /** 生成签名：x-pan-token = sha256(method&path&tm&signKey) */
+  /** 生成簽名：x-pan-token = sha256(method&path&tm&signKey) */
   private async generateSign(
     method: string,
     pathname: string,
@@ -82,7 +82,7 @@ export class ClientQuarkOpen {
     const data: QuarkCommonResp = await resp
       .json()
       .catch(() => ({ status: -1, errno: -1 }) as any)
-    // token 过期 → 刷新重试
+    // token 過期 → 刷新重試
     if (
       data.status === -1 &&
       (data.errno === 11001 ||

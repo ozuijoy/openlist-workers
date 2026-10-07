@@ -2,26 +2,26 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 
 /**
- * getDb() 缓存回归测试（性能事故防护）
+ * getDb() 快取迴歸測試（性能事故防護）
  *
- * 背景：曾出现过一次线上性能事故 —— getDb() 在**无参调用**时直接
- * `return loadDb(envCtx)`，绕过了 dbCache / dbInflight 两个缓存。
- * 而仓库里有约 30 处无参调用（storage.ts 的驱动回调、getSettings 等五个
- * getter），导致一次 WebDAV PROPFIND 或一次页面加载会触发数十次「完整冷加载」：
- * 后端全量读取 + JSON.parse + 逐字段 AES 解密。KV 与 D1 两种后端因此被同时
- * 放大数十倍而变慢。
+ * 背景：曾出現過一次線上性能事故 —— getDb() 在**無參調用**時直接
+ * `return loadDb(envCtx)`，繞過了 dbCache / dbInflight 兩個快取。
+ * 而倉庫裡有約 30 處無參調用（storage.ts 的驅動回調、getSettings 等五個
+ * getter），導致一次 WebDAV PROPFIND 或一次頁面加載會觸發數十次「完整冷加載」：
+ * 後端全量讀取 + JSON.parse + 逐欄位 AES 解密。KV 與 D1 兩種後端因此被同時
+ * 放大數十倍而變慢。
  *
- * 本文件锁定修复后的行为：
- *  1. 重复的无参 getDb() 不得重复触发后端 load（应命中缓存）；
- *  2. 并发的无参 getDb() 必须合并为一次 load（in-flight 去重）；
- *  3. saveDb() 之后的无参 getDb() 必须能观察到最新写入（写后读一致）；
- *  4. 有参调用与无参调用共享同一份缓存，不应各自重复加载。
+ * 本文件鎖定修復後的行為：
+ *  1. 重複的無參 getDb() 不得重複觸發後端 load（應命中快取）；
+ *  2. 併發的無參 getDb() 必須合併為一次 load（in-flight 去重）；
+ *  3. saveDb() 之後的無參 getDb() 必須能觀察到最新寫入（寫後讀一致）；
+ *  4. 有參調用與無參調用共享同一份快取，不應各自重複加載。
  *
- * 说明：db.ts 内部使用模块级缓存（TTL 1s），因此测试之间通过
- * `__resetDbCacheForTest()` 清理状态，避免相互干扰。
+ * 說明：db.ts 內部使用模塊級快取（TTL 1s），因此測試之間通過
+ * `__resetDbCacheForTest()` 清理狀態，避免相互干擾。
  */
 
-// 动态导入以避免测试文件顶层就初始化 store 后端探测。
+// 動態導入以避免測試文件頂層就初始化 store 後端探測。
 const mod = await import("./db")
 
 const {
@@ -32,7 +32,7 @@ const {
   __setStoreBackendLoaderForTest,
 } = mod as any
 
-/** 统计 load 调用次数的伪后端。 */
+/** 統計 load 調用次數的偽後端。 */
 function createCountingBackend(initial: any) {
   let data = initial ? JSON.parse(JSON.stringify(initial)) : null
   const stats = { load: 0, save: 0 }
@@ -41,7 +41,7 @@ function createCountingBackend(initial: any) {
     isConfigured: async () => true,
     async load() {
       stats.load++
-      // 模拟真实后端的网络 + 解析延迟，让并发窗口真实存在。
+      // 模擬真實後端的網路 + 解析延遲，讓併發窗口真實存在。
       await new Promise((r) => setTimeout(r, 10))
       return data ? JSON.parse(JSON.stringify(data)) : null
     },
@@ -63,7 +63,7 @@ const SAMPLE = {
   plugins: [],
 }
 
-test("getDb: 重复无参调用只触发一次后端 load（缓存命中）", async () => {
+test("getDb: 重複無參調用只觸發一次後端 load（快取命中）", async () => {
   __resetDbCacheForTest()
   const { backend, stats } = createCountingBackend(SAMPLE)
   __setStoreBackendLoaderForTest(async () => backend)
@@ -75,24 +75,24 @@ test("getDb: 重复无参调用只触发一次后端 load（缓存命中）", as
   const b = await getDb()
   const c = await getDb()
 
-  assert.equal(stats.load, 1, "连续无参 getDb() 应命中缓存，只 load 一次")
+  assert.equal(stats.load, 1, "連續無參 getDb() 應命中快取，只 load 一次")
   assert.equal(a, b)
   assert.equal(b, c)
 
-  // 传入同一 env 也复用同一缓存，不应额外 load。
+  // 傳入同一 env 也複用同一快取，不應額外 load。
   const d = await getDb(env)
-  assert.equal(stats.load, 1, "有参调用应与无参调用共享缓存")
+  assert.equal(stats.load, 1, "有參調用應與無參調用共享快取")
   assert.equal(d, a)
 })
 
-test("getDb: 并发无参调用合并为一次 load（in-flight 去重）", async () => {
+test("getDb: 併發無參調用合併為一次 load（in-flight 去重）", async () => {
   __resetDbCacheForTest()
   const { backend, stats } = createCountingBackend(SAMPLE)
   __setStoreBackendLoaderForTest(async () => backend)
 
   setEnvCtx({ DB_DRIVER: "counting" })
 
-  // 同时发起（不 await），模拟一次请求内多个模块并行取 DB。
+  // 同時發起（不 await），模擬一次請求內多個模塊並行取 DB。
   const results = await Promise.all([
     getDb(),
     getDb(),
@@ -101,11 +101,11 @@ test("getDb: 并发无参调用合并为一次 load（in-flight 去重）", asyn
     getDb(),
   ])
 
-  assert.equal(stats.load, 1, "并发无参 getDb() 应合并为一次 load")
+  assert.equal(stats.load, 1, "併發無參 getDb() 應合併為一次 load")
   for (const r of results) assert.equal(r, results[0])
 })
 
-test("getDb: saveDb 后无参读取可观察到最新写入（写后读一致）", async () => {
+test("getDb: saveDb 後無參讀取可觀察到最新寫入（寫後讀一致）", async () => {
   __resetDbCacheForTest()
   const { backend, stats, getData } = createCountingBackend(SAMPLE)
   __setStoreBackendLoaderForTest(async () => backend)
@@ -118,13 +118,13 @@ test("getDb: saveDb 后无参读取可观察到最新写入（写后读一致）
 
   const next = { ...SAMPLE, settings: [{ key: "site_title", value: "Changed" }] }
   await saveDb(next)
-  // 注意：saveDb 内部可能同时写入加密密钥等辅助数据，因此不断言 save 恰好为 1，
-  // 只要求确实发生过持久化写入。
-  assert.ok(stats.save >= 1, "saveDb 应触发后端持久化")
+  // 注意：saveDb 內部可能同時寫入加密密鑰等輔助資料，因此不斷言 save 恰好為 1，
+  // 只要求確實發生過持久化寫入。
+  assert.ok(stats.save >= 1, "saveDb 應觸發後端持久化")
 
-  // 注意：这里不等待 TTL 过期，验证的是 saveDb 主动刷新缓存。
+  // 注意：這裡不等待 TTL 過期，驗證的是 saveDb 主動刷新快取。
   const after = await getDb()
-  assert.equal(stats.load, 1, "saveDb 应刷新缓存，避免再触发一次 load")
+  assert.equal(stats.load, 1, "saveDb 應刷新快取，避免再觸發一次 load")
   assert.equal(after.settings[0].value, "Changed")
   assert.equal(getData().settings[0].value, "Changed")
 })
@@ -134,8 +134,8 @@ test("saveDb: sensitive fields use the low-CPU v2 envelope and remain readable",
   const { backend, getData } = createCountingBackend({
     ...SAMPLE,
     users: [{ id: 1, username: "admin", password: "password-hash" }],
-    // 注意：storage 必须带 driver / mount_path —— 否则会被 ensureDefaultStorages()
-    // 当作损坏条目过滤掉（storages 变为空数组），断言在 storages[0] 上就会炸。
+    // 注意：storage 必須帶 driver / mount_path —— 否則會被 ensureDefaultStorages()
+    // 當作損壞條目過濾掉（storages 變為空數組），斷言在 storages[0] 上就會炸。
     storages: [
       {
         id: 1,
@@ -150,8 +150,8 @@ test("saveDb: sensitive fields use the low-CPU v2 envelope and remain readable",
   const env = {
     DB_DRIVER: "counting",
     JWT_SECRET: "test-config-encryption-secret",
-    // 加密是可选的：默认 DB_CIPHER=none（明文落盘），本用例显式开启加密，
-    // 以锁定 #69 的低 CPU v2 envelope 行为（见下方「默认不加密」用例）。
+    // 加密是可選的：默認 DB_CIPHER=none（明文落盤），本用例顯式開啟加密，
+    // 以鎖定 #69 的低 CPU v2 envelope 行為（見下方「默認不加密」用例）。
     DB_CIPHER: "aes-256-gcm",
   }
   const plain = await getDb(env)
@@ -185,7 +185,7 @@ test("saveDb: without DB_CIPHER sensitive fields are written as plaintext", asyn
   })
   __setStoreBackendLoaderForTest(async () => backend)
 
-  // 不配置 DB_CIPHER（默认 none）：即便提供了 JWT_SECRET 也不加密数据库字段。
+  // 不配置 DB_CIPHER（默認 none）：即便提供了 JWT_SECRET 也不加密資料庫欄位。
   const env = {
     DB_DRIVER: "counting",
     JWT_SECRET: "test-config-encryption-secret",
@@ -198,7 +198,7 @@ test("saveDb: without DB_CIPHER sensitive fields are written as plaintext", asyn
   assert.equal(persisted.users[0].password, "password-hash")
 })
 
-test("getDb: 五个无参 getter 复用同一份缓存快照", async () => {
+test("getDb: 五個無參 getter 複用同一份快取快照", async () => {
   __resetDbCacheForTest()
   const { backend, stats } = createCountingBackend({
     ...SAMPLE,
@@ -208,8 +208,8 @@ test("getDb: 五个无参 getter 复用同一份缓存快照", async () => {
 
   setEnvCtx({ DB_DRIVER: "counting" })
 
-  // getSettings/getUsers/getStorages/getMetas/getPlugins 均为无参调用 getDb()。
-  // 本用例的核心断言是 load 次数：修复前每个 getter 都各触发一次完整冷加载。
+  // getSettings/getUsers/getStorages/getMetas/getPlugins 均為無參調用 getDb()。
+  // 本用例的核心斷言是 load 次數：修復前每個 getter 都各觸發一次完整冷加載。
   const [settings, users, storages, metas, plugins] = await Promise.all([
     mod.getSettings(),
     mod.getUsers(),
@@ -221,9 +221,9 @@ test("getDb: 五个无参 getter 复用同一份缓存快照", async () => {
   assert.equal(
     stats.load,
     1,
-    "五个无参 getter 并发调用应合并为一次 load（修复前为 5 次）",
+    "五個無參 getter 併發調用應合併為一次 load（修復前為 5 次）",
   )
-  // getSettings() 返回「key -> value」的扁平对象，而非数组。
+  // getSettings() 返回「key -> value」的扁平對象，而非數組。
   assert.equal(settings.site_title, "OpenList")
   assert.equal(users[0].username, "admin")
   assert.ok(Array.isArray(storages))
@@ -231,7 +231,7 @@ test("getDb: 五个无参 getter 复用同一份缓存快照", async () => {
   assert.ok(Array.isArray(plugins))
 })
 
-test("getDb: TTL 过期后允许重新加载（缓存不是永久固化）", async () => {
+test("getDb: TTL 過期後允許重新加載（快取不是永久固化）", async () => {
   __resetDbCacheForTest()
   const { backend, stats } = createCountingBackend(SAMPLE)
   __setStoreBackendLoaderForTest(async () => backend)
@@ -241,13 +241,13 @@ test("getDb: TTL 过期后允许重新加载（缓存不是永久固化）", asy
   await getDb()
   assert.equal(stats.load, 1)
 
-  // 等待 TTL（1s）过期，模拟跨请求/长时间空闲后的重新加载。
+  // 等待 TTL（1s）過期，模擬跨請求/長時間空閒後的重新加載。
   await new Promise((r) => setTimeout(r, 1100))
   await getDb()
-  assert.equal(stats.load, 2, "TTL 过期后应重新 load，以获取其他实例的写入")
+  assert.equal(stats.load, 2, "TTL 過期後應重新 load，以獲取其他實例的寫入")
 })
 
-test("getDb: __resetDbCacheForTest 同时复位写前守卫状态", async () => {
+test("getDb: __resetDbCacheForTest 同時復位寫前守衛狀態", async () => {
   __resetDbCacheForTest()
   const { backend } = createCountingBackend(SAMPLE)
   __setStoreBackendLoaderForTest(async () => backend)
@@ -256,9 +256,9 @@ test("getDb: __resetDbCacheForTest 同时复位写前守卫状态", async () => 
   setEnvCtx(env)
 
   await getDb()
-  assert.equal(mod.isDbTrusted(), true, "成功加载后应标记为内存库可信")
+  assert.equal(mod.isDbTrusted(), true, "成功加載後應標記為記憶體庫可信")
 
-  // 写回一个空壳 → 必被守卫拦截，并留下 dbWriteBlocked 标记。
+  // 寫回一個空殼 → 必被守衛攔截，並留下 dbWriteBlocked 標記。
   const blocked = await saveDb({
     settings: [],
     users: [],
@@ -267,13 +267,13 @@ test("getDb: __resetDbCacheForTest 同时复位写前守卫状态", async () => 
     metas: [],
     plugins: [],
   })
-  assert.equal(blocked, false, "空壳写入必须被拒绝")
-  assert.equal(mod.isDbWriteBlocked(), true, "守卫应记录本次拦截")
+  assert.equal(blocked, false, "空殼寫入必須被拒絕")
+  assert.equal(mod.isDbWriteBlocked(), true, "守衛應記錄本次攔截")
 
-  // 关键断言：reset 之后这些模块级状态必须回到初始态，否则用例结果会取决于
-  // 执行顺序（db_write_guard.test.ts 直接断言 isDbTrusted / isDbWriteBlocked）。
+  // 關鍵斷言：reset 之後這些模塊級狀態必須回到初始態，否則用例結果會取決於
+  // 執行順序（db_write_guard.test.ts 直接斷言 isDbTrusted / isDbWriteBlocked）。
   __resetDbCacheForTest()
-  assert.equal(mod.isDbTrusted(), false, "reset 后应回到「不可信」")
-  assert.equal(mod.isDbWriteBlocked(), false, "reset 后应清除拦截标记")
-  assert.equal(mod.getDbLoadError(), null, "reset 后不应残留读取错误")
+  assert.equal(mod.isDbTrusted(), false, "reset 後應回到「不可信」")
+  assert.equal(mod.isDbWriteBlocked(), false, "reset 後應清除攔截標記")
+  assert.equal(mod.getDbLoadError(), null, "reset 後不應殘留讀取錯誤")
 })

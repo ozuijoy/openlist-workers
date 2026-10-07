@@ -1,6 +1,6 @@
-// Virtual driver — 虚拟目录驱动（压测 / 占位）
+// Virtual driver — 虛擬目錄驅動（壓測 / 佔位）
 // 移植自 OpenList Go 版 drivers/virtual。
-// 生成指定数量的随机占位文件与目录，下载时返回随机数据流（DummyMFile）。
+// 生成指定數量的隨機佔位文件與目錄，下載時返回隨機資料流（DummyMFile）。
 import {
   StorageDriver,
   FileItem,
@@ -84,8 +84,8 @@ export class VirtualDriver implements StorageDriver {
   async put(): Promise<void> {}
 
   /**
-   * 随机数据流，支持 Range。raw.ts 检测到 createReadStream 时走流式下载
-   * （虚拟文件无真实 raw_url，因此依赖此方法返回内容）。
+   * 隨機資料流，支持 Range。raw.ts 檢測到 createReadStream 時走流式下載
+   * （虛擬文件無真實 raw_url，因此依賴此方法返回內容）。
    */
   async createReadStream(
     _physicalPath: string,

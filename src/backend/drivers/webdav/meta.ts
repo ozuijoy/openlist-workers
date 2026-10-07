@@ -2,8 +2,8 @@ export const config = {
   name: "WebDav",
   localSort: true,
   defaultRoot: "/",
-  // 对齐 Go drivers/webdav/meta.go 的 PreferProxy: true。
-  // WebDAV 直链带认证信息，直接 302 给浏览器会丢认证，因此默认走服务端代理。
-  // 驱动能力表的唯一真相在 internal/driver/proxy.ts，此处不再重复登记。
+  // 對齊 Go drivers/webdav/meta.go 的 PreferProxy: true。
+  // WebDAV 直鏈帶認證信息，直接 302 給瀏覽器會丟認證，因此默認走服務端代理。
+  // 驅動能力表的唯一真相在 internal/driver/proxy.ts，此處不再重複登記。
   preferProxy: true,
 }

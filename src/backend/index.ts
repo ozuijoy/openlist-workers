@@ -11,13 +11,13 @@ import { storageErrorSummary, uiStorageError } from "./server/storage-error"
 const app = new Hono()
 
 /**
- * 静态资源 / SPA 壳路径：这些请求不应被存储配置错误拦截，
- * 否则前端连提示页面都加载不出来。
+ * 靜態資源 / SPA 殼路徑：這些請求不應被儲存配置錯誤攔截，
+ * 否則前端連提示頁面都加載不出來。
  */
 function isStaticOrShell(pathname: string, accept: string, method: string): boolean {
-  // 带扩展名的静态文件
+  // 帶擴展名的靜態文件
   if (/\.[a-zA-Z0-9]+$/.test(pathname)) return true
-  // 浏览器导航请求（HTML）由 SPA 壳承载
+  // 瀏覽器導航請求（HTML）由 SPA 殼承載
   if ((method === "GET" || method === "HEAD") && accept.includes("text/html")) {
     return true
   }
@@ -25,23 +25,23 @@ function isStaticOrShell(pathname: string, accept: string, method: string): bool
 }
 
 /**
- * 诊断类接口：必须豁免存储配置错误拦截。
+ * 診斷類介面：必須豁免儲存配置錯誤攔截。
  *
- * 这类接口存在的意义就是「报告哪里出了问题」。若在存储出错时把它们也
- * 一并 503 掉，调用方只会看到一个空洞的失败，拿不到任何可操作信息
- * （前端表现为「只显示存储不可用，其余字段全部空白」）。
+ * 這類介面存在的意義就是「報告哪裡出了問題」。若在儲存出錯時把它們也
+ * 一併 503 掉，調用方只會看到一個空洞的失敗，拿不到任何可操作信息
+ * （前端表現為「只顯示儲存不可用，其餘欄位全部空白」）。
  *
- * 注意：豁免的是「拦截」，不是「鉴权」。这些接口本身仍是免鉴权的公开
- * 诊断端点，且只返回脱敏后的状态，不泄露密钥或 DSN。
+ * 注意：豁免的是「攔截」，不是「鑑權」。這些介面本身仍是免鑑權的公開
+ * 診斷端點，且只返回脫敏後的狀態，不洩露密鑰或 DSN。
  */
 const DIAGNOSTIC_PATHS = [
-  // 环境自检：返回 config/storage/jwt/ready/issues 全量诊断
+  // 環境自檢：返回 config/storage/jwt/ready/issues 全量診斷
   "/api/public/env_check",
-  // 初始化状态：存储不可用时必须能报告「未初始化」，否则前端无法
-  // 判断该停留在初始化向导还是跳转登录页。
+  // 初始化狀態：儲存不可用時必須能報告「未初始化」，否則前端無法
+  // 判斷該停留在初始化嚮導還是跳轉登入頁。
   "/api/public/init_status",
-  // 真实就绪探针：存储故障时应由它自己给出结构化 503，
-  // 而不是被中间件替换成通用错误。
+  // 真實就緒探針：儲存故障時應由它自己給出結構化 503，
+  // 而不是被中間件替換成通用錯誤。
   "/api/healthz",
 ]
 
@@ -50,19 +50,19 @@ function isDiagnosticPath(pathname: string): boolean {
 }
 
 /**
- * KV 代理传输端点（EdgeOne Edge Function 侧由 functions/kv-* 提供）。
+ * KV 代理傳輸端點（EdgeOne Edge Function 側由 functions/kv-* 提供）。
  *
- * 这些路径是「驱动探测/读写」的传输层，不是业务请求，本 Worker 也不提供它们
- * （只有 EdgeOne Edge Function / CF Pages Functions 才有）。必须两种情况都避开：
+ * 這些路徑是「驅動探測/讀寫」的傳輸層，不是業務請求，本 Worker 也不提供它們
+ * （只有 EdgeOne Edge Function / CF Pages Functions 才有）。必須兩種情況都避開：
  *
- *   1. **不走存储配置拦截**：kv 驱动的可用性判定就是向 `{origin}/kv-list` 发一次
- *      探测，而拦截逻辑会解析驱动 —— 若这些请求落进拦截，就会「探测请求 → 解析
- *      驱动 → 再探测自身」无限自调用（本地 `wrangler dev` 表现为满屏
- *      `GET /kv-list 503`，且耗时随嵌套层数不断增长）。
- *   2. **不能落进 SPA 兜底**：兜底会返回 index.html（HTTP 200），探测会把
- *      「拿到 HTML」误判成「KV 可用」，之后读写全部拿到 HTML 而报错。
+ *   1. **不走儲存配置攔截**：kv 驅動的可用性判定就是向 `{origin}/kv-list` 發一次
+ *      探測，而攔截邏輯會解析驅動 —— 若這些請求落進攔截，就會「探測請求 → 解析
+ *      驅動 → 再探測自身」無限自調用（本地 `wrangler dev` 表現為滿屏
+ *      `GET /kv-list 503`，且耗時隨嵌套層數不斷增長）。
+ *   2. **不能落進 SPA 兜底**：兜底會返回 index.html（HTTP 200），探測會把
+ *      「拿到 HTML」誤判成「KV 可用」，之後讀寫全部拿到 HTML 而報錯。
  *
- * 因此这里显式回 410：既明确说明本部署不提供该端点，也让探测得到干净的失败。
+ * 因此這裡顯式回 410：既明確說明本部署不提供該端點，也讓探測得到乾淨的失敗。
  */
 const KV_PROXY_PATHS = ["/kv-list", "/kv-get", "/kv-put", "/kv-delete"]
 
@@ -71,13 +71,13 @@ function isKvProxyPath(pathname: string): boolean {
 }
 
 app.use("*", async (c, next) => {
-  // 关键：每个请求注入 KV binding 上下文（CF Workers 多实例/冷启动时
-  // 模块级 globalEnvCtx 为 null，会导致 getDb()/saveDb() 退回内存模式，
-  // 网盘账号密码与 access_token 无法从 KV 持久化读取）
+  // 關鍵：每個請求注入 KV binding 上下文（CF Workers 多實例/冷啟動時
+  // 模塊級 globalEnvCtx 為 null，會導致 getDb()/saveDb() 退回記憶體模式，
+  // 網盤賬號密碼與 access_token 無法從 KV 持久化讀取）
   //
-  // EdgeOne 场景：KV 只能由 Edge Function 访问，Node 云函数需经 HTTP 代理
-  // 调用 /kv-* 。而 Node 的 fetch 不接受相对 URL，因此这里把当前请求的
-  // origin 注入 env，供 kv 驱动拼出绝对地址（同一部署内自调用）。
+  // EdgeOne 場景：KV 只能由 Edge Function 訪問，Node 雲函數需經 HTTP 代理
+  // 調用 /kv-* 。而 Node 的 fetch 不接受相對 URL，因此這裡把當前請求的
+  // origin 注入 env，供 kv 驅動拼出絕對地址（同一部署內自調用）。
   const env = (c.env || {}) as any
   try {
     const reqUrl = new URL(c.req.url)
@@ -85,38 +85,38 @@ app.use("*", async (c, next) => {
       env.__requestOrigin = reqUrl.origin
     }
   } catch {
-    // 忽略：无法解析时由驱动侧回退处理
+    // 忽略：無法解析時由驅動側回退處理
   }
 
   setEnvCtx(env)
 
-  // 存储配置错误全局拦截：任何依赖持久化的 API 都应立即得到明确错误，
-  // 而不是静默退回内存模式（表现为「操作成功但数据丢失」）。
-  // 静态资源与 SPA 壳放行，保证前端能加载并展示该错误。
+  // 儲存配置錯誤全局攔截：任何依賴持久化的 API 都應立即得到明確錯誤，
+  // 而不是靜默退回記憶體模式（表現為「操作成功但資料丟失」）。
+  // 靜態資源與 SPA 殼放行，保證前端能加載並展示該錯誤。
   const { pathname } = new URL(c.req.url)
   const exempt =
     isStaticOrShell(pathname, c.req.header("accept") || "", c.req.method) ||
     isDiagnosticPath(pathname) ||
-    // KV 代理传输端点：解析驱动会再探测自身，必须绕开（见 isKvProxyPath）
+    // KV 代理傳輸端點：解析驅動會再探測自身，必須繞開（見 isKvProxyPath）
     isKvProxyPath(pathname)
   if (!exempt) {
-    // 用 Detail 版本：除完整原因外还带分类码与一句话修复建议，前端据此
-    // 展示「哪里错了 + 该改成什么」。只给一段长文本时，用户（和日志读者）
-    // 能看到的只是「驱动不可用」，不知道该把 DB_DRIVER 改成什么。
+    // 用 Detail 版本：除完整原因外還帶分類碼與一句話修復建議，前端據此
+    // 展示「哪裡錯了 + 該改成什麼」。只給一段長文本時，用戶（和日誌讀者）
+    // 能看到的只是「驅動不可用」，不知道該把 DB_DRIVER 改成什麼。
     const detail = await getStoreConfigErrorDetail(env)
     if (detail.message) {
       const ui = uiStorageError(detail)
       return c.json(
         {
           code: 503,
-          // message 保持完整原因（兼容既有客户端与日志排查）
+          // message 保持完整原因（相容既有客戶端與日誌排查）
           message: detail.message,
           data: {
             error: "STORAGE_CONFIG_ERROR",
             code: detail.code,
             configError: detail.message,
-            // 界面展示 summary（完整一句短原因）+ suggestion（怎么改）；
-            // reason 是截断后的完整说明，留给工具与日志阅读。
+            // 界面展示 summary（完整一句短原因）+ suggestion（怎麼改）；
+            // reason 是截斷後的完整說明，留給工具與日誌閱讀。
             summary: storageErrorSummary(detail.message),
             reason: ui.reason,
             suggestion: ui.suggestion,
@@ -130,12 +130,12 @@ app.use("*", async (c, next) => {
   await next()
 })
 
-// 在 Serverless 环境中，所有逻辑都是无状态的且由请求触发。
-// 这里不应该初始化任何常驻的后台任务 (如 Cron 或 线程池)。
+// 在 Serverless 環境中，所有邏輯都是無狀態的且由請求觸發。
+// 這裡不應該初始化任何常駐的後台任務 (如 Cron 或 執行緒池)。
 
-// KV 代理传输端点：本部署不提供（只有 EdgeOne Edge Function / CF Pages
-// Functions 的 functions/kv-* 提供）。显式回 410，避免这些请求落进 SPA 兜底
-// 被当成「HTTP 200」而让 kv 驱动误判为可用（详见 isKvProxyPath 注释）。
+// KV 代理傳輸端點：本部署不提供（只有 EdgeOne Edge Function / CF Pages
+// Functions 的 functions/kv-* 提供）。顯式回 410，避免這些請求落進 SPA 兜底
+// 被當成「HTTP 200」而讓 kv 驅動誤判為可用（詳見 isKvProxyPath 註釋）。
 for (const path of KV_PROXY_PATHS) {
   app.all(path, (c) =>
     c.json(
@@ -153,7 +153,7 @@ for (const path of KV_PROXY_PATHS) {
   )
 }
 
-// 挂载 API 到 /api
+// 掛載 API 到 /api
 const api = new Hono()
 setupRouter(api)
 app.route("/api", api)
@@ -163,17 +163,17 @@ app.route("/d", rawRouter)
 app.route("/sd", rawRouter)
 app.route("/p", rawRouter)
 
-// 内嵌品牌资源（logo/favicon），必须在 SPA 兜底 app.all("*") 之前挂载
+// 內嵌品牌資源（logo/favicon），必須在 SPA 兜底 app.all("*") 之前掛載
 app.route("/", assetsRouter)
 
-// WebDAV 协议服务（/dav/*），必须在 SPA 兜底之前挂载
+// WebDAV 協議服務（/dav/*），必須在 SPA 兜底之前掛載
 app.route("/dav", webdavRouter)
 
-// S3 网关（/s3/*），必须在 SPA 兜底之前挂载
+// S3 網關（/s3/*），必須在 SPA 兜底之前掛載
 app.route("/s3", s3Router)
 
-// SPA 兜底 HTML（由 EdgeOne 入口 api/_makers.ts 在构建期注入 dist/index.html；
-// 其他平台入口不注入，保持原有 ASSETS / 404 行为）
+// SPA 兜底 HTML（由 EdgeOne 入口 api/_makers.ts 在構建期注入 dist/index.html；
+// 其他平台入口不注入，保持原有 ASSETS / 404 行為）
 let spaFallbackHtml: string | null = null
 
 export function setSpaFallbackHtml(html: string) {
@@ -186,54 +186,54 @@ app.all("*", async (c) => {
   if (env && env.ASSETS && typeof env.ASSETS.fetch === "function") {
     const res = await env.ASSETS.fetch(c.req.raw)
     if (res.status >= 200 && res.status < 300) {
-      // 修复「部署新版本后生产环境仍是旧界面」：index.html 若不设缓存头，
-      // 会被 Cloudflare 边缘/浏览器长期缓存，导致旧 HTML 引用旧 hash 的 JS/CSS。
-      // 只对 HTML 入口 no-cache（JS/CSS 带 hash 可安全长期缓存）。
+      // 修復「部署新版本後生產環境仍是舊界面」：index.html 若不設快取頭，
+      // 會被 Cloudflare 邊緣/瀏覽器長期快取，導致舊 HTML 引用舊 hash 的 JS/CSS。
+      // 只對 HTML 入口 no-cache（JS/CSS 帶 hash 可安全長期快取）。
       if (url.pathname === "/" || url.pathname === "/index.html") {
         const headers = new Headers(res.headers)
         headers.set("Cache-Control", "no-cache, must-revalidate")
         headers.set("Content-Type", "text/html; charset=utf-8")
-        // 未配置 ASSET_URLS 时零开销直通：不改写 HTML，流式透传响应体
+        // 未配置 ASSET_URLS 時零開銷直通：不改寫 HTML，流式透傳響應體
         if (!isCdnConfigured(env)) {
           return new Response(res.body, { status: res.status, headers })
         }
-        // HTML 入口：注入 cdn 让浏览器直连 CDN 取静态资源。优先用本地 HTML
-        // （CDN 上有同一套哈希时，npmmirror 这类不返回 .html 的 CDN 也能用），
-        // 否则改用 CDN 自己的 index.html 保证哈希同源；都不可用则不注入。
-        // body 会被读成字符串，必须清掉编码/长度头，否则浏览器按「已编码」解析明文。
+        // HTML 入口：注入 cdn 讓瀏覽器直連 CDN 取靜態資源。優先用本地 HTML
+        // （CDN 上有同一套哈希時，npmmirror 這類不返回 .html 的 CDN 也能用），
+        // 否則改用 CDN 自己的 index.html 保證哈希同源；都不可用則不注入。
+        // body 會被讀成字符串，必須清掉編碼/長度頭，否則瀏覽器按「已編碼」解析明文。
         headers.delete("content-encoding")
         headers.delete("content-length")
         let html = await res.text()
         try {
           html = await getIndexHtmlWithCdn(env, html)
         } catch {
-          // 注入失败不影响 HTML 正常返回
+          // 注入失敗不影響 HTML 正常返回
         }
         return new Response(html, { status: res.status, headers })
       }
       return res
     }
-    // 静态层未命中：静态资源目录 302 到 CDN（对齐 Go 版 static.go 的 folders 重定向）。
-    // 资源存在时静态层已直接返回、Worker 不会执行，所以走到这里说明源站确实没有
-    // 这个文件 —— 若不重定向，下面的 SPA 兜底会把 index.html 当作 .js/.css 返回，
-    // 浏览器按 text/html 解析后报错。
+    // 靜態層未命中：靜態資源目錄 302 到 CDN（對齊 Go 版 static.go 的 folders 重定向）。
+    // 資源存在時靜態層已直接返回、Worker 不會執行，所以走到這裡說明源站確實沒有
+    // 這個文件 —— 若不重定向，下面的 SPA 兜底會把 index.html 當作 .js/.css 返回，
+    // 瀏覽器按 text/html 解析後報錯。
     const toCdn = await cdnAssetRedirect(env, url.pathname + url.search)
     if (toCdn) return c.redirect(toCdn, 302)
     // SPA fallback: return index.html for non-asset routes (e.g. /login, /manage)
-    // 注意：ASSETS.fetch 对 /index.html 也可能返回 307，直接 fetch "/" 获取实际 HTML
+    // 注意：ASSETS.fetch 對 /index.html 也可能返回 307，直接 fetch "/" 獲取實際 HTML
     const rootReq = new Request(`${url.origin}/`, c.req.raw)
     const rootRes = await env.ASSETS.fetch(rootReq)
     const headers = new Headers(rootRes.headers)
     headers.set("Content-Type", "text/html; charset=utf-8")
-    // HTML 入口必须 no-cache，否则新版本部署后旧 HTML 仍引用旧 hash 的 JS/CSS
+    // HTML 入口必須 no-cache，否則新版本部署後舊 HTML 仍引用舊 hash 的 JS/CSS
     headers.set("Cache-Control", "no-cache, must-revalidate")
-    // 只有「已配置 CDN + 2xx + GET/HEAD」才改写 HTML，其余情况一律
-    // 「状态码 + headers + body 流」原样透传：
-    //   - 未配置 ASSET_URLS：零开销直通，不把 body 读成字符串再重建响应
-    //     （否则每次深链刷新都白付一次缓冲，并丢掉流式透传）；
-    //   - 非 2xx（如 /index.html 的 307、兜底子请求的 404）：
-    //     改写会把状态码抹平成一个 200 + HTML 空壳，掩盖真实错误；
-    //   - 非 GET/HEAD：HTML 改写只对页面导航有意义。
+    // 只有「已配置 CDN + 2xx + GET/HEAD」才改寫 HTML，其餘情況一律
+    // 「狀態碼 + headers + body 流」原樣透傳：
+    //   - 未配置 ASSET_URLS：零開銷直通，不把 body 讀成字符串再重建響應
+    //     （否則每次深鏈刷新都白付一次緩衝，並丟掉流式透傳）；
+    //   - 非 2xx（如 /index.html 的 307、兜底子請求的 404）：
+    //     改寫會把狀態碼抹平成一個 200 + HTML 空殼，掩蓋真實錯誤；
+    //   - 非 GET/HEAD：HTML 改寫只對頁面導航有意義。
     const rewritable =
       isCdnConfigured(env) &&
       rootRes.status >= 200 &&
@@ -242,37 +242,37 @@ app.all("*", async (c) => {
     if (!rewritable) {
       return new Response(rootRes.body, { status: rootRes.status, headers })
     }
-    // body 会被读成字符串，必须清掉编码/长度头，否则浏览器按「已编码」解析明文
+    // body 會被讀成字符串，必須清掉編碼/長度頭，否則瀏覽器按「已編碼」解析明文
     headers.delete("content-encoding")
     headers.delete("content-length")
     let html = await rootRes.text()
     try {
       html = await getIndexHtmlWithCdn(env, html)
     } catch {
-      // 注入失败不影响 SPA 兜底
+      // 注入失敗不影響 SPA 兜底
     }
     return new Response(html, { status: rootRes.status, headers })
   }
-  // EdgeOne 等 ASSETS 缺席的环境：静态层未命中时同样先尝试 302 到 CDN，
-  // 避免把 SPA 壳当作缺失的 .js/.css 返回
+  // EdgeOne 等 ASSETS 缺席的環境：靜態層未命中時同樣先嚐試 302 到 CDN，
+  // 避免把 SPA 殼當作缺失的 .js/.css 返回
   const toCdnNoAssets = await cdnAssetRedirect(env, url.pathname + url.search)
   if (toCdnNoAssets) return c.redirect(toCdnNoAssets, 302)
-  // EdgeOne 等 ASSETS 缺席的环境：直接返回构建期内联的 SPA 壳，
-  // 避免前端路由（/add、/@manage/* 等）落到 404 文本导致整站不可达
+  // EdgeOne 等 ASSETS 缺席的環境：直接返回構建期內聯的 SPA 殼，
+  // 避免前端路由（/add、/@manage/* 等）落到 404 文本導致整站不可達
   if (spaFallbackHtml && (c.req.method === "GET" || c.req.method === "HEAD")) {
-    // 未配置 ASSET_URLS 时直接返回构建期内联的壳，省掉一次无意义的 async 调用；
-    // 配置了则从 CDN 拉取并注入 —— 不修改模块级 spaFallbackHtml，避免并发污染。
+    // 未配置 ASSET_URLS 時直接返回構建期內聯的殼，省掉一次無意義的 async 調用；
+    // 配置了則從 CDN 拉取並注入 —— 不修改模塊級 spaFallbackHtml，避免併發汙染。
     let html = spaFallbackHtml
     if (isCdnConfigured(env)) {
       try {
         html = await getIndexHtmlWithCdn(env, html)
       } catch {
-        // 注入失败时返回原始 SPA 壳
+        // 注入失敗時返回原始 SPA 殼
       }
     }
     return c.body(html, 200, {
       "Content-Type": "text/html; charset=utf-8",
-      // HTML 入口必须 no-cache，否则新版本部署后旧 HTML 仍引用旧 hash 的 JS/CSS
+      // HTML 入口必須 no-cache，否則新版本部署後舊 HTML 仍引用舊 hash 的 JS/CSS
       "Cache-Control": "no-cache, must-revalidate",
     })
   }

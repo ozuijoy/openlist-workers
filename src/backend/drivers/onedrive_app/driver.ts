@@ -161,8 +161,8 @@ export class OnedriveAPP implements StorageDriver {
     physicalPath: string,
     names: string[],
   ): Promise<void> {
-    // physicalPath 是目标项自身的物理路径（op/storage.ts 逐项调用），
-    // 参数即目标项路径，不得再拼 name，否则指向 <item>/<name>，DELETE 404 导致对象仍然存在。
+    // physicalPath 是目標項自身的物理路徑（op/storage.ts 逐項調用），
+    // 參數即目標項路徑，不得再拼 name，否則指向 <item>/<name>，DELETE 404 導致對象仍然存在。
     const url = getMetaUrl(this, false, physicalPath)
     await requestApi(this, url, "DELETE")
   }
@@ -174,10 +174,10 @@ export class OnedriveAPP implements StorageDriver {
     srcPhys: string,
     dstPhys: string,
   ): Promise<void> {
-    // srcPhys/dstPhys 是源/目标项自身的物理路径（已含 name，参数即目标项路径，
-    // 不得再拼 name，否则指向 <item>/<name>）：
-    // 目标父目录取 dstPhys 去掉末段（直接 GET dstPhys 拿到的是目标项本身，通常还不存在），
-    // 目标名字以 dstPhys 末段为准，源项路径则直接使用 srcPhys。
+    // srcPhys/dstPhys 是源/目標項自身的物理路徑（已含 name，參數即目標項路徑，
+    // 不得再拼 name，否則指向 <item>/<name>）：
+    // 目標父目錄取 dstPhys 去掉末段（直接 GET dstPhys 拿到的是目標項本身，通常還不存在），
+    // 目標名字以 dstPhys 末段為準，源項路徑則直接使用 srcPhys。
     const dstParentPath = dstPhys.split("/").slice(0, -1).join("/") || "/"
     const dstUrl = getMetaUrl(this, false, dstParentPath)
     const dstRes = await requestApi<any>(this, dstUrl, "GET")
@@ -202,8 +202,8 @@ export class OnedriveAPP implements StorageDriver {
     srcPhys: string,
     dstPhys: string,
   ): Promise<void> {
-    // 与 move 同理：参数是目标项自身路径，不得再拼 name；
-    // 目标父目录 = dstPhys 去掉末段，目标名字取 dstPhys 末段，源项路径直接使用 srcPhys。
+    // 與 move 同理：參數是目標項自身路徑，不得再拼 name；
+    // 目標父目錄 = dstPhys 去掉末段，目標名字取 dstPhys 末段，源項路徑直接使用 srcPhys。
     const dstParentPath = dstPhys.split("/").slice(0, -1).join("/") || "/"
     const dstUrl = getMetaUrl(this, false, dstParentPath)
     const dstRes = await requestApi<any>(this, dstUrl, "GET")

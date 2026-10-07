@@ -1,4 +1,4 @@
-// UrlTree driver types — 从文本定义的 URL 树构建虚拟文件系统
+// UrlTree driver types — 從文本定義的 URL 樹構建虛擬文件系統
 export interface UrlTreeAddition {
   url_structure: string
   head_size?: boolean

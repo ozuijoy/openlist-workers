@@ -1,4 +1,4 @@
-// MoPan (中国移动和彩云) driver
+// MoPan (中國移動和彩雲) driver
 // Ported from: https://github.com/OpenListTeam/OpenList/tree/main/drivers/mopan
 import {
   StorageDriver,
@@ -244,7 +244,7 @@ export class MoPanDriver implements StorageDriver {
 
   async mkdir(_virtualPath: string, physicalPath: string): Promise<void> {
     const parts = physicalPath.split("/").filter(Boolean)
-    const name = parts.pop() || "新文件夹"
+    const name = parts.pop() || "新文件夾"
     const parentPath = parts.join("/")
     const parentId = await this.resolveFolderId(parentPath)
 
@@ -275,9 +275,9 @@ export class MoPanDriver implements StorageDriver {
     srcPhys: string,
     dstPhys: string,
   ): Promise<void> {
-    // srcPhys/dstPhys 是源/目标项自身的物理路径（op/storage.ts moveItems 逐项调用），
-    // 参数即目标项路径，不得再拼 name，否则指向 `<item>/<name>` 这种不存在的路径。
-    // 目标文件夹取 dstPhys 去掉末段后的父目录。
+    // srcPhys/dstPhys 是源/目標項自身的物理路徑（op/storage.ts moveItems 逐項調用），
+    // 參數即目標項路徑，不得再拼 name，否則指向 `<item>/<name>` 這種不存在的路徑。
+    // 目標文件夾取 dstPhys 去掉末段後的父目錄。
     const srcItem = await this.get(srcDir, srcPhys)
     const dstFolderPath = dstPhys.split("/").slice(0, -1).join("/")
     const dstFolderId = await this.resolveFolderId(dstFolderPath)
@@ -292,7 +292,7 @@ export class MoPanDriver implements StorageDriver {
     srcPhys: string,
     dstPhys: string,
   ): Promise<void> {
-    // 同 move：srcPhys/dstPhys 已是目标项自身路径，参数即目标项路径，不得再拼 name。
+    // 同 move：srcPhys/dstPhys 已是目標項自身路徑，參數即目標項路徑，不得再拼 name。
     const srcItem = await this.get(srcDir, srcPhys)
     const dstFolderPath = dstPhys.split("/").slice(0, -1).join("/")
     const dstFolderId = await this.resolveFolderId(dstFolderPath)

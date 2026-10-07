@@ -1,4 +1,4 @@
-// 豆包网盘 API 客户端
+// 豆包網盤 API 客戶端
 import {
   DriverDoubaoAddition,
   DoubaoFile,
@@ -87,7 +87,7 @@ export class ClientDoubao {
     return all
   }
 
-  /** 下载链接 */
+  /** 下載鏈接 */
   async getDownloadUrl(file: DoubaoFile): Promise<string> {
     if (this.downloadApi === "get_download_info") {
       const resp = await this.request<DoubaoCommonResp>("/samantha/aispace/get_download_info", {
@@ -98,7 +98,7 @@ export class ClientDoubao {
       if (!url) throw new Error("[Doubao] empty download url")
       return url
     }
-    // get_file_url（默认）
+    // get_file_url（默認）
     if (file.node_type === VideoType || file.node_type === AudioType) {
       const resp = await this.request<DoubaoCommonResp>("/samantha/media/get_play_info", {
         key: file.key,

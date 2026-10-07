@@ -1,31 +1,31 @@
 /**
- * JSON / KV / Blob 后端（默认后端）。
+ * JSON / KV / Blob 後端（默認後端）。
  *
- * 从原 db.ts 原样迁移：EdgeOne Blob SDK、Cloudflare/EdgeOne KV binding、
- * Cloudflare KV REST API、内存回退。行为与原实现完全一致。
+ * 從原 db.ts 原樣遷移：EdgeOne Blob SDK、Cloudflare/EdgeOne KV binding、
+ * Cloudflare KV REST API、記憶體回退。行為與原實現完全一致。
  */
 import type { StoreBackend } from "./types"
 import { sanitizeProxyOrigin } from "./proxy"
 
-// 保持既有引用路径不变（scripts/_regress.mjs 通过 jsonMod 访问）
+// 保持既有引用路徑不變（scripts/_regress.mjs 通過 jsonMod 訪問）
 export { sanitizeProxyOrigin } from "./proxy"
 
 // ---- EdgeOne Blob SDK (HTTP API, avoids Redis RESP protocol crashes) ----
 let _blobStore: any = null
 
 /**
- * 探测次数上限。
+ * 探測次數上限。
  *
- * 只缓存「成功」结果，失败不缓存：
- * 冷启动早期 SDK 可能尚未就绪，若把失败也永久缓存，会导致整个实例
- * 生命周期内再也不会尝试，表现为「明明能用却一直报无持久化后端」。
- * 同时设上限避免每个请求都重复探测。
+ * 只快取「成功」結果，失敗不快取：
+ * 冷啟動早期 SDK 可能尚未就緒，若把失敗也永久快取，會導致整個實例
+ * 生命週期內再也不會嘗試，表現為「明明能用卻一直報無持久化後端」。
+ * 同時設上限避免每個請求都重複探測。
  */
 let _blobProbeCount = 0
 
 async function getBlobStore(): Promise<any | null> {
-  if (_blobStore) return _blobStore // 成功过：直接复用
-  if (_blobProbeCount >= 3) return null // 连续失败：不再重试
+  if (_blobStore) return _blobStore // 成功過：直接複用
+  if (_blobProbeCount >= 3) return null // 連續失敗：不再重試
   _blobProbeCount++
   try {
     // @ts-ignore
@@ -37,7 +37,7 @@ async function getBlobStore(): Promise<any | null> {
       consistency: "strong",
     } as any)
   } catch {
-    return null // 不缓存失败，允许后续请求重试
+    return null // 不快取失敗，允許後續請求重試
   }
   return _blobStore
 }
@@ -67,27 +67,27 @@ function installRespSafetyNet() {
   })
 }
 
-// JSON 后端的模块级环境上下文（与 db.ts 的 globalEnvCtx 并行维护，由
-// db.ts 的 setEnvCtx 同步写入）。
+// JSON 後端的模塊級環境上下文（與 db.ts 的 globalEnvCtx 並行維護，由
+// db.ts 的 setEnvCtx 同步寫入）。
 let jsonEnvCtx: any = null
 
 /**
- * getKvBinding() 的结果缓存。
+ * getKvBinding() 的結果快取。
  *
- * 为什么需要它：
- *   - getKvBinding() 每次都会重新探测 env.KV / globalThis.KV、尝试初始化
- *     Blob SDK，并打印 console.warn；
- *   - 登录失败计数、注销黑名单、审计日志读写都会调用它，单次请求可能命中数次。
- * 绑定只取决于 env 对象的身份（`1 env = 1 请求`），因此按 env 身份用 WeakMap
- * 记忆化既安全又足以消除重复探测与日志噪声。
+ * 為什麼需要它：
+ *   - getKvBinding() 每次都會重新探測 env.KV / globalThis.KV、嘗試初始化
+ *     Blob SDK，並打印 console.warn；
+ *   - 登入失敗計數、註銷黑名單、審計日誌讀寫都會調用它，單次請求可能命中數次。
+ * 綁定只取決於 env 對象的身份（`1 env = 1 請求`），因此按 env 身份用 WeakMap
+ * 記憶化既安全又足以消除重複探測與日誌噪聲。
  *
- * 缓存语义（重要）：
- *   - 成功结果（binding / blob / api / proxy）永久缓存：绑定在实例生命周期内
- *     不会变化；
- *   - `none`（探测不到任何 KV 风格绑定）只做短 TTL 缓存：既消除同一请求内的
- *     重复探测与重复告警，又保留「冷启动早期 SDK 尚未就绪、稍后重试即可用」的
- *     既有语义（见 getBlobStore() 的探测次数上限）。
- * 键是 env 对象本身，条目随 env 被 GC 回收，不会无限增长。
+ * 快取語義（重要）：
+ *   - 成功結果（binding / blob / api / proxy）永久快取：綁定在實例生命週期內
+ *     不會變化；
+ *   - `none`（探測不到任何 KV 風格綁定）只做短 TTL 快取：既消除同一請求內的
+ *     重複探測與重複告警，又保留「冷啟動早期 SDK 尚未就緒、稍後重試即可用」的
+ *     既有語義（見 getBlobStore() 的探測次數上限）。
+ * 鍵是 env 對象本身，條目隨 env 被 GC 回收，不會無限增長。
  */
 const KV_BINDING_NONE_TTL_MS = 1000
 
@@ -99,7 +99,7 @@ type KvBindingInfo = {
 
 const kvBindingCache = new WeakMap<object, KvBindingInfo & { ts: number }>()
 
-/** 读取缓存：`none` 结果超过 TTL 视为未命中，允许重新探测。 */
+/** 讀取快取：`none` 結果超過 TTL 視為未命中，允許重新探測。 */
 function readKvBindingCache(env: any): KvBindingInfo | null {
   if (!env || typeof env !== "object") return null
   const entry = kvBindingCache.get(env)
@@ -111,10 +111,10 @@ function readKvBindingCache(env: any): KvBindingInfo | null {
 }
 
 /**
- * 写入缓存并返回同一对象引用。
+ * 寫入快取並返回同一對象引用。
  *
- * 返回缓存条目本身（而不是另建对象）是为了让调用方在同一 TTL 窗口内拿到
- * **同一个引用**，行为可被测试直接断言。
+ * 返回快取條目本身（而不是另建對象）是為了讓調用方在同一 TTL 窗口內拿到
+ * **同一個引用**，行為可被測試直接斷言。
  */
 function writeKvBindingCache(env: any, info: KvBindingInfo): KvBindingInfo {
   const entry: KvBindingInfo & { ts: number } = { ...info, ts: Date.now() }
@@ -129,27 +129,27 @@ export function setJsonEnvCtx(env: any) {
 /**
  * Universal KV / Blob Storage Adapter for EdgeOne Makers & Cloudflare Workers
  *
- * 默认（auto）按以下顺序检测：
+ * 默認（auto）按以下順序檢測：
  *   1. @edgeone/pages-blob SDK (EdgeOne — HTTP API, no RESP crashes)
  *   2. KV namespace binding (Cloudflare Workers native)
  *   3. CF REST API (env vars)
  *   4. None (memory fallback)
  */
 /**
- * 判断一个对象是否是「可用的 Web KV binding」。
+ * 判斷一個對象是否是「可用的 Web KV binding」。
  *
- * 这一校验必不可少：EdgeOne Node 云函数也会注入一个名为 `KV` 的绑定，
- * 但它走 RESP/Redis 协议（TCP socket），调用 get/put 会抛出
+ * 這一校驗必不可少：EdgeOne Node 雲函數也會注入一個名為 `KV` 的綁定，
+ * 但它走 RESP/Redis 協議（TCP socket），調用 get/put 會拋出
  * "cannot find the collection by name"，而不是提供 Web KV API。
- * 只有具备 get() 且具备 put()/set() 的对象才算可用。
+ * 只有具備 get() 且具備 put()/set() 的對象才算可用。
  *
- * 同时排除字符串等原始值 —— 环境变量 `KV` 可能是绑定名（字符串），
- * 直接当绑定使用会得到 "kv.get is not a function"。
+ * 同時排除字符串等原始值 —— 環境變量 `KV` 可能是綁定名（字符串），
+ * 直接當綁定使用會得到 "kv.get is not a function"。
  */
 export function isWebKv(b: any): boolean {
   if (!b || typeof b !== "object") return false
-  // 属性访问可能触发异常 getter（代理对象、SDK 惰性初始化等），
-  // 任何异常都视为「不是可用绑定」，避免让探测本身崩溃。
+  // 屬性訪問可能觸發異常 getter（代理對象、SDK 惰性初始化等），
+  // 任何異常都視為「不是可用綁定」，避免讓探測本身崩潰。
   try {
     if (typeof b.get !== "function") return false
     return typeof b.put === "function" || typeof b.set === "function"
@@ -159,18 +159,18 @@ export function isWebKv(b: any): boolean {
 }
 
 /**
- * 创建基于 HTTP 代理的 KV 适配器。
+ * 創建基於 HTTP 代理的 KV 適配器。
  *
- * 用于 EdgeOne Node 云函数：拿不到 KV binding，必须经 Edge Function
- * （functions/kv-*）代为访问。对外暴露与原生 binding 相同的接口，
- * 使调用方（middlewares/auth/admin）无需感知差异。
+ * 用於 EdgeOne Node 雲函數：拿不到 KV binding，必須經 Edge Function
+ * （functions/kv-*）代為訪問。對外暴露與原生 binding 相同的介面，
+ * 使調用方（middlewares/auth/admin）無需感知差異。
  *
- * 实现**直接委托给 kvDriver**（该代理协议的唯一实现），避免同一协议
- * 在本文件中重复一份、与 driver/kv.ts 的行为产生漂移。
- * 这里只负责把 Driver 的 `string[]` 契约适配成 binding 的 `{name,key}[]`。
+ * 實現**直接委託給 kvDriver**（該代理協議的唯一實現），避免同一協議
+ * 在本文件中重複一份、與 driver/kv.ts 的行為產生漂移。
+ * 這裡只負責把 Driver 的 `string[]` 契約適配成 binding 的 `{name,key}[]`。
  *
- * kvDriver 用动态 import 引入：driver/kv.ts 需要本模块的
- * sanitizeProxyOrigin，静态互相导入会形成循环依赖。
+ * kvDriver 用動態 import 引入：driver/kv.ts 需要本模塊的
+ * sanitizeProxyOrigin，靜態互相導入會形成循環依賴。
  */
 function createProxyBinding(_origin: string, env: any): any {
   const load = async () => (await import("./driver/kv")).kvDriver
@@ -190,18 +190,18 @@ function createProxyBinding(_origin: string, env: any): any {
 
     async list(opts: { prefix?: string } = {}): Promise<{ keys: any[] }> {
       const keys = await (await load()).list(opts?.prefix || "", env)
-      // 兼容 binding 形态：调用方读取 k.name / k.key 两种写法
+      // 相容 binding 形態：調用方讀取 k.name / k.key 兩種寫法
       return { keys: keys.map((name) => ({ name, key: name })) }
     },
   }
 }
 
 /**
- * 「未探测到 KV 风格绑定」的告警是否已打印过。
+ * 「未探測到 KV 風格綁定」的告警是否已打印過。
  *
- * 该分支位于登录失败计数 / 注销黑名单 / 审计日志等热路径上，且此前每次调用都会
- * 打印一次，导致 serverless 日志被同一行刷屏（issue #51 的噪声来源之一）。
- * 每个进程提示一次即可：这是环境配置结论，不是每请求事件。
+ * 該分支位於登入失敗計數 / 註銷黑名單 / 審計日誌等熱路徑上，且此前每次調用都會
+ * 打印一次，導致 serverless 日誌被同一行刷屏（issue #51 的噪聲來源之一）。
+ * 每個進程提示一次即可：這是環境配置結論，不是每請求事件。
  */
 let kvNoneWarnedOnce = false
 
@@ -217,22 +217,22 @@ export async function getKvBinding(envCtx?: any): Promise<{
     envCtx || jsonEnvCtx || (typeof process !== "undefined" ? process.env : {})
   const g = typeof globalThis !== "undefined" ? (globalThis as any) : {}
 
-  // 结果缓存：同一 env 对象只解析一次绑定（详见 kvBindingCache 注释）。
+  // 結果快取：同一 env 對象只解析一次綁定（詳見 kvBindingCache 註釋）。
   const cached = readKvBindingCache(env)
   if (cached) return cached
 
   /**
-   * 原生 KV binding 探测。
+   * 原生 KV binding 探測。
    *
-   * 两点必须注意：
-   *  1. env 与 globalThis 需独立检查 —— env 为真值时不会回退到 globalThis，
-   *     而 EdgeOne Edge Functions 把绑定名注入为全局标识符。
-   *  2. 必须做接口形态校验 —— EdgeOne Node 云函数也会注入名为 `KV` 的绑定，
-   *     但它走 RESP/Redis 协议（TCP socket），调用 put/get 会抛
+   * 兩點必須注意：
+   *  1. env 與 globalThis 需獨立檢查 —— env 為真值時不會回退到 globalThis，
+   *     而 EdgeOne Edge Functions 把綁定名注入為全局標識符。
+   *  2. 必須做介面形態校驗 —— EdgeOne Node 雲函數也會注入名為 `KV` 的綁定，
+   *     但它走 RESP/Redis 協議（TCP socket），調用 put/get 會拋
    *     "cannot find the collection by name"，而非提供 Web KV API。
-   *     只有具备 get/put(或 set) 的对象才算可用的 KV binding。
+   *     只有具備 get/put(或 set) 的對象才算可用的 KV binding。
    *
-   * 绑定名统一为 `KV`（KV namespace binding 的通用约定名）。
+   * 綁定名統一為 `KV`（KV namespace binding 的通用約定名）。
    */
   const nativeKv = isWebKv(env?.KV)
     ? env.KV
@@ -240,8 +240,8 @@ export async function getKvBinding(envCtx?: any): Promise<{
       ? g.KV
       : null
 
-  // 0. EdgeOne Node 云函数：显式 DB_DRIVER=kv 且无原生 binding → 走 HTTP 代理。
-  //    放在 Blob 之前，确保用户显式选择的 KV 优先于自动探测出的 Blob。
+  // 0. EdgeOne Node 雲函數：顯式 DB_DRIVER=kv 且無原生 binding → 走 HTTP 代理。
+  //    放在 Blob 之前，確保用戶顯式選擇的 KV 優先於自動探測出的 Blob。
   const kvPreferred =
     String(env?.DB_DRIVER || "").trim().toLowerCase() === "kv"
   if (kvPreferred && !nativeKv) {
@@ -286,7 +286,7 @@ export async function getKvBinding(envCtx?: any): Promise<{
     )
   }
 
-  // 2. KV namespace binding（统一名为 KV）
+  // 2. KV namespace binding（統一名為 KV）
   if (nativeKv) {
     const isEdgeOne =
       Boolean(env && (env.EDGEONE || env.EO_REGION)) ||
@@ -303,7 +303,7 @@ export async function getKvBinding(envCtx?: any): Promise<{
     return writeKvBindingCache(env, bindingResult)
   }
 
-  // 3. Cloudflare REST API 模式（显式 DB_DRIVER=cfkv 或凭据齐全时自动启用）
+  // 3. Cloudflare REST API 模式（顯式 DB_DRIVER=cfkv 或憑據齊全時自動啟用）
   {
     const cfAccountId =
       env.CF_ACCOUNT ||
@@ -345,10 +345,10 @@ export async function getKvBinding(envCtx?: any): Promise<{
   const configuredDriver = String(env?.DB_DRIVER || "")
     .trim()
     .toLowerCase()
-  // 两重条件缺一不可：
-  //   - expectsKvStyleBackend：只有「本该用 KV/Blob」的部署，缺绑定才是异常；
-  //     显式配 d1/mysql/do 时 KV 缺失是设计使然，不该告警（否则误导用户）。
-  //   - !kvNoneWarnedOnce：每个进程只提示一次，避免日志刷屏。
+  // 兩重條件缺一不可：
+  //   - expectsKvStyleBackend：只有「本該用 KV/Blob」的部署，缺綁定才是異常；
+  //     顯式配 d1/mysql/do 時 KV 缺失是設計使然，不該告警（否則誤導用戶）。
+  //   - !kvNoneWarnedOnce：每個進程只提示一次，避免日誌刷屏。
   const expectsKvStyleBackend =
     !configuredDriver ||
     configuredDriver === "auto" ||
@@ -368,7 +368,7 @@ export async function getKvBinding(envCtx?: any): Promise<{
       )
     }
   }
-  // `none` 同样要写缓存：否则每次调用都会重新探测一遍并重新告警。
+  // `none` 同樣要寫快取：否則每次調用都會重新探測一遍並重新告警。
   return writeKvBindingCache(env, {
     binding: null,
     platform: "none",
@@ -455,7 +455,7 @@ async function saveToKv(
       // NOTE: only an explicit `false` counts as failure. Cloudflare KV's
       // put() resolves to void, so `undefined` must stay a success —
       // otherwise every normal write would be reported as failed.
-      // proxy 模式复用同一分支：适配器已实现 put/get/delete/list。
+      // proxy 模式複用同一分支：適配器已實現 put/get/delete/list。
       if (typeof binding.put === "function") {
         const putResult = await binding.put(key, valStr)
         const result = putResult !== false
@@ -524,36 +524,36 @@ export async function getKvStatus(envCtx?: any) {
   }
 }
 
-// ───────────────────────── 持久化密钥管理 ─────────────────────────
+// ───────────────────────── 持久化密鑰管理 ─────────────────────────
 //
-// 密钥（JWT 签名密钥、字段加密密钥）需要跨实例、跨冷启动保持一致，
-// 因此必须持久化。设计原则：
+// 密鑰（JWT 簽名密鑰、欄位加密密鑰）需要跨實例、跨冷啟動保持一致，
+// 因此必須持久化。設計原則：
 //
-//   1. 生成只发生在初始化（setup）阶段，且仅当键不存在时。
-//   2. 一旦写入，永不覆盖 —— 覆盖会导致已加密数据无法解密。
-//   3. 非初始化阶段只读；读不到就是故障，绝不重新生成。
-//   4. 判定依据是「键是否存在」，而不是「读取是否成功」。
+//   1. 生成只發生在初始化（setup）階段，且僅當鍵不存在時。
+//   2. 一旦寫入，永不覆蓋 —— 覆蓋會導致已加密資料無法解密。
+//   3. 非初始化階段只讀；讀不到就是故障，絕不重新生成。
+//   4. 判定依據是「鍵是否存在」，而不是「讀取是否成功」。
 //
-// 键名与数据库中的实体隔离，避免被通用 list(prefix) 误扫。
+// 鍵名與資料庫中的實體隔離，避免被通用 list(prefix) 誤掃。
 //
-// 历史实现只走 getKvBinding（仅探测 原生 KV / EdgeOne Blob / CF KV REST /
-// proxy），**没有 D1/MySQL 分支**。于是当用户按推荐配置 DB_DRIVER=d1 时，
-// 业务数据能正常落到 D1，密钥却读不到也写不进去（并打印误导性的
-// "memory-only mode" 日志），最终每次冷启动都生成新的随机 JWT_SECRET，
-// 导致多实例间签发/验签密钥不一致 —— 表现为下载、播放报
+// 歷史實現只走 getKvBinding（僅探測 原生 KV / EdgeOne Blob / CF KV REST /
+// proxy），**沒有 D1/MySQL 分支**。於是當用戶按推薦配置 DB_DRIVER=d1 時，
+// 業務資料能正常落到 D1，密鑰卻讀不到也寫不進去（並打印誤導性的
+// "memory-only mode" 日誌），最終每次冷啟動都生成新的隨機 JWT_SECRET，
+// 導致多實例間簽發/驗籤密鑰不一致 —— 表現為下載、播放報
 // "sign verify failed"（401）。
 //
-// 现在统一走 getStorageBackend()（与业务数据同一条驱动解析路径），
-// 因此 D1/MySQL/DO/KV/Blob 等所有驱动都能持久化密钥。
+// 現在統一走 getStorageBackend()（與業務資料同一條驅動解析路徑），
+// 因此 D1/MySQL/DO/KV/Blob 等所有驅動都能持久化密鑰。
 
 /**
- * 解析用于密钥读写的驱动。
+ * 解析用於密鑰讀寫的驅動。
  *
- * 复用业务数据的驱动解析（getStorageBackend），保证「业务数据存哪、
- * 密钥就存哪」，不会出现两者不一致。
+ * 複用業務資料的驅動解析（getStorageBackend），保證「業務資料存哪、
+ * 密鑰就存哪」，不會出現兩者不一致。
  *
- * 无可用驱动（如 serverless 环境未配置任何存储）时 getStorageBackend
- * 会抛出可读错误，由调用方捕获并按「无持久化」处理。
+ * 無可用驅動（如 serverless 環境未配置任何儲存）時 getStorageBackend
+ * 會拋出可讀錯誤，由調用方捕獲並按「無持久化」處理。
  */
 async function resolveSecretDriver(env: any) {
   const { getStorageBackend } = await import("./backend")
@@ -561,7 +561,7 @@ async function resolveSecretDriver(env: any) {
   return driver
 }
 
-/** 从持久化后端读取密钥，不存在或失败返回 null */
+/** 從持久化後端讀取密鑰，不存在或失敗返回 null */
 export async function readPersistedSecret(
   env: any,
   key: string,
@@ -570,7 +570,7 @@ export async function readPersistedSecret(
     const driver = await resolveSecretDriver(env)
     const val = await driver.get(key, env)
     if (val === null || val === undefined) return null
-    // 部分绑定的 get() 可能返回 Response 形态，兼容 text() 取值。
+    // 部分綁定的 get() 可能返回 Response 形態，相容 text() 取值。
     const resolved: any =
       typeof (val as any)?.text === "function" ? await (val as any).text() : val
     const str = String(resolved).trim()
@@ -582,10 +582,10 @@ export async function readPersistedSecret(
 }
 
 /**
- * 写入密钥。
+ * 寫入密鑰。
  *
- * 调用方需自行保证「仅在不存在时调用」，本函数不检查现有值
- * （见上方设计原则第 2 条）。
+ * 調用方需自行保證「僅在不存在時調用」，本函數不檢查現有值
+ * （見上方設計原則第 2 條）。
  */
 export async function writePersistedSecret(
   env: any,
@@ -605,7 +605,7 @@ export async function writePersistedSecret(
 }
 
 /**
- * 生成一个 64 位十六进制随机密钥，与 middlewares.ts 中的生成方式一致。
+ * 生成一個 64 位十六進制隨機密鑰，與 middlewares.ts 中的生成方式一致。
  */
 export function generateSecret(): string {
   const bytes = new Uint8Array(32)

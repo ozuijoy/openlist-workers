@@ -7,7 +7,7 @@ export interface ProtonDriveAddition {
   root_folder_id?: string
   use_reusable_login?: boolean
   chunk_size?: string
-  /** 可复用登录凭证（base64 编码的 JSON） */
+  /** 可複用登入憑證（base64 編碼的 JSON） */
   reusable_credential?: string
 }
 
@@ -162,7 +162,7 @@ export interface ProtonDraftResp {
   RevisionID: string
 }
 
-/** 可复用登录凭证（持久化到 addition，避免重复密码认证） */
+/** 可複用登入憑證（持久化到 addition，避免重複密碼認證） */
 export interface ProtonReusableCredential {
   UID: string
   AccessToken: string

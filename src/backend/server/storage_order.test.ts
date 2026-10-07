@@ -6,13 +6,13 @@ import { saveDb } from "../internal/model/db"
 import { adminRouter } from "./admin"
 
 /**
- * 存储「序号」（storage.order）必须真实生效 —— 对齐 Go：
+ * 儲存「序號」（storage.order）必須真實生效 —— 對齊 Go：
  *
- * - 虚拟根目录的挂载点顺序：`op.getStorageVirtualFilesByPath`
- *     先按 `Order` 升序，`Order` 相同时按 `MountPath` 升序；
- * - 后台存储列表：`internal/db.GetStorages`（`addStorageOrder` = `order, id`）。
+ * - 虛擬根目錄的掛載點順序：`op.getStorageVirtualFilesByPath`
+ *     先按 `Order` 升序，`Order` 相同時按 `MountPath` 升序；
+ * - 後台儲存列表：`internal/db.GetStorages`（`addStorageOrder` = `order, id`）。
  *
- * 此前 TS 两处都直接沿用数据库数组顺序，后台改「序号」后排序完全不变。
+ * 此前 TS 兩處都直接沿用資料庫數組順序，後台改「序號」後排序完全不變。
  */
 
 const storageRow = (
@@ -39,11 +39,11 @@ const dbWith = (storages: any[], settings: any[] = []) => ({
   metas: [],
 })
 
-test("根目录挂载点按 storage.order 升序、同序号按 mount_path 升序", async () => {
+test("根目錄掛載點按 storage.order 升序、同序號按 mount_path 升序", async () => {
   const env: any = {}
   await saveDb(
     dbWith([
-      // 数据库里的顺序刻意与 order 相反，确保测的是 order 而不是数组下标
+      // 資料庫裡的順序刻意與 order 相反，確保測的是 order 而不是數組下標
       storageRow(11, "/c", 2),
       storageRow(12, "/a", 1),
       storageRow(13, "/b", 2),
@@ -58,7 +58,7 @@ test("根目录挂载点按 storage.order 升序、同序号按 mount_path 升�
   )
 })
 
-test("序号相同时按 mount_path 升序（不依赖 id / 插入顺序）", async () => {
+test("序號相同時按 mount_path 升序（不依賴 id / 插入順序）", async () => {
   const env: any = {}
   await saveDb(
     dbWith([
@@ -76,7 +76,7 @@ test("序号相同时按 mount_path 升序（不依赖 id / 插入顺序）", as
   )
 })
 
-test("被禁用的存储不参与挂载点合并", async () => {
+test("被禁用的儲存不參與掛載點合併", async () => {
   const env: any = {}
   await saveDb(
     dbWith([
@@ -93,7 +93,7 @@ test("被禁用的存储不参与挂载点合并", async () => {
   )
 })
 
-test("后台存储列表按 order, id 升序返回（对齐 Go db.GetStorages）", async () => {
+test("後台儲存列表按 order, id 升序返回（對齊 Go db.GetStorages）", async () => {
   const env: any = { }
   await saveDb(
     dbWith(

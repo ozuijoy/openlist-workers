@@ -5,11 +5,11 @@ import { adminAuthMiddleware, matchCronSecret } from "./middlewares"
 
 export const taskRouter = new Hono()
 
-// 定时任务调度接口：刷新所有已启用网盘驱动的 Token / 状态并持久化
-// 仅管理员可触发（防止未授权用户探测存储配置/触发资源消耗）。
-// EdgeOne Schedules 等平台调度器无法附加 Authorization 头，
-// 因此复用 JWT_SECRET 作为调度密钥，调度请求可携带该密钥
-//（JSON body / query / X-Cron-Secret 头）通过 matchCronSecret 放行。
+// 定時任務調度介面：刷新所有已啟用網盤驅動的 Token / 狀態並持久化
+// 僅管理員可觸發（防止未授權用戶探測儲存配置/觸發資源消耗）。
+// EdgeOne Schedules 等平台調度器無法附加 Authorization 頭，
+// 因此複用 JWT_SECRET 作為調度密鑰，調度請求可攜帶該密鑰
+//（JSON body / query / X-Cron-Secret 頭）通過 matchCronSecret 放行。
 taskRouter.all(
   "/refresh",
   async (c, next) => {
@@ -27,8 +27,8 @@ taskRouter.all(
       try {
         const driver = await getDriver(s.driver, s)
         await driver.init?.()
-        // lanzou 驱动：主动校验 Cookie 是否过期（有效期约 15 天），
-        // 失效时标记 status=cookie_expired，管理后台可直接看到提示
+        // lanzou 驅動：主動校驗 Cookie 是否過期（有效期約 15 天），
+        // 失效時標記 status=cookie_expired，管理後台可直接看到提示
         if (
           typeof (driver as any).checkCookieValid === "function" &&
           /lanzou/i.test(String(s.driver))
@@ -133,9 +133,9 @@ taskRouter.post("/:type/clear_succeeded", (c) => {
   return c.json({ code: 200, message: "success", data: null })
 })
 
-// 以下接口在 TS Worker 中无意义：TS 不维护持久异步任务队列，
-// 所有文件操作均同步完成后立即返回。任务 ID / 进度 / 重试 / 取消
-// 等生命周期管理由 Go 后端负责，此处明确返回 501。
+// 以下介面在 TS Worker 中無意義：TS 不維護持久非同步任務佇列，
+// 所有文件操作均同步完成後立即返回。任務 ID / 進度 / 重試 / 取消
+// 等生命週期管理由 Go 後端負責，此處明確返回 501。
 const unsupportedTaskOp = (c: any) =>
   c.json(
     {

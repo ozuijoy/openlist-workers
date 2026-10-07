@@ -1,72 +1,72 @@
 /**
- * 审计日志模块 (Audit Log)
+ * 審計日誌模塊 (Audit Log)
  * 添加日期: 2026-09-05
  * 
- * 记录所有敏感操作，用于安全审计和合规性
+ * 記錄所有敏感操作，用於安全審計和合規性
  * 支持：
- * - 用户认证事件（登录、登出、失败）
- * - 权限变更
- * - 文件操作（上传、删除、分享）
- * - 配置变更
+ * - 用戶認證事件（登入、登出、失敗）
+ * - 權限變更
+ * - 文件操作（上傳、刪除、分享）
+ * - 配置變更
  */
 
 import type { Context } from "hono"
 
 /**
- * 审计日志级别
+ * 審計日誌級別
  */
 export enum AuditLevel {
-  INFO = "info",      // 一般信息（查看文件、下载）
-  WARN = "warn",      // 警告（登录失败、权限不足）
-  ERROR = "error",    // 错误（系统异常）
-  CRITICAL = "critical", // 严重（数据删除、权限变更）
+  INFO = "info",      // 一般信息（查看文件、下載）
+  WARN = "warn",      // 警告（登入失敗、權限不足）
+  ERROR = "error",    // 錯誤（系統異常）
+  CRITICAL = "critical", // 嚴重（資料刪除、權限變更）
 }
 
 /**
- * 审计日志类别
+ * 審計日誌類別
  */
 export enum AuditCategory {
-  AUTH = "auth",           // 认证相关
-  USER = "user",           // 用户管理
+  AUTH = "auth",           // 認證相關
+  USER = "user",           // 用戶管理
   FILE = "file",           // 文件操作
   SHARE = "share",         // 分享操作
-  CONFIG = "config",       // 配置变更
-  PERMISSION = "permission", // 权限变更
-  SYSTEM = "system",       // 系统操作
+  CONFIG = "config",       // 配置變更
+  PERMISSION = "permission", // 權限變更
+  SYSTEM = "system",       // 系統操作
 }
 
 /**
- * 审计日志条目
+ * 審計日誌條目
  */
 export interface AuditLogEntry {
   id: string
   timestamp: string // ISO 8601
   level: AuditLevel
   category: AuditCategory
-  action: string // 具体操作（如 "login", "delete_file", "update_permission"）
+  action: string // 具體操作（如 "login", "delete_file", "update_permission"）
   
-  // 用户信息
+  // 用戶信息
   user_id?: string
   username?: string
   ip_address?: string
   user_agent?: string
   
-  // 操作目标
+  // 操作目標
   resource_type?: string // 如 "file", "user", "config"
   resource_id?: string
   resource_name?: string
   
-  // 详细信息
+  // 詳細信息
   message: string
-  details?: Record<string, any> // 附加数据
+  details?: Record<string, any> // 附加資料
   
-  // 结果
+  // 結果
   success: boolean
   error_message?: string
 }
 
 /**
- * 审计日志存储接口
+ * 審計日誌儲存介面
  */
 export interface AuditLogStorage {
   write(entry: AuditLogEntry): Promise<void>
@@ -75,7 +75,7 @@ export interface AuditLogStorage {
 }
 
 /**
- * 审计日志查询过滤器
+ * 審計日誌查詢過濾器
  */
 export interface AuditLogQueryFilters {
   start_time?: string // ISO 8601
@@ -100,7 +100,7 @@ function generateId(): string {
 }
 
 /**
- * 从 Context 提取用户信息
+ * 從 Context 提取用戶信息
  */
 function extractUserInfo(c: Context): {
   user_id?: string
@@ -124,7 +124,7 @@ function extractUserInfo(c: Context): {
 }
 
 /**
- * 审计日志记录器
+ * 審計日誌記錄器
  */
 export class AuditLogger {
   private storage: AuditLogStorage
@@ -134,7 +134,7 @@ export class AuditLogger {
   }
 
   /**
-   * 记录审计日志
+   * 記錄審計日誌
    */
   async log(
     c: Context,
@@ -173,12 +173,12 @@ export class AuditLogger {
       await this.storage.write(entry)
     } catch (err) {
       console.error("[AuditLog] Failed to write log:", err)
-      // 不抛出异常，避免影响主业务
+      // 不拋出異常，避免影響主業務
     }
   }
 
   /**
-   * 记录登录成功
+   * 記錄登入成功
    */
   async logLoginSuccess(c: Context, username: string): Promise<void> {
     await this.log(
@@ -192,7 +192,7 @@ export class AuditLogger {
   }
 
   /**
-   * 记录登录失败
+   * 記錄登入失敗
    */
   async logLoginFailure(
     c: Context,
@@ -210,7 +210,7 @@ export class AuditLogger {
   }
 
   /**
-   * 记录登出
+   * 記錄登出
    */
   async logLogout(c: Context): Promise<void> {
     await this.log(
@@ -224,7 +224,7 @@ export class AuditLogger {
   }
 
   /**
-   * 记录文件上传
+   * 記錄文件上傳
    */
   async logFileUpload(
     c: Context,
@@ -247,7 +247,7 @@ export class AuditLogger {
   }
 
   /**
-   * 记录文件删除
+   * 記錄文件刪除
    */
   async logFileDelete(
     c: Context,
@@ -269,7 +269,7 @@ export class AuditLogger {
   }
 
   /**
-   * 记录权限变更
+   * 記錄權限變更
    */
   async logPermissionChange(
     c: Context,
@@ -293,7 +293,7 @@ export class AuditLogger {
   }
 
   /**
-   * 记录用户创建
+   * 記錄用戶創建
    */
   async logUserCreate(
     c: Context,
@@ -316,7 +316,7 @@ export class AuditLogger {
   }
 
   /**
-   * 记录用户删除
+   * 記錄用戶刪除
    */
   async logUserDelete(c: Context, username: string): Promise<void> {
     await this.log(
@@ -334,14 +334,14 @@ export class AuditLogger {
   }
 
   /**
-   * 查询审计日志
+   * 查詢審計日誌
    */
   async query(filters: AuditLogQueryFilters): Promise<AuditLogEntry[]> {
     return this.storage.query(filters)
   }
 
   /**
-   * 统计审计日志数量
+   * 統計審計日誌數量
    */
   async count(filters: AuditLogQueryFilters): Promise<number> {
     return this.storage.count(filters)
@@ -349,7 +349,7 @@ export class AuditLogger {
 }
 
 /**
- * 内存存储（用于开发和测试）
+ * 記憶體儲存（用於開發和測試）
  */
 export class InMemoryAuditLogStorage implements AuditLogStorage {
   private logs: AuditLogEntry[] = []
@@ -361,7 +361,7 @@ export class InMemoryAuditLogStorage implements AuditLogStorage {
 
   async write(entry: AuditLogEntry): Promise<void> {
     this.logs.push(entry)
-    // 限制内存大小
+    // 限制記憶體大小
     if (this.logs.length > this.maxSize) {
       this.logs.shift()
     }
@@ -370,7 +370,7 @@ export class InMemoryAuditLogStorage implements AuditLogStorage {
   async query(filters: AuditLogQueryFilters): Promise<AuditLogEntry[]> {
     let results = this.logs
 
-    // 过滤
+    // 過濾
     if (filters.start_time) {
       results = results.filter((log) => log.timestamp >= filters.start_time!)
     }
@@ -409,7 +409,7 @@ export class InMemoryAuditLogStorage implements AuditLogStorage {
       (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
     )
 
-    // 分页
+    // 分頁
     const offset = filters.offset || 0
     const limit = filters.limit || 100
     return results.slice(offset, offset + limit)
@@ -420,14 +420,14 @@ export class InMemoryAuditLogStorage implements AuditLogStorage {
     return results.length
   }
 
-  // 开发辅助：清空日志
+  // 開發輔助：清空日誌
   clear(): void {
     this.logs = []
   }
 }
 
 /**
- * 控制台存储（直接输出到日志）
+ * 控制檯儲存（直接輸出到日誌）
  */
 export class ConsoleAuditLogStorage implements AuditLogStorage {
   async write(entry: AuditLogEntry): Promise<void> {
@@ -455,16 +455,16 @@ export class ConsoleAuditLogStorage implements AuditLogStorage {
 }
 
 /**
- * 全局审计日志实例（单例）
+ * 全局審計日誌實例（單例）
  */
 let globalAuditLogger: AuditLogger | null = null
 
 /**
- * 获取全局审计日志实例
+ * 獲取全局審計日誌實例
  */
 export function getAuditLogger(): AuditLogger {
   if (!globalAuditLogger) {
-    // 默认使用内存存储（生产环境应该替换为持久化存储）
+    // 默認使用記憶體儲存（生產環境應該替換為持久化儲存）
     const storage = new InMemoryAuditLogStorage(10000)
     globalAuditLogger = new AuditLogger(storage)
   }
@@ -472,7 +472,7 @@ export function getAuditLogger(): AuditLogger {
 }
 
 /**
- * 设置全局审计日志存储
+ * 設置全局審計日誌儲存
  */
 export function setAuditLogStorage(storage: AuditLogStorage): void {
   globalAuditLogger = new AuditLogger(storage)

@@ -1,4 +1,4 @@
-// Cloudreve V3 API 客户端（session cookie 认证）
+// Cloudreve V3 API 客戶端（session cookie 認證）
 import {
   DriverCloudreveV3Addition,
   CloudreveV3Resp,
@@ -112,7 +112,7 @@ export class ClientCloudreveV3 {
     if (data.code !== 0) {
       throw new Error(`[Cloudreve] ${data.msg || `HTTP ${resp.status}`}`)
     }
-    // 更新 cookie（响应可能刷新 session）
+    // 更新 cookie（響應可能刷新 session）
     const sess = this.extractSessionCookie(resp)
     if (sess) this.cookie = sess
     return data.data as T

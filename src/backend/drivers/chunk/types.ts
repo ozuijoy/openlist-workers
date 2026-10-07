@@ -1,24 +1,24 @@
-// chunk (分片打包存储) - 将大文件切分为多个分片存入底层存储
+// chunk (分片打包儲存) - 將大文件切分為多個分片存入底層儲存
 // API reference: Go drivers/chunk
 
 export interface ChunkAddition {
-  /** 底层存储挂载路径 */
+  /** 底層儲存掛載路徑 */
   remote_path: string
-  /** 分片大小（字节） */
+  /** 分片大小（字節） */
   part_size: number
-  /** 仅当文件大小 > part_size 时才分片 */
+  /** 僅當文件大小 > part_size 時才分片 */
   chunk_large_file_only?: boolean
-  /** 分片目录前缀 */
+  /** 分片目錄前綴 */
   chunk_prefix?: string
-  /** 分片文件后缀（可选） */
+  /** 分片文件後綴（可選） */
   custom_ext?: string
-  /** 是否存储 hash 文件 */
+  /** 是否儲存 hash 文件 */
   store_hash?: boolean
-  /** 列表并发数 */
+  /** 列表併發數 */
   num_list_workers?: number
-  /** 是否启用缩略图 */
+  /** 是否啟用縮略圖 */
   thumbnail?: boolean
-  /** 是否显示隐藏文件 */
+  /** 是否顯示隱藏文件 */
   show_hidden?: boolean
 }
 

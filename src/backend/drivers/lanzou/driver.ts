@@ -1,4 +1,4 @@
-// Lanzou (蓝奏云) driver
+// Lanzou (藍奏雲) driver
 // Re-ported from: https://github.com/OpenListTeam/OpenList/tree/main/drivers/lanzou
 import {
   StorageDriver,
@@ -71,8 +71,8 @@ export class LanzouDriver implements StorageDriver {
   }
 
   /**
-   * 校验当前 Cookie 是否有效（供管理后台 /task/refresh 状态刷新调用）。
-   * 有效返回 true；失效返回 false 并附过期提示。
+   * 校驗當前 Cookie 是否有效（供管理後台 /task/refresh 狀態刷新調用）。
+   * 有效返回 true；失效返回 false 並附過期提示。
    */
   async checkCookieValid(): Promise<{ valid: boolean; error?: string }> {
     return this.client.checkCookieValid()
@@ -87,7 +87,7 @@ export class LanzouDriver implements StorageDriver {
   }
 
   /**
-   * 将 physicalPath 解析为对应的 folderId
+   * 將 physicalPath 解析為對應的 folderId
    */
   private async resolveFolderId(physicalPath: string): Promise<string> {
     const rootId = this.getRootId()
@@ -149,7 +149,7 @@ export class LanzouDriver implements StorageDriver {
       })
 
       if (!folder) {
-        throw new Error(`[Lanzou] 目录未找到: ${rawName}`)
+        throw new Error(`[Lanzou] 目錄未找到: ${rawName}`)
       }
 
       parentId = folder.fol_id || folder.id || ""
@@ -161,7 +161,7 @@ export class LanzouDriver implements StorageDriver {
   }
 
   /**
-   * 解析具体文件或文件夹
+   * 解析具體文件或文件夾
    */
   private async resolveItem(physicalPath: string): Promise<{
     item: LanzouFileOrFolder
@@ -176,7 +176,7 @@ export class LanzouDriver implements StorageDriver {
         .join("/")
 
     const segs = clean.split("/").filter(Boolean)
-    if (segs.length === 0) throw new Error("[Lanzou] 路径无效")
+    if (segs.length === 0) throw new Error("[Lanzou] 路徑無效")
 
     const rawName = segs[segs.length - 1]
     const decodedName = (() => {
@@ -209,7 +209,7 @@ export class LanzouDriver implements StorageDriver {
     })
 
     if (!found) {
-      throw new Error(`[Lanzou] 文件或目录未找到: ${rawName}`)
+      throw new Error(`[Lanzou] 文件或目錄未找到: ${rawName}`)
     }
 
     const isDir = Boolean(found.is_folder || found.fol_id)
@@ -277,8 +277,8 @@ export class LanzouDriver implements StorageDriver {
             item.id || "",
             item.pwd || this.addition.share_password || "",
             undefined,
-            // 分享页域名每个人不同（如 xxx.lanzn.com），
-            // 先探测分享页真实域名再解析直链，避免一直用兜底域名请求
+            // 分享頁域名每個人不同（如 xxx.lanzn.com），
+            // 先探測分享頁真實域名再解析直鏈，避免一直用兜底域名請求
             await this.client.probeShareDomain(item.id || ""),
           )
           downloadUrl = resolved.url
@@ -287,10 +287,10 @@ export class LanzouDriver implements StorageDriver {
         } else {
           const shareInfo = await this.client.getFileShareUrlById(item.id || "")
           const shareId = shareInfo?.f_id || (shareInfo as any)?.id
-          // 注意：is_newd 是"上传域名"（如 https://upload.lanzouj.com），
-          // 不是分享页域名，不能作为 customShareDomain 传入（会导致分享页
-          // 请求随机失败）。getFilesByShareUrl 内部会 probeShareDomain 探测
-          // 真实分享页域名。
+          // 注意：is_newd 是"上傳域名"（如 https://upload.lanzouj.com），
+          // 不是分享頁域名，不能作為 customShareDomain 傳入（會導致分享頁
+          // 請求隨機失敗）。getFilesByShareUrl 內部會 probeShareDomain 探測
+          // 真實分享頁域名。
           if (shareId) {
             const resolved = await this.client.getFilesByShareUrl(
               shareId,
@@ -304,18 +304,18 @@ export class LanzouDriver implements StorageDriver {
         }
       } catch (err: any) {
         console.error(
-          `[Lanzou] 解析下载链接失败 (${item.name_all || item.name}):`,
+          `[Lanzou] 解析下載鏈接失敗 (${item.name_all || item.name}):`,
           err.message,
         )
         throw new Error(
-          `[Lanzou] 获取下载直链失败 (${item.name_all || item.name}): ${err.message}`,
+          `[Lanzou] 獲取下載直鏈失敗 (${item.name_all || item.name}): ${err.message}`,
         )
       }
     }
 
     if (!downloadUrl) {
       throw new Error(
-        `[Lanzou] 未能获取到下载直链 (${item.name_all || item.name || physicalPath})`,
+        `[Lanzou] 未能獲取到下載直鏈 (${item.name_all || item.name || physicalPath})`,
       )
     }
 
@@ -336,12 +336,12 @@ export class LanzouDriver implements StorageDriver {
 
   async mkdir(_virtualPath: string, physicalPath: string): Promise<void> {
     if (this.isUrlMode()) {
-      throw new Error("[Lanzou] 分享链接模式不支持新建文件夹")
+      throw new Error("[Lanzou] 分享鏈接模式不支持新建文件夾")
     }
     const segs = String(physicalPath || "")
       .split("/")
       .filter(Boolean)
-    const dirName = segs.pop() || "新文件夹"
+    const dirName = segs.pop() || "新文件夾"
     const parentPath = "/" + segs.join("/")
     const parentId = await this.resolveFolderId(parentPath)
     await this.client.mkdir(parentId, dirName)
@@ -353,11 +353,11 @@ export class LanzouDriver implements StorageDriver {
     newName: string,
   ): Promise<void> {
     if (this.isUrlMode()) {
-      throw new Error("[Lanzou] 分享链接模式不支持重命名")
+      throw new Error("[Lanzou] 分享鏈接模式不支持重命名")
     }
     const { item, isDir } = await this.resolveItem(physicalPath)
     if (isDir) {
-      throw new Error("[Lanzou] 蓝奏云不支持重命名文件夹")
+      throw new Error("[Lanzou] 藍奏雲不支持重命名文件夾")
     }
     await this.client.rename(item.id || "", newName)
   }
@@ -368,7 +368,7 @@ export class LanzouDriver implements StorageDriver {
     _names: string[],
   ): Promise<void> {
     if (this.isUrlMode()) {
-      throw new Error("[Lanzou] 分享链接模式不支持删除")
+      throw new Error("[Lanzou] 分享鏈接模式不支持刪除")
     }
     const { item, isDir } = await this.resolveItem(physicalPath)
     await this.client.remove(item.fol_id || item.id || "", isDir)
@@ -382,11 +382,11 @@ export class LanzouDriver implements StorageDriver {
     _dstPhysical: string,
   ): Promise<void> {
     if (this.isUrlMode()) {
-      throw new Error("[Lanzou] 分享链接模式不支持移动")
+      throw new Error("[Lanzou] 分享鏈接模式不支持移動")
     }
     const { item, isDir } = await this.resolveItem(srcPhysical)
     if (isDir) {
-      throw new Error("[Lanzou] 蓝奏云不支持移动文件夹")
+      throw new Error("[Lanzou] 藍奏雲不支持移動文件夾")
     }
     const dstParts = String(dstDir).split("/").filter(Boolean)
     const targetParentId = await this.resolveFolderId("/" + dstParts.join("/"))
@@ -394,12 +394,12 @@ export class LanzouDriver implements StorageDriver {
   }
 
   async copy(): Promise<void> {
-    throw new Error("[Lanzou] 蓝奏云不支持直接复制文件")
+    throw new Error("[Lanzou] 藍奏雲不支持直接複製文件")
   }
 
   async put(): Promise<void> {
     throw new Error(
-      "[Lanzou] Cloudflare Worker 环境暂不支持直接流式写入，请使用网页端进行文件上传",
+      "[Lanzou] Cloudflare Worker 環境暫不支持直接流式寫入，請使用網頁端進行文件上傳",
     )
   }
 }

@@ -4,18 +4,18 @@ import { Hono } from "hono"
 import { assetsRouter } from "./assets"
 
 /**
- * 静态资源路由的回归：CDN 重定向**只能**匹配固定目录前缀。
+ * 靜態資源路由的迴歸：CDN 重定向**只能**匹配固定目錄前綴。
  *
- * 背景（实机复现）：进入文件预览页后刷新，地址形如 `<域名>/存储2/xxx.exe`，
- * 会被原先的贪婪路由 `/:folder/:filepath*` 拦下，未配置 ASSET_URLS 时直接
- * 返回 404 `Static resource not found`，前端来不及走到 SPA 兜底。
+ * 背景（實機復現）：進入文件預覽頁後刷新，地址形如 `<域名>/儲存2/xxx.exe`，
+ * 會被原先的貪婪路由 `/:folder/:filepath*` 攔下，未配置 ASSET_URLS 時直接
+ * 返回 404 `Static resource not found`，前端來不及走到 SPA 兜底。
  *
- * Go 的对应实现（server/static/static.go）只对
- * `assets / images / streamer / static` 四个目录做 CDN 重定向，其余一律
- * 交给 `noRoute`（返回 index.html）。
+ * Go 的對應實現（server/static/static.go）只對
+ * `assets / images / streamer / static` 四個目錄做 CDN 重定向，其餘一律
+ * 交給 `noRoute`（返回 index.html）。
  */
 
-/** 模拟 index.ts 的挂载顺序：assetsRouter 位于 SPA 兜底之前 */
+/** 模擬 index.ts 的掛載順序：assetsRouter 位於 SPA 兜底之前 */
 const appWithSpaFallback = () => {
   const app = new Hono()
   app.route("/", assetsRouter)
@@ -23,12 +23,12 @@ const appWithSpaFallback = () => {
   return app
 }
 
-test("刷新文件预览页（<挂载点>/<文件>）必须落到 SPA 兜底，而不是 404", async () => {
+test("刷新文件預覽頁（<掛載點>/<文件>）必須落到 SPA 兜底，而不是 404", async () => {
   const app = appWithSpaFallback()
   for (const path of [
     "/%E5%AD%98%E5%82%A82/xxx.exe",
-    "/存储2/xxx.exe",
-    "/存储2/sub/dir/file.mp4",
+    "/儲存2/xxx.exe",
+    "/儲存2/sub/dir/file.mp4",
   ]) {
     const res = await app.request(path, {
       method: "GET",
@@ -36,21 +36,21 @@ test("刷新文件预览页（<挂载点>/<文件>）必须落到 SPA 兜底，�
     })
     assert.equal(res.status, 200, `${path} -> ${res.status}`)
     const body = await res.text()
-    assert.match(body, /<title>index<\/title>/, `${path} 未返回 SPA 壳`)
+    assert.match(body, /<title>index<\/title>/, `${path} 未返回 SPA 殼`)
     assert.doesNotMatch(body, /Static resource not found/, `${path} 被 CDN 路由吞掉`)
   }
 })
 
-test("未配置 ASSET_URLS 时，/assets/* 放行给本地静态资源（不返回 404 文案）", async () => {
+test("未配置 ASSET_URLS 時，/assets/* 放行給本地靜態資源（不返回 404 文案）", async () => {
   const res = await appWithSpaFallback().request("/assets/index-abc.js", {
     method: "GET",
   })
-  // 单测里没有 ASSETS 绑定，因此会落到 SPA 兜底；关键是不能再返回那句 404
+  // 單測裡沒有 ASSETS 綁定，因此會落到 SPA 兜底；關鍵是不能再返回那句 404
   assert.notEqual(res.status, 404)
   assert.doesNotMatch(await res.text(), /Static resource not found/)
 })
 
-test("配置 ASSET_URLS 时，仅四个静态目录 302 到 CDN，且 $version 被替换", async () => {
+test("配置 ASSET_URLS 時，僅四個靜態目錄 302 到 CDN，且 $version 被替換", async () => {
   const env = { ASSET_URLS: "https://cdn.example.com/dist" }
   const app = appWithSpaFallback()
 
@@ -63,13 +63,13 @@ test("配置 ASSET_URLS 时，仅四个静态目录 302 到 CDN，且 $version �
     )
   }
 
-  // 非静态目录不受影响（仍是 SPA 壳）
-  const spa = await app.request("/存储2/xxx.exe", { method: "GET" }, env)
+  // 非靜態目錄不受影響（仍是 SPA 殼）
+  const spa = await app.request("/儲存2/xxx.exe", { method: "GET" }, env)
   assert.equal(spa.status, 200)
   assert.match(await spa.text(), /<title>index<\/title>/)
 })
 
-test("ASSET_URLS 含 $version 占位符时不留占位符（取不到版本则 latest）", async () => {
+test("ASSET_URLS 含 $version 佔位符時不留佔位符（取不到版本則 latest）", async () => {
   const env = {
     ASSET_URLS: "https://cdn.example.com/openlist/$version/files/dist",
   }

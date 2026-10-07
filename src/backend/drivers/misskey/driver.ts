@@ -83,7 +83,7 @@ export class DriverMisskey implements StorageDriver {
       }
     } catch {}
 
-    // Fallback: 目录
+    // Fallback: 目錄
     try {
       await this.resolveFolderId(physicalPath)
       return {

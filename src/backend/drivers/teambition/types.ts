@@ -1,4 +1,4 @@
-// teambition (Teambition 网盘) - Cookie 认证
+// teambition (Teambition 網盤) - Cookie 認證
 // API reference: Go drivers/teambition
 
 export interface DriverTeambitionAddition {

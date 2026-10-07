@@ -202,10 +202,10 @@ export class MediatrackDriver implements StorageDriver {
     physicalPath: string,
     names: string[],
   ): Promise<void> {
-    // physicalPath 是目标项自身的物理路径（op/storage.ts removeItems 逐项调用），
-    // 目标名取参数末段、父目录取去掉末段后的部分；resolveParentId 解析的是
-    // 传入路径自身的 id，把项路径当父目录会去 <item> 的子项里按 title 查找
-    //（相当于找 <item>/<name>），找不到时静默跳过，对象仍然存在。
+    // physicalPath 是目標項自身的物理路徑（op/storage.ts removeItems 逐項調用），
+    // 目標名取參數末段、父目錄取去掉末段後的部分；resolveParentId 解析的是
+    // 傳入路徑自身的 id，把項路徑當父目錄會去 <item> 的子項裡按 title 查找
+    //（相當於找 <item>/<name>），找不到時靜默跳過，對象仍然存在。
     const clean = this.cleanPath(physicalPath)
     const name = clean.split("/").pop() || ""
     const parentPath = clean.split("/").slice(0, -1).join("/")
@@ -235,10 +235,10 @@ export class MediatrackDriver implements StorageDriver {
     srcPhys: string,
     dstPhys: string,
   ): Promise<void> {
-    // srcPhys/dstPhys 是源/目标项自身的物理路径（已含 name），父目录取去掉
-    // 末段后的部分：源侧在其父目录的子项里按 title 找，目标侧解析目标项所在
-    // 目录的 id。把项路径当父目录解析会指到项本身：源侧永远落空，
-    // 目标侧解析一个尚不存在的目标项必然报错。
+    // srcPhys/dstPhys 是源/目標項自身的物理路徑（已含 name），父目錄取去掉
+    // 末段後的部分：源側在其父目錄的子項裡按 title 找，目標側解析目標項所在
+    // 目錄的 id。把項路徑當父目錄解析會指到項本身：源側永遠落空，
+    // 目標側解析一個尚不存在的目標項必然報錯。
     const srcClean = this.cleanPath(srcPhys)
     const dstClean = this.cleanPath(dstPhys)
     const srcName = srcClean.split("/").pop() || ""
@@ -270,7 +270,7 @@ export class MediatrackDriver implements StorageDriver {
     srcPhys: string,
     dstPhys: string,
   ): Promise<void> {
-    // 与 move 同理：源/目标项自身路径先去掉末段得到父目录，目标名取源路径末段。
+    // 與 move 同理：源/目標項自身路徑先去掉末段得到父目錄，目標名取源路徑末段。
     const srcClean = this.cleanPath(srcPhys)
     const dstClean = this.cleanPath(dstPhys)
     const srcName = srcClean.split("/").pop() || ""

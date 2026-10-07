@@ -20,7 +20,7 @@ import {
   md5Base64,
 } from "./crypto"
 
-/** Cookie 辅助函数 */
+/** Cookie 輔助函數 */
 function getCookieValue(cookieStr: string, key: string): string | null {
   const match = cookieStr.match(new RegExp(`(?:^|;\\s*)${key}=([^;]*)`))
   return match ? decodeURIComponent(match[1]) : null
@@ -189,8 +189,8 @@ export class Pan189Client {
       if (!isTrustedHttpsUrl(currentUrlObj)) {
         throw new Error(
           currentUrlObj.protocol !== "https:"
-            ? `[189Cloud] 登录重定向必须使用 HTTPS: ${currentUrlObj.origin}`
-            : `[189Cloud] 不受信任的登录重定向地址: ${currentUrlObj.origin}`,
+            ? `[189Cloud] 登入重定向必須使用 HTTPS: ${currentUrlObj.origin}`
+            : `[189Cloud] 不受信任的登入重定向地址: ${currentUrlObj.origin}`,
         )
       }
       const requestHeaders: Record<string, string> = { ...headers }
@@ -220,8 +220,8 @@ export class Pan189Client {
             if (!isTrustedHttpsUrl(responseUrl)) {
               throw new Error(
                 responseUrl.protocol !== "https:"
-                  ? `[189Cloud] 登录重定向必须使用 HTTPS: ${responseUrl.origin}`
-                  : `[189Cloud] 不受信任的登录重定向地址: ${responseUrl.origin}`,
+                  ? `[189Cloud] 登入重定向必須使用 HTTPS: ${responseUrl.origin}`
+                  : `[189Cloud] 不受信任的登入重定向地址: ${responseUrl.origin}`,
               )
             }
             terminalUrl = responseUrl.toString()
@@ -231,22 +231,22 @@ export class Pan189Client {
         return { response, url: terminalUrl, urls: visitedUrls }
       }
       if (redirectCount === 8) {
-        throw new Error("[189Cloud] 登录重定向次数过多")
+        throw new Error("[189Cloud] 登入重定向次數過多")
       }
 
       const nextUrl = new URL(location, currentUrl)
       if (!isTrustedHttpsUrl(nextUrl)) {
         throw new Error(
           nextUrl.protocol !== "https:"
-            ? `[189Cloud] 登录重定向必须使用 HTTPS: ${nextUrl.origin}`
-            : `[189Cloud] 不受信任的登录重定向地址: ${nextUrl.origin}`,
+            ? `[189Cloud] 登入重定向必須使用 HTTPS: ${nextUrl.origin}`
+            : `[189Cloud] 不受信任的登入重定向地址: ${nextUrl.origin}`,
         )
       }
       currentUrl = nextUrl.toString()
       visitedUrls.push(currentUrl)
     }
 
-    throw new Error("[189Cloud] 登录重定向失败")
+    throw new Error("[189Cloud] 登入重定向失敗")
   }
 
   private async resolveLoginUrl(
@@ -267,9 +267,9 @@ export class Pan189Client {
         return result.url
       }
 
-      // Workers/CDN 可能隐藏最终响应的 Location 或把 Response.url 归一化为
-      // 请求地址，导致 result.url 缺 lt/reqId。从重定向历史中回退查找任意
-      // 携带 OAuth 参数（lt + reqId）的跳转 URL，避免误报参数缺失。
+      // Workers/CDN 可能隱藏最終響應的 Location 或把 Response.url 歸一化為
+      // 請求地址，導致 result.url 缺 lt/reqId。從重定向歷史中回退查找任意
+      // 攜帶 OAuth 參數（lt + reqId）的跳轉 URL，避免誤報參數缺失。
       const oauthUrl = result.urls.find((u) => hasOAuthParams(u))
       if (oauthUrl) {
         return oauthUrl
@@ -283,9 +283,9 @@ export class Pan189Client {
   }
 
   /**
-   * 登录天翼云盘：
-   * 1. 尝试使用已有 Cookie 请求主页判断是否已登录
-   * 2. 若未登录且配置了账号密码，执行 open.e.189.cn OAuth2 登录流程
+   * 登入天翼雲盤：
+   * 1. 嘗試使用已有 Cookie 請求主頁判斷是否已登入
+   * 2. 若未登入且配置了賬號密碼，執行 open.e.189.cn OAuth2 登入流程
    */
   async login(options: { force?: boolean } = {}): Promise<void> {
     if (this.cookie && !options.force) return
@@ -304,16 +304,16 @@ export class Pan189Client {
 
     const redirectUrlStr = await this.resolveLoginUrl(loginUrl, headers)
     if (isLoggedInUrl(redirectUrlStr)) {
-      // 已经处于登录状态
+      // 已經處於登入狀態
       return
     }
 
     if (!this.addition.username || !this.addition.password) {
       if (this.cookie) {
-        // 用户仅提供了 Cookie
+        // 用戶僅提供了 Cookie
         return
       }
-      throw new Error("[189Cloud] 账号或密码为空，且未提供有效 Cookie")
+      throw new Error("[189Cloud] 賬號或密碼為空，且未提供有效 Cookie")
     }
 
     let urlObj: URL
@@ -327,7 +327,7 @@ export class Pan189Client {
     const reqId = urlObj.searchParams.get("reqId") || ""
     const appId = urlObj.searchParams.get("appId") || "cloud"
     if (!lt || !reqId) {
-      throw new Error("[189Cloud] 登录跳转参数不完整，未获取到 lt 或 reqId")
+      throw new Error("[189Cloud] 登入跳轉參數不完整，未獲取到 lt 或 reqId")
     }
 
     const authHeaders = () => {
@@ -345,7 +345,7 @@ export class Pan189Client {
       return result
     }
 
-    // 1. 获取 App 配置
+    // 1. 獲取 App 配置
     const appConfRes = await fetch(
       "https://open.e.189.cn/api/logbox/oauth2/appConf.do",
       {
@@ -361,11 +361,11 @@ export class Pan189Client {
     const appConf: AppConfResp189 = await appConfRes.json()
     if (appConf.result !== "0" || !appConf.data) {
       throw new Error(
-        `[189Cloud] 获取 AppConf 失败: ${appConf.msg || JSON.stringify(appConf)}`,
+        `[189Cloud] 獲取 AppConf 失敗: ${appConf.msg || JSON.stringify(appConf)}`,
       )
     }
 
-    // 2. 获取加密配置 (公钥 & 前缀)
+    // 2. 獲取加密配置 (公鑰 & 前綴)
     const encConfRes = await fetch(
       "https://open.e.189.cn/api/logbox/config/encryptConf.do",
       {
@@ -380,18 +380,18 @@ export class Pan189Client {
     const encConf: EncryptConfResp189 = await encConfRes.json()
     if (encConf.result !== 0 || !encConf.data?.pubKey) {
       throw new Error(
-        `[189Cloud] 获取 EncryptConf 失败: ${JSON.stringify(encConf)}`,
+        `[189Cloud] 獲取 EncryptConf 失敗: ${JSON.stringify(encConf)}`,
       )
     }
 
     const pre = encConf.data.pre || ""
     const pubKey = encConf.data.pubKey
 
-    // 3. RSA 加密用户名和密码
+    // 3. RSA 加密用戶名和密碼
     const encUsername = pre + rsaEncode(this.addition.username, pubKey, true)
     const encPassword = pre + rsaEncode(this.addition.password, pubKey, true)
 
-    // 4. 提交登录
+    // 4. 提交登入
     const loginParams: Record<string, string> = {
       version: "v2.0",
       apToken: "",
@@ -426,20 +426,20 @@ export class Pan189Client {
     await this.updateCookie(loginRes.headers)
     const loginData = await loginRes.json()
     if (loginData.result !== 0) {
-      const msg = loginData.msg || "登录失败"
+      const msg = loginData.msg || "登入失敗"
       if (
-        msg.includes("验证码") ||
-        msg.includes("滑块") ||
-        msg.includes("设备锁")
+        msg.includes("驗證碼") ||
+        msg.includes("滑塊") ||
+        msg.includes("設備鎖")
       ) {
         throw new Error(
-          `[189Cloud] 登录触发验证码/设备保护: ${msg}。请在浏览器登录后复制 Cookie 填入配置。`,
+          `[189Cloud] 登入觸發驗證碼/設備保護: ${msg}。請在瀏覽器登入後複製 Cookie 填入配置。`,
         )
       }
-      throw new Error(`[189Cloud] 登录失败: ${msg}`)
+      throw new Error(`[189Cloud] 登入失敗: ${msg}`)
     }
 
-    // 5. 跟随跳转完成授权
+    // 5. 跟隨跳轉完成授權
     if (loginData.toUrl) {
       await this.followRedirectsWithCookies(loginData.toUrl, {
         "User-Agent":
@@ -449,7 +449,7 @@ export class Pan189Client {
   }
 
   /**
-   * 发送 189 API 请求，带 SessionKey 自动恢复与 Cookie 传递
+   * 發送 189 API 請求，帶 SessionKey 自動恢復與 Cookie 傳遞
    */
   async request<T = any>(
     url: string,
@@ -501,7 +501,7 @@ export class Pan189Client {
     try {
       data = parseJsonPreservingIds(text)
     } catch {
-      throw new Error(`[189Cloud] 非预期响应: ${text.slice(0, 200)}`)
+      throw new Error(`[189Cloud] 非預期響應: ${text.slice(0, 200)}`)
     }
 
     const invalidSession =
@@ -517,25 +517,25 @@ export class Pan189Client {
         })
       }
       throw new Error(
-        data.errorMsg || data.res_message || "[189Cloud] 登录会话已失效",
+        data.errorMsg || data.res_message || "[189Cloud] 登入會話已失效",
       )
     }
 
     if (data.errorCode) {
-      throw new Error(data.errorMsg || `[189Cloud] API 错误: ${data.errorCode}`)
+      throw new Error(data.errorMsg || `[189Cloud] API 錯誤: ${data.errorCode}`)
     }
 
     if (!res.ok) {
       throw new Error(
         data.errorMsg ||
           data.res_message ||
-          `[189Cloud] HTTP 请求失败 (${res.status})`,
+          `[189Cloud] HTTP 請求失敗 (${res.status})`,
       )
     }
 
     if (data.res_code !== undefined && String(data.res_code) !== "0") {
       throw new Error(
-        data.res_message || `189 API 错误 (res_code: ${data.res_code})`,
+        data.res_message || `189 API 錯誤 (res_code: ${data.res_code})`,
       )
     }
 
@@ -583,7 +583,7 @@ export class Pan189Client {
       !Array.isArray(resp.fileListAO.fileList) ||
       !Array.isArray(resp.fileListAO.folderList)
     ) {
-      throw new Error("[189Cloud] 文件列表响应缺少有效的 fileListAO 数组字段")
+      throw new Error("[189Cloud] 文件列表響應缺少有效的 fileListAO 數組欄位")
     }
     return resp
   }
@@ -593,7 +593,7 @@ export class Pan189Client {
   }
 
   /**
-   * 获取目录下的文件与文件夹列表
+   * 獲取目錄下的文件與文件夾列表
    */
   async getFiles(
     folderId: string,
@@ -658,7 +658,7 @@ export class Pan189Client {
   }
 
   /**
-   * 获取文件直链与详情
+   * 獲取文件直鏈與詳情
    */
   async getDownloadUrl(fileId: string): Promise<string> {
     const resp = await this.request<DownResp189>(
@@ -671,13 +671,13 @@ export class Pan189Client {
 
     const rawUrl = resp.fileDownloadUrl || resp.downloadUrl
     if (!rawUrl) {
-      throw new Error(`[189Cloud] 获取文件下载地址失败 (fileId: ${fileId})`)
+      throw new Error(`[189Cloud] 獲取文件下載地址失敗 (fileId: ${fileId})`)
     }
 
     let downloadUrl = rawUrl.startsWith("//") ? "https:" + rawUrl : rawUrl
     downloadUrl = downloadUrl.replace(/^http:\/\//i, "https://")
 
-    // 尝试解析一次 302 重定向获得直接 CDN 地址
+    // 嘗試解析一次 302 重定向獲得直接 CDN 地址
     try {
       const probeRes = await fetch(downloadUrl, {
         method: "GET",
@@ -701,7 +701,7 @@ export class Pan189Client {
       { method: "GET" },
     )
     const sessionKey = String(resp.sessionKey || "")
-    if (!sessionKey) throw new Error("[189Cloud] 获取上传 SessionKey 失败")
+    if (!sessionKey) throw new Error("[189Cloud] 獲取上傳 SessionKey 失敗")
     return sessionKey
   }
 
@@ -715,7 +715,7 @@ export class Pan189Client {
     )
     const pubKey = String(resp.pubKey || "")
     const pkId = String(resp.pkId || "")
-    if (!pubKey || !pkId) throw new Error("[189Cloud] 获取上传 RSA 公钥失败")
+    if (!pubKey || !pkId) throw new Error("[189Cloud] 獲取上傳 RSA 公鑰失敗")
     this.rsa = {
       pubKey,
       pkId,
@@ -765,18 +765,18 @@ export class Pan189Client {
     const text = await response.text()
     if (!response.ok) {
       throw new Error(
-        `[189Cloud] 上传接口 HTTP ${response.status}: ${text.slice(0, 200)}`,
+        `[189Cloud] 上傳介面 HTTP ${response.status}: ${text.slice(0, 200)}`,
       )
     }
     let data: any
     try {
       data = parseJsonPreservingIds(text)
     } catch {
-      throw new Error(`[189Cloud] 上传接口返回无效响应: ${text.slice(0, 200)}`)
+      throw new Error(`[189Cloud] 上傳介面返回無效響應: ${text.slice(0, 200)}`)
     }
     if (data.code !== "SUCCESS") {
       throw new Error(
-        data.msg || data.message || `[189Cloud] 上传接口失败: ${uri}`,
+        data.msg || data.message || `[189Cloud] 上傳介面失敗: ${uri}`,
       )
     }
     return data as T
@@ -824,7 +824,7 @@ export class Pan189Client {
     }
     const uploadFileId = String(response.data?.uploadFileId || "")
     if (!uploadFileId)
-      throw new Error("[189Cloud] 创建上传会话失败：缺少 uploadFileId")
+      throw new Error("[189Cloud] 創建上傳會話失敗：缺少 uploadFileId")
     return {
       uploadFileId,
       fileDataExists: String(response.data?.fileDataExists || "0") === "1",
@@ -846,7 +846,7 @@ export class Pan189Client {
     )
     const uploadPart = response.uploadUrls?.[`partNumber_${partNumber}`]
     if (!uploadPart?.requestURL) {
-      throw new Error(`[189Cloud] 获取第 ${partNumber} 个分片上传地址失败`)
+      throw new Error(`[189Cloud] 獲取第 ${partNumber} 個分片上傳地址失敗`)
     }
     return uploadPart
   }
@@ -866,7 +866,7 @@ export class Pan189Client {
   }
 
   /**
-   * 创建文件夹
+   * 創建文件夾
    */
   async mkdir(parentFolderId: string, folderName: string): Promise<void> {
     await this.request(
@@ -882,7 +882,7 @@ export class Pan189Client {
   }
 
   /**
-   * 重命名文件或文件夹
+   * 重命名文件或文件夾
    */
   async rename(id: string, isFolder: boolean, newName: string): Promise<void> {
     const url = isFolder
@@ -900,7 +900,7 @@ export class Pan189Client {
   }
 
   /**
-   * 批量任务：移动 / 复制 / 删除
+   * 批量任務：移動 / 複製 / 刪除
    */
   private async batchTask(
     type: "MOVE" | "COPY" | "DELETE",
@@ -965,7 +965,7 @@ export class Pan189Client {
   }
 
   /**
-   * 获取容量信息
+   * 獲取容量信息
    */
   async getCapacityInfo(): Promise<CapacityResp189> {
     return this.request<CapacityResp189>(

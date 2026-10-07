@@ -1,4 +1,4 @@
-// Misskey drive API 客户端
+// Misskey drive API 客戶端
 import { DriverMisskeyAddition, MisskeyFile, MisskeyFolder } from "./types"
 
 export class ClientMisskey {

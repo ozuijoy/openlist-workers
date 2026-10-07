@@ -4,16 +4,16 @@ import { Hono } from "hono"
 import { setupRouter } from "./router"
 
 /**
- * 专用回归测试：EdgeOne / ESA Blob + DB_FORMAT=map 的空存储首次初始化。
+ * 專用迴歸測試：EdgeOne / ESA Blob + DB_FORMAT=map 的空儲存首次初始化。
  *
- * 为什么单独一个文件：`memoryDb` / `dbTrusted` 是 isolate 级模块状态（与线上
- * 一致），同一进程里先跑过「已初始化」的用例后，新的空后端会被判定为
- * 「可信快照仍存在」而复用旧快照（init/setup 于是返回 400 already initialized）。
- * 独立文件 = 独立进程，才能精确复现「全新部署第一次访问」的初始状态。
+ * 為什麼單獨一個文件：`memoryDb` / `dbTrusted` 是 isolate 級模塊狀態（與線上
+ * 一致），同一進程裡先跑過「已初始化」的用例後，新的空後端會被判定為
+ * 「可信快照仍存在」而複用舊快照（init/setup 於是返回 400 already initialized）。
+ * 獨立文件 = 獨立進程，才能精確復現「全新部署第一次訪問」的初始狀態。
  *
- * 被锁定的行为（issue #62 现象 3 的 EdgeOne 分支）：
- *   Blob 的 get 在键不存在时返回 null（不抛错）→ loadDb 认为是
- *   「读取成功但后端为空」→ 必须放行初始化，而不是 500 死锁。
+ * 被鎖定的行為（issue #62 現象 3 的 EdgeOne 分支）：
+ *   Blob 的 get 在鍵不存在時返回 null（不拋錯）→ loadDb 認為是
+ *   「讀取成功但後端為空」→ 必須放行初始化，而不是 500 死鎖。
  */
 const buildApp = () => {
   const api = new Hono()
@@ -23,7 +23,7 @@ const buildApp = () => {
   return app
 }
 
-/** ESA Blob 形态的替身：get 返回 Response 形态对象，键不存在时返回 null。 */
+/** ESA Blob 形態的替身：get 返回 Response 形態對象，鍵不存在時返回 null。 */
 function fakeBlob() {
   const store = new Map<string, string>()
   return {
@@ -43,7 +43,7 @@ function fakeBlob() {
   }
 }
 
-test("EO/ESA Blob + map：全新空存储的首次初始化必须成功", async () => {
+test("EO/ESA Blob + map：全新空儲存的首次初始化必須成功", async () => {
   const env: any = {
     DB_DRIVER: "blob",
     DB_FORMAT: "map",
@@ -64,15 +64,15 @@ test("EO/ESA Blob + map：全新空存储的首次初始化必须成功", async 
   assert.equal(
     res.status,
     200,
-    "Blob 空存储必须先能通过向导初始化，否则会退化为永远无法安装",
+    "Blob 空儲存必須先能通過嚮導初始化，否則會退化為永遠無法安裝",
   )
   assert.equal(
     env.ESA_BLOB.__store.has("openlist_config"),
     true,
-    "初始化必须真正写入 Blob",
+    "初始化必須真正寫入 Blob",
   )
 
-  // 写入后同一实例应能读到已初始化的库。
+  // 寫入後同一實例應能讀到已初始化的庫。
   const status = await buildApp().request(
     "/api/public/init_status",
     { method: "GET" },

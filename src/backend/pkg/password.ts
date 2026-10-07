@@ -1,15 +1,15 @@
 /* =====================================================================
- * 密码哈希模块 (Password Hashing)
+ * 密碼哈希模塊 (Password Hashing)
  *
- * 存储方案：Go (OpenList/AList) 兼容双层 SHA256
- *   对齐 OpenList/internal/model/user.go：
+ * 儲存方案：Go (OpenList/AList) 相容雙層 SHA256
+ *   對齊 OpenList/internal/model/user.go：
  *     StaticHash(pwd)          = sha256(`${pwd}-${STATIC_HASH_SALT}`) —— 前端 /login/hash 提交值
- *     saltedHash(static, salt) = sha256(`${static}-${salt}`)          —— per-user 盐二次哈希
- *     PwdHash = saltedHash(StaticHash(pwd), salt)                     —— 数据库存储值
+ *     saltedHash(static, salt) = sha256(`${static}-${salt}`)          —— per-user 鹽二次哈希
+ *     PwdHash = saltedHash(StaticHash(pwd), salt)                     —— 資料庫儲存值
  *
- * 存储字段：user.password（64位 hex）+ user.salt（16位随机）。
- * 历史格式兼容（读兼容，登录成功后自动迁移到本格式）：
- *   - 单层 sha256（无 salt 字段，早期 TSWorker）：password 直接等于 StaticHash(pwd)
+ * 儲存欄位：user.password（64位 hex）+ user.salt（16位隨機）。
+ * 歷史格式相容（讀相容，登入成功後自動遷移到本格式）：
+ *   - 單層 sha256（無 salt 欄位，早期 TSWorker）：password 直接等於 StaticHash(pwd)
  * ===================================================================== */
 
 export const STATIC_HASH_SALT = "https://github.com/alist-org/alist"
@@ -24,12 +24,12 @@ async function sha256Hex(input: string): Promise<string> {
     .join("")
 }
 
-/** 明文 -> 传输用静态哈希（对应 Go StaticHash） */
+/** 明文 -> 傳輸用靜態哈希（對應 Go StaticHash） */
 export async function staticHash(plain: string): Promise<string> {
   return sha256Hex(`${plain}-${STATIC_HASH_SALT}`)
 }
 
-/** 静态哈希 + 用户盐 -> 最终存储值（对应 Go HashPwd） */
+/** 靜態哈希 + 用戶鹽 -> 最終儲存值（對應 Go HashPwd） */
 export async function saltedHash(
   staticHex: string,
   salt: string,
@@ -37,7 +37,7 @@ export async function saltedHash(
   return sha256Hex(`${staticHex}-${salt}`)
 }
 
-/** 明文 + 用户盐 -> 最终存储值（对应 Go TwoHashPwd / SetPassword） */
+/** 明文 + 用戶鹽 -> 最終儲存值（對應 Go TwoHashPwd / SetPassword） */
 export async function twoStepHash(
   plain: string,
   salt: string,
@@ -45,7 +45,7 @@ export async function twoStepHash(
   return saltedHash(await staticHash(plain), salt)
 }
 
-/** 生成用户盐（16 位 [A-Za-z0-9]，对应 Go random.String(16)） */
+/** 生成用戶鹽（16 位 [A-Za-z0-9]，對應 Go random.String(16)） */
 export function generateSalt(length: number = 16): string {
   const chars =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
@@ -56,14 +56,14 @@ export function generateSalt(length: number = 16): string {
   return out
 }
 
-/** 是否为 64 位 hex（双层/单层 SHA256 存储值均符合） */
+/** 是否為 64 位 hex（雙層/單層 SHA256 儲存值均符合） */
 export function isHex64(value: string): boolean {
   return /^[0-9a-f]{64}$/i.test(String(value || ""))
 }
 
 /**
- * 统一写入口令（对应 Go User.SetPassword）：
- * 生成新盐并写入双层哈希。调用方负责 saveDb 持久化。
+ * 統一寫入口令（對應 Go User.SetPassword）：
+ * 生成新鹽並寫入雙層哈希。調用方負責 saveDb 持久化。
  */
 export async function setUserPassword(
   user: any,
@@ -75,9 +75,9 @@ export async function setUserPassword(
 }
 
 /**
- * 验证密码（兼容历史单层 sha256，推荐存储为双层）
- * @param plain 明文密码（或经过 staticHash 的前端哈希值）
- * @param user  含 password + salt 字段的用户对象
+ * 驗證密碼（相容歷史單層 sha256，推薦儲存為雙層）
+ * @param plain 明文密碼（或經過 staticHash 的前端哈希值）
+ * @param user  含 password + salt 欄位的用戶對象
  */
 export async function verifyUserPassword(
   plain: string,
@@ -85,21 +85,21 @@ export async function verifyUserPassword(
 ): Promise<boolean> {
   if (!user.password) return false
   if (user.salt) {
-    // 双层：先判断 plain 是否已经是 staticHash（前端哈希登录），
-    // 再判断是否是明文（直接登录）。
+    // 雙層：先判斷 plain 是否已經是 staticHash（前端哈希登入），
+    // 再判斷是否是明文（直接登入）。
     const staticHex = isHex64(plain) ? plain : await staticHash(plain)
     const expected = await saltedHash(staticHex, user.salt)
     return expected === user.password
   }
-  // 历史单层：password == staticHash(plain)
+  // 歷史單層：password == staticHash(plain)
   const staticHex = isHex64(plain) ? plain : await staticHash(plain)
   return staticHex === user.password
 }
 
-// ---- 工具函数（与存储无关） ----
+// ---- 工具函數（與儲存無關） ----
 
 /**
- * 使用 CSPRNG 生成 [0, maxExclusive) 的均匀随机整数（rejection sampling 消除 modulo bias）
+ * 使用 CSPRNG 生成 [0, maxExclusive) 的均勻隨機整數（rejection sampling 消除 modulo bias）
  */
 function secureRandomInt(maxExclusive: number): number {
   if (maxExclusive <= 0) throw new Error("maxExclusive must be > 0")
@@ -115,8 +115,8 @@ function secureRandomInt(maxExclusive: number): number {
 }
 
 /**
- * 生成随机密码（用于临时密码、重置密码等）
- * @param length 密码长度（默认 16，最小 4）
+ * 生成隨機密碼（用於臨時密碼、重置密碼等）
+ * @param length 密碼長度（默認 16，最小 4）
  */
 export function generateRandomPassword(length: number = 16): string {
   if (!Number.isInteger(length) || length < 4) {
@@ -132,7 +132,7 @@ export function generateRandomPassword(length: number = 16): string {
   crypto.getRandomValues(bytes)
 
   const chars: string[] = []
-  // 保证四类字符各至少一个
+  // 保證四類字符各至少一個
   chars.push(lowercase[bytes[0] % lowercase.length])
   chars.push(uppercase[bytes[1] % uppercase.length])
   chars.push(numbers[bytes[2] % numbers.length])
@@ -152,7 +152,7 @@ export function generateRandomPassword(length: number = 16): string {
 }
 
 /**
- * 验证密码强度
+ * 驗證密碼強度
  * @returns { score: 0-4, feedback, isStrong }
  */
 export function checkPasswordStrength(password: string): {

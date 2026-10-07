@@ -19,7 +19,7 @@ export class DriverKodbox implements StorageDriver {
     await this.client.init()
   }
 
-  /** 物理路径：拼接 root_path 前缀 */
+  /** 物理路徑：拼接 root_path 前綴 */
   private fullPath(physicalPath: string): string {
     const root = (this.addition.root_path || "").replace(/^\/+|\/+$/g, "")
     const p = physicalPath.replace(/^\/+/, "")
@@ -69,7 +69,7 @@ export class DriverKodbox implements StorageDriver {
       }
     } catch {}
 
-    // Fallback: 目录
+    // Fallback: 目錄
     try {
       await this.client.list(full)
       return {

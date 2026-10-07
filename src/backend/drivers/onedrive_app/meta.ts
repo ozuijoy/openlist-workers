@@ -17,8 +17,8 @@ export const config = {
   name: "OnedriveAPP",
   localSort: true,
   defaultRoot: "/",
-  // 对齐 Go drivers/onedrive_app/meta.go：不设 only_proxy / prefer_proxy，
-  // 默认 302 直链。驱动能力表的唯一真相在 internal/driver/proxy.ts。
+  // 對齊 Go drivers/onedrive_app/meta.go：不設 only_proxy / prefer_proxy，
+  // 默認 302 直鏈。驅動能力表的唯一真相在 internal/driver/proxy.ts。
   preferProxy: false,
 }
 

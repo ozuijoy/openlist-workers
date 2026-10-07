@@ -16,17 +16,17 @@ import {
 } from "../pkg/sign"
 
 /**
- * 与 Go 版对齐的两处语义回归：
+ * 與 Go 版對齊的兩處語義迴歸：
  *
- * 1. raw_url 的路径编码 —— Go 用 utils.EncodePath(reqPath, true)
- *    （url.PathEscape 的 encodePath 模式：保留 A-Za-z0-9-._~ 与 $&+,:;=@，
- *    其余含 %、?、#、空格、非 ASCII 逐字节编码，保留 `/`）。
- *    未编码时 `?`/`#` 会被浏览器当成 query/fragment 截断；裸 `%` 会让服务端
- *    decodeURIComponent 抛 URIError（raw.ts 路径解析）。
+ * 1. raw_url 的路徑編碼 —— Go 用 utils.EncodePath(reqPath, true)
+ *    （url.PathEscape 的 encodePath 模式：保留 A-Za-z0-9-._~ 與 $&+,:;=@，
+ *    其餘含 %、?、#、空格、非 ASCII 逐字節編碼，保留 `/`）。
+ *    未編碼時 `?`/`#` 會被瀏覽器當成 query/fragment 截斷；裸 `%` 會讓服務端
+ *    decodeURIComponent 拋 URIError（raw.ts 路徑解析）。
  *
- * 2. link_expiration 的单位与 0 语义 —— Go internal/sign：
- *    expire == 0 → NotExpired（永不过期）；否则 time.Duration(expire)*time.Hour
- *    （**小时**，官方文档 configuration/global.md 亦为 "in hours"）。
+ * 2. link_expiration 的單位與 0 語義 —— Go internal/sign：
+ *    expire == 0 → NotExpired（永不過期）；否則 time.Duration(expire)*time.Hour
+ *    （**小時**，官方文件 configuration/global.md 亦為 "in hours"）。
  */
 
 const tmpRoots: string[] = []
@@ -84,32 +84,32 @@ const appOf = () => {
 }
 
 // ---------------------------------------------------------------------------
-// 1. 路径编码（Go utils.EncodePath(path, true)）
+// 1. 路徑編碼（Go utils.EncodePath(path, true)）
 // ---------------------------------------------------------------------------
 
-test("encodeDownloadPath 与 Go EncodePath(path, true) 的字符集合一致", () => {
-  // 保留：字母数字、-_.~ 与子分隔符 $&+,:;=@，以及路径分隔符 /
+test("encodeDownloadPath 與 Go EncodePath(path, true) 的字符集合一致", () => {
+  // 保留：字母數字、-_.~ 與子分隔符 $&+,:;=@，以及路徑分隔符 /
   assert.equal(
     encodeDownloadPath("/a-b_c.d~e/f$g&h+i,j:k;l=m@n.txt"),
     "/a-b_c.d~e/f$g&h+i,j:k;l=m@n.txt",
   )
-  // 编码：%、?、#、空格、非 ASCII（逐字节 %XX）
+  // 編碼：%、?、#、空格、非 ASCII（逐字節 %XX）
   assert.equal(encodeDownloadPath("/100%.txt"), "/100%25.txt")
   assert.equal(encodeDownloadPath("/a?b.txt"), "/a%3Fb.txt")
   assert.equal(encodeDownloadPath("/a#b.txt"), "/a%23b.txt")
   assert.equal(encodeDownloadPath("/a b.txt"), "/a%20b.txt")
   assert.equal(
-    encodeDownloadPath("/存储1/7z.exe"),
+    encodeDownloadPath("/儲存1/7z.exe"),
     "/%E5%AD%98%E5%82%A81/7z.exe",
   )
-  // 缺少前导 / 时补上（与 Go 的 reqPath 一定是绝对路径一致）
+  // 缺少前導 / 時補上（與 Go 的 reqPath 一定是絕對路徑一致）
   assert.equal(encodeDownloadPath("a.txt"), "/a.txt")
 })
 
-test("fs/get：raw_url 编码后，含 % / # / 中文 的文件名不再被截断或 500", async () => {
+test("fs/get：raw_url 編碼後，含 % / # / 中文 的文件名不再被截斷或 500", async () => {
   const env: any = {}
-  // 注意：`?` 在 Windows 上无法作为文件名，其编码行为由上一条单元用例覆盖
-  const names = ["100%.txt", "a#b.txt", "存储1.exe"]
+  // 注意：`?` 在 Windows 上無法作為文件名，其編碼行為由上一條單元用例覆蓋
+  const names = ["100%.txt", "a#b.txt", "儲存1.exe"]
   const root = makeLocalRoot(names)
   await saveDb(dbWith(root, [{ key: "sign_all", value: "true" }]), env)
   const app = appOf()
@@ -127,14 +127,14 @@ test("fs/get：raw_url 编码后，含 % / # / 中文 的文件名不再被截�
       rawUrl.startsWith("/api/p" + encodeDownloadPath(`/local/${name}`)),
       `${name}: raw_url not encoded -> ${rawUrl}`,
     )
-    // 关键：这个 http 请求过去会抛 URIError（裸 %）或被 ? 截断成另一个路径
+    // 關鍵：這個 http 請求過去會拋 URIError（裸 %）或被 ? 截斷成另一個路徑
     const hit = await app.request(rawUrl, { method: "GET" })
     assert.notEqual(hit.status, 401, `${name}: raw_url rejected -> ${hit.status}`)
     assert.notEqual(hit.status, 500, `${name}: raw_url crashed -> ${hit.status}`)
   }
 })
 
-test("/p 对非法百分号转义回 400（而不是 URIError 冒泡成 500）", async () => {
+test("/p 對非法百分號轉義回 400（而不是 URIError 冒泡成 500）", async () => {
   const env: any = {}
   await saveDb(dbWith(makeLocalRoot(["a.txt"])), env)
   const res = await appOf().request("/api/p/local/100%.txt", { method: "GET" })
@@ -142,10 +142,10 @@ test("/p 对非法百分号转义回 400（而不是 URIError 冒泡成 500）",
 })
 
 // ---------------------------------------------------------------------------
-// 2. link_expiration 单位（小时）与 0 = 永不过期
+// 2. link_expiration 單位（小時）與 0 = 永不過期
 // ---------------------------------------------------------------------------
 
-test("link_expiration 以小时计：24 → 有效期 86400 秒（与 Go *time.Hour 一致）", async () => {
+test("link_expiration 以小時計：24 → 有效期 86400 秒（與 Go *time.Hour 一致）", async () => {
   const env: any = {}
   await saveDb(emptyDb([{ key: "link_expiration", value: "24" }]), env)
 
@@ -163,7 +163,7 @@ test("link_expiration 以小时计：24 → 有效期 86400 秒（与 Go *time.H
   )
 })
 
-test("link_expiration=0 + sign_all：签发永不过期签名（expire=0，Go NotExpired）", async () => {
+test("link_expiration=0 + sign_all：簽發永不過期簽名（expire=0，Go NotExpired）", async () => {
   const env: any = {}
   await saveDb(
     emptyDb([
@@ -175,7 +175,7 @@ test("link_expiration=0 + sign_all：签发永不过期签名（expire=0，Go No
 
   const policy = await getSignPolicy({ env })
   assert.equal(policy.enabled, true)
-  assert.equal(policy.expiresIn, 0, "0 = 永不过期")
+  assert.equal(policy.expiresIn, 0, "0 = 永不過期")
   assert.equal(await getSignExpiresIn({ env }), 0)
 
   const sign = await signDownloadPath(
@@ -183,11 +183,11 @@ test("link_expiration=0 + sign_all：签发永不过期签名（expire=0，Go No
     "/a.txt",
     await getSignExpiresIn({ env }),
   )
-  assert.ok(sign.startsWith("0."), `expire 字段应为 0，实际 ${sign.slice(0, 12)}`)
+  assert.ok(sign.startsWith("0."), `expire 欄位應為 0，實際 ${sign.slice(0, 12)}`)
   assert.equal(await verifyDownloadSign({ env }, "/a.txt", sign), true)
 })
 
-test("负数有效期仍视为已过期（对齐 Go 传负 duration 的行为）", async () => {
+test("負數有效期仍視為已過期（對齊 Go 傳負 duration 的行為）", async () => {
   const env: any = {}
   await saveDb(emptyDb(), env)
   const sign = await signDownloadPath({ env }, "/a.txt", -10)

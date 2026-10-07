@@ -1,4 +1,4 @@
-// OpenList（对端实例）API 客户端
+// OpenList（對端實例）API 客戶端
 import { DriverOpenlistAddition, OLFile, OLResp, OLListData, OLGetData } from "./types"
 
 export class ClientOpenlist {

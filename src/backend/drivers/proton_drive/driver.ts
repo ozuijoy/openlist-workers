@@ -1,23 +1,23 @@
-// ProtonDrive driver — E2EE 网盘驱动（浏览 + 解密下载 + 基础写操作）
+// ProtonDrive driver — E2EE 網盤驅動（瀏覽 + 解密下載 + 基礎寫操作）
 // Ported from: OpenList-Backends/drivers/proton_drive (go-proton-api + Proton-API-Bridge)
 //
-// 安全模型说明：Proton Drive 的文件名与文件内容均为 OpenPGP 端到端加密，
-// 服务端仅存储密文。因此本驱动必须在客户端（此处为 Workers 运行时）完成
-// 整条密钥链的解锁，才能解密出文件名与内容：
+// 安全模型說明：Proton Drive 的文件名與文件內容均為 OpenPGP 端到端加密，
+// 服務端僅儲存密文。因此本驅動必須在客戶端（此處為 Workers 運行時）完成
+// 整條密鑰鏈的解鎖，才能解密出文件名與內容：
 //
-//   用户私钥 (bcrypt(password, keySalt) 解锁)
-//     └─ 地址私钥 (Token 用用户密钥环解密得到 passphrase)
-//         └─ 共享(share)私钥 (Passphrase 用地址密钥环解密)
-//             └─ 根节点密钥 → 子节点密钥链 (NodePassphrase 逐级解密)
-//                 └─ 文件名 / 内容会话密钥(session key)
+//   用戶私鑰 (bcrypt(password, keySalt) 解鎖)
+//     └─ 地址私鑰 (Token 用用戶密鑰環解密得到 passphrase)
+//         └─ 共享(share)私鑰 (Passphrase 用地址密鑰環解密)
+//             └─ 根節點密鑰 → 子節點密鑰鏈 (NodePassphrase 逐級解密)
+//                 └─ 文件名 / 內容會話密鑰(session key)
 //
-// 注意：saltedKeyPass 是 bcrypt 摘要的 printable-ASCII 形式，可直接作为
-// openpgp 的 string passphrase 使用；这一点与 go-proton-api 的实现一致。
+// 注意：saltedKeyPass 是 bcrypt 摘要的 printable-ASCII 形式，可直接作為
+// openpgp 的 string passphrase 使用；這一點與 go-proton-api 的實現一致。
 //
 // 已知限制（TODO）：
-//   - move/copy：需要把 NodePassphrase 用「目标父节点密钥环」重新加密，属于
-//     跨节点重加密操作，本移植版本暂未实现（见对应方法注释）。
-//   - put/上传：需要分块 AEAD 加密 + draft/revision 两阶段上传协议，暂未实现。
+//   - move/copy：需要把 NodePassphrase 用「目標父節點密鑰環」重新加密，屬於
+//     跨節點重加密操作，本移植版本暫未實現（見對應方法註釋）。
+//   - put/上傳：需要分塊 AEAD 加密 + draft/revision 兩階段上傳協議，暫未實現。
 import {
   StorageDriver,
   FileItem,
@@ -77,7 +77,7 @@ export class ProtonDriveDriver implements StorageDriver {
   private defaultAddrKR: KeyRing = []
   private defaultAddrID = ""
 
-  // 路径/ID 缓存
+  // 路徑/ID 快取
   private idCache = new Map<string, string>()
   private linkCache = new Map<string, ProtonLink>()
   private nodeKRcache = new Map<string, KeyRing>()
@@ -98,7 +98,7 @@ export class ProtonDriveDriver implements StorageDriver {
     const user = await this.client.getUser()
     const addresses = await this.client.getAddresses()
 
-    // 解锁用户密钥
+    // 解鎖用戶密鑰
     const { userKR, saltedKeyPass } = await unlockUserKeys(
       user.Keys,
       this.addition.password,
@@ -107,17 +107,17 @@ export class ProtonDriveDriver implements StorageDriver {
     this.userKR = userKR
     this.client.setSaltedKeyPass(saltedKeyPass)
 
-    // 解锁地址密钥
+    // 解鎖地址密鑰
     this.addrKRs = await unlockAddressKeys(addresses, this.userKR, saltedKeyPass)
     if (this.addrKRs.size === 0) {
       throw new Error("failed to unlock address keys")
     }
 
-    // 默认地址（第一个地址）
+    // 默認地址（第一個地址）
     this.defaultAddrID = addresses[0]?.ID || ""
     this.defaultAddrKR = this.addrKRs.get(this.defaultAddrID) || []
 
-    // 获取主 share 并解锁 share 密钥环
+    // 獲取主 share 並解鎖 share 密鑰環
     const shares = await this.client.getShares()
     this.mainShare =
       shares.find((s) => s.Type === ProtonShareTypeMain) || shares[0]
@@ -125,7 +125,7 @@ export class ProtonDriveDriver implements StorageDriver {
 
     this.mainShareKR = await unlockShareKeyring(this.mainShare, this.addrKRs)
 
-    // 预热根节点密钥环
+    // 預熱根節點密鑰環
     await this.getLinkKR(this.getRootLinkID())
   }
 
@@ -160,7 +160,7 @@ export class ProtonDriveDriver implements StorageDriver {
     return resp.Link
   }
 
-  /** 递归构建节点密钥环：nodeKR = parentKR + nodePrivateKey */
+  /** 遞歸構建節點密鑰環：nodeKR = parentKR + nodePrivateKey */
   private async getLinkKR(linkID: string): Promise<KeyRing> {
     const cached = this.nodeKRcache.get(linkID)
     if (cached) return cached
@@ -199,7 +199,7 @@ export class ProtonDriveDriver implements StorageDriver {
     return parent === "/" ? `/${name}` : `${parent}/${name}`
   }
 
-  /** 列出某个 link 的所有子 link（带缓存 + 翻页） */
+  /** 列出某個 link 的所有子 link（帶快取 + 翻頁） */
   private async listChildren(linkID: string): Promise<ProtonLink[]> {
     const cached = this.childrenCache.get(linkID)
     if (cached) return cached
@@ -225,7 +225,7 @@ export class ProtonDriveDriver implements StorageDriver {
     return all
   }
 
-  /** 名称路径 → linkID（遍历解密文件名） */
+  /** 名稱路徑 → linkID（遍歷解密文件名） */
   private async resolveId(path: string): Promise<string> {
     const clean = this.cleanPath(path)
     if (clean === "/") return this.getRootLinkID()
@@ -296,7 +296,7 @@ export class ProtonDriveDriver implements StorageDriver {
     const name = await this.decryptName(link)
     const isDir = link.Type === 2
 
-    // 文件大小需用解密后的真实大小（link.Size 是加密后大小）
+    // 文件大小需用解密後的真實大小（link.Size 是加密後大小）
     let size = 0
     if (!isDir) {
       const nodeKR = await this.getLinkKR(linkID)
@@ -311,14 +311,14 @@ export class ProtonDriveDriver implements StorageDriver {
       modified: parseProtonDate(link.ModifyTime || link.CreateTime),
       sign: linkID,
       type: calcFileType(name, isDir),
-      // 无 raw_url：下载走 createReadStream（服务端解密）
+      // 無 raw_url：下載走 createReadStream（服務端解密）
       raw_url: "",
     }
   }
 
   /**
-   * 流式解密下载。raw.ts 检测到本方法后会用其替代 raw_url 代理。
-   * 支持 Range（start/end），把字节区间映射到加密分块并逐块解密。
+   * 流式解密下載。raw.ts 檢測到本方法後會用其替代 raw_url 代理。
+   * 支持 Range（start/end），把字節區間映射到加密分塊並逐塊解密。
    */
   async createReadStream(
     physicalPath: string,
@@ -337,7 +337,7 @@ export class ProtonDriveDriver implements StorageDriver {
     // 解密 content session key
     const sessionKey = await decryptSessionKeyPacket(contentKeyPacket, nodeKR)
 
-    // 获取 revision（含加密分块列表）
+    // 獲取 revision（含加密分塊列表）
     const revisions = (await this.client.requestAPI(
       `/drive/volumes/${this.getVolumeID()}/links/${linkID}/revisions`,
     )) as { Code: number; Revisions: any[] }
@@ -351,14 +351,14 @@ export class ProtonDriveDriver implements StorageDriver {
       Token: string
     }[]
 
-    // 解密后真实大小（用于无 Range 请求时的 end 计算）
+    // 解密後真實大小（用於無 Range 請求時的 end 計算）
     const decryptedSize =
       (await decryptXAttrSize(link.XAttr || "", nodeKR)) || revision.Size || 0
     const chunkSize = (parseInt(this.addition.chunk_size || "4") || 4) * 1024 * 1024
 
     const start = options?.start ?? 0
-    // 当解密后大小未知时（decryptedSize <= 0），使用一个足够大的上界，
-    // 避免无 Range 的完整下载只流式传输第一个字节。
+    // 當解密後大小未知時（decryptedSize <= 0），使用一個足夠大的上界，
+    // 避免無 Range 的完整下載只流式傳輸第一個字節。
     const end =
       options?.end ?? (decryptedSize > 0 ? decryptedSize - 1 : Number.MAX_SAFE_INTEGER)
 
@@ -372,7 +372,7 @@ export class ProtonDriveDriver implements StorageDriver {
             const blockBytes = await self.downloadBlock(block.BareURL, block.Token)
             const plain = await decryptBinaryWithSessionKey(blockBytes, [sessionKey])
 
-            // 按字节区间切片
+            // 按字節區間切片
             const blockStart = block.Index * chunkSize
             const blockEnd = blockStart + plain.length - 1
             const from = Math.max(start, blockStart)
@@ -412,7 +412,7 @@ export class ProtonDriveDriver implements StorageDriver {
     const encryptedName = await encryptText(dirName, parentKR)
     const nameHash = await getNameHash(dirName)
 
-    // 生成节点密钥对（公钥作为 NodeKey 上传，私钥的 passphrase 用父密钥环加密）
+    // 生成節點密鑰對（公鑰作為 NodeKey 上傳，私鑰的 passphrase 用父密鑰環加密）
     const { publicKey: nodePublicArmored } = await openpgp.generateKey({
       type: "ecc",
       curve: "curve25519Legacy",
@@ -482,13 +482,13 @@ export class ProtonDriveDriver implements StorageDriver {
     srcPhys: string,
     dstPhys: string,
   ): Promise<void> {
-    // TODO(未实现)：Proton Drive 移动文件并非简单的 parentLinkID 变更，而是
-    // 必须把源节点的 NodePassphrase 用「目标父节点的密钥环」重新加密后上传，
-    // 否则目标父节点无法解开子节点密钥链。实现路径：
-    //   1) 用 srcLink 的父密钥环解密 NodePassphrase 得到明文 passphrase
-    //   2) 用 dstLink 的密钥环(await getLinkKR(dstId))重新 encryptText 该 passphrase
-    //   3) 调用 /drive/volumes/{vol}/links/{linkId}/move 提交 ParentLinkID + 新 NodePassphrase
-    // 由于涉及密钥链交叉重加密与原子性，本移植版本暂未实现。
+    // TODO(未實現)：Proton Drive 移動文件並非簡單的 parentLinkID 變更，而是
+    // 必須把源節點的 NodePassphrase 用「目標父節點的密鑰環」重新加密後上傳，
+    // 否則目標父節點無法解開子節點密鑰鏈。實現路徑：
+    //   1) 用 srcLink 的父密鑰環解密 NodePassphrase 得到明文 passphrase
+    //   2) 用 dstLink 的密鑰環(await getLinkKR(dstId))重新 encryptText 該 passphrase
+    //   3) 調用 /drive/volumes/{vol}/links/{linkId}/move 提交 ParentLinkID + 新 NodePassphrase
+    // 由於涉及密鑰鏈交叉重加密與原子性，本移植版本暫未實現。
     throw new Error("ProtonDrive move is not supported yet")
   }
 
@@ -499,9 +499,9 @@ export class ProtonDriveDriver implements StorageDriver {
     srcPhys: string,
     dstPhys: string,
   ): Promise<void> {
-    // TODO(未实现)：复制等价于「新建节点 + 复用源文件的 content session key」。
-    // 需要对源节点的 NodeKey/NodePassphrase 与文件 ContentKeyPacket 在目标父
-    // 密钥环下重建，且要处理跨 share 的场景，复杂度高于 move，暂未实现。
+    // TODO(未實現)：複製等價於「新建節點 + 複用源文件的 content session key」。
+    // 需要對源節點的 NodeKey/NodePassphrase 與文件 ContentKeyPacket 在目標父
+    // 密鑰環下重建，且要處理跨 share 的場景，複雜度高於 move，暫未實現。
     throw new Error("ProtonDrive copy is not supported")
   }
 
@@ -510,11 +510,11 @@ export class ProtonDriveDriver implements StorageDriver {
     physicalPath: string,
     content: Buffer,
   ): Promise<void> {
-    // TODO(未实现)：上传需走 Proton 的两阶段协议：
-    //   1) POST /drive/volumes/{vol}/links/{parent}/draft 创建草稿，得到 revisionID
-    //   2) 每个 4MB 分块用独立随机 session key 做 AEAD 加密，POST 到 block 上传端点
-    //   3) 汇总 block 元数据后提交 revision，并把文件 ContentKeyPacket 用节点密钥环加密
-    // 且分块必须流式处理以控制内存。本移植版本暂未实现。
+    // TODO(未實現)：上傳需走 Proton 的兩階段協議：
+    //   1) POST /drive/volumes/{vol}/links/{parent}/draft 創建草稿，得到 revisionID
+    //   2) 每個 4MB 分塊用獨立隨機 session key 做 AEAD 加密，POST 到 block 上傳端點
+    //   3) 彙總 block 元資料後提交 revision，並把文件 ContentKeyPacket 用節點密鑰環加密
+    // 且分塊必須流式處理以控制記憶體。本移植版本暫未實現。
     throw new Error("ProtonDrive upload is not supported yet")
   }
 }

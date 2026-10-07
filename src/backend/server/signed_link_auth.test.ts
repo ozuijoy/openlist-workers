@@ -6,19 +6,19 @@ import { saveDb } from "../internal/model/db"
 import { signDownloadPath, needDownloadSign, metaCoversPath } from "../pkg/sign"
 
 /**
- * /p、/d 下载端点的鉴权语义 —— 对齐 Go 实现。
+ * /p、/d 下載端點的鑑權語義 —— 對齊 Go 實現。
  *
  * Go server/router.go：
  *   r.GET("/d/*path", middlewares.PathParse, middlewares.Down(sign.Verify), ...)
  *   r.GET("/p/*path", middlewares.PathParse, middlewares.Down(sign.Verify), ...)
  *
- * 这两条路由**没有 Auth 中间件**。是否放行完全由
- * server/middlewares.needSign 决定：
- *   sign_all || storage.EnableSign || (meta.Password != "" && 覆盖该路径)
- * 都不满足时，端点是公开的。
+ * 這兩條路由**沒有 Auth 中間件**。是否放行完全由
+ * server/middlewares.needSign 決定：
+ *   sign_all || storage.EnableSign || (meta.Password != "" && 覆蓋該路徑)
+ * 都不滿足時，端點是公開的。
  *
- * TS 版曾在此处额外要求登录用户，导致 guest 被禁用后
- * 列目录 / 播放视频全部 401。
+ * TS 版曾在此處額外要求登入用戶，導致 guest 被禁用後
+ * 列目錄 / 播放視頻全部 401。
  */
 
 const dbWith = (
@@ -49,7 +49,7 @@ const appOf = () => {
 }
 
 // ---------------------------------------------------------------------------
-// needSign 判定（对齐 Go middlewares.needSign）
+// needSign 判定（對齊 Go middlewares.needSign）
 // ---------------------------------------------------------------------------
 
 test("needSign: false by default (sign_all off, no meta) — endpoint is public", async () => {
@@ -71,7 +71,7 @@ test("needSign: true when a password-protected meta covers the path", async () =
     env,
   )
   assert.equal(await needDownloadSign({ env }, "/private/a/b.txt"), true)
-  // 未被 meta 覆盖的路径仍然公开
+  // 未被 meta 覆蓋的路徑仍然公開
   assert.equal(await needDownloadSign({ env }, "/public/c.txt"), false)
 })
 
@@ -92,7 +92,7 @@ test("metaCoversPath mirrors Go common.MetaCoversPath", () => {
 })
 
 // ---------------------------------------------------------------------------
-// 端点行为
+// 端點行為
 // ---------------------------------------------------------------------------
 
 test("public endpoint: anonymous request is not 401 when no sign required", async () => {
@@ -100,7 +100,7 @@ test("public endpoint: anonymous request is not 401 when no sign required", asyn
   await saveDb(dbWith(), env)
 
   const res = await appOf().request("/p/README.md", { method: "GET" })
-  // 测试库无该存储 → 路径解析失败（非 401）
+  // 測試庫無該儲存 → 路徑解析失敗（非 401）
   assert.notEqual(
     res.status,
     401,

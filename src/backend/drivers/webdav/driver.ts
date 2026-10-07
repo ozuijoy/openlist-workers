@@ -48,9 +48,9 @@ export class WebdavDriver implements StorageDriver {
       size: item.size,
       is_dir: item.isFolder,
       modified: item.modified,
-      // sign 语义是「下载签名」（由 pkg/sign 签发），不是远程路径。
-      // 之前误塞远程路径会让前端拼出 ?sign=/dav/xxx 这类无效签名，
-      // 在 sign_all/link_expiration 开启时被判为「Invalid or expired sign」→ 401。
+      // sign 語義是「下載簽名」（由 pkg/sign 簽發），不是遠程路徑。
+      // 之前誤塞遠程路徑會讓前端拼出 ?sign=/dav/xxx 這類無效簽名，
+      // 在 sign_all/link_expiration 開啟時被判為「Invalid or expired sign」→ 401。
       sign: "",
       type: calcFileType(item.name, item.isFolder),
       thumb: "",
@@ -105,8 +105,8 @@ export class WebdavDriver implements StorageDriver {
     srcPhys: string,
     dstPhys: string,
   ): Promise<void> {
-    // srcPhys/dstPhys 已是源/目标项自身的路径，参数即项路径，直接移动即可；
-    // 再拼一次 name 会指向不存在的 <item>/<name>，MOVE 源/目标错位。
+    // srcPhys/dstPhys 已是源/目標項自身的路徑，參數即項路徑，直接移動即可；
+    // 再拼一次 name 會指向不存在的 <item>/<name>，MOVE 源/目標錯位。
     await this.client.move(
       this.getRemotePath(srcPhys),
       this.getRemotePath(dstPhys),
@@ -121,8 +121,8 @@ export class WebdavDriver implements StorageDriver {
     srcPhys: string,
     dstPhys: string,
   ): Promise<void> {
-    // srcPhys/dstPhys 已是源/目标项自身的路径，参数即项路径，直接复制即可；
-    // 再拼一次 name 会让 COPY 源/目标路径错位。
+    // srcPhys/dstPhys 已是源/目標項自身的路徑，參數即項路徑，直接複製即可；
+    // 再拼一次 name 會讓 COPY 源/目標路徑錯位。
     await this.client.copy(
       this.getRemotePath(srcPhys),
       this.getRemotePath(dstPhys),
@@ -135,9 +135,9 @@ export class WebdavDriver implements StorageDriver {
     physicalPath: string,
     names: string[],
   ): Promise<void> {
-    // physicalPath 已是目标项自身的路径（op/storage.ts 逐项解析后传入），
-    // 参数即项路径，不得再拼 name，否则指向 <item>/<name>，WebDAV DELETE 对 404 视作成功，
-    // 结果接口静默返回成功但对象仍在。
+    // physicalPath 已是目標項自身的路徑（op/storage.ts 逐項解析後傳入），
+    // 參數即項路徑，不得再拼 name，否則指向 <item>/<name>，WebDAV DELETE 對 404 視作成功，
+    // 結果介面靜默返回成功但對象仍在。
     await this.client.remove(this.getRemotePath(physicalPath))
   }
 

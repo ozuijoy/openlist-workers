@@ -48,7 +48,7 @@ export const PC_ALGORITHMS = [
   "vk7hBjawK/rOSrSWajtbMk95nfgf3",
 ]
 
-// client_id / client_secret 已移除内置默认值，须通过 addition.client_id / addition.client_secret 提供自有 OAuth 应用凭据。
+// client_id / client_secret 已移除內置默認值，須通過 addition.client_id / addition.client_secret 提供自有 OAuth 應用憑據。
 export const ANDROID_CLIENT_VERSION = "1.53.2"
 export const ANDROID_PACKAGE_NAME = "com.pikcloud.pikpak"
 export const ANDROID_SDK_VERSION = "2.0.6.206003"
@@ -154,7 +154,7 @@ export class PikPakApiClient {
     this.captchaTokenVal = addition.captcha_token || ""
 
     const platform = addition.platform || "web"
-    // 支持通过 addition 覆盖内置 OAuth 凭据（产品化时使用自有应用）
+    // 支持通過 addition 覆蓋內置 OAuth 憑據（產品化時使用自有應用）
     const overrideClientId = addition.client_id
     const overrideClientSecret = addition.client_secret
     if (platform === "android") {

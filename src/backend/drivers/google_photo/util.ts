@@ -1,4 +1,4 @@
-// Google Photos API 客户端
+// Google Photos API 客戶端
 import {
   DriverGooglePhotoAddition,
   GooglePhotoMediaItem,

@@ -1,4 +1,4 @@
-// AList V3 driver types — 通过 HTTP API 访问另一个 OpenList / AList 实例
+// AList V3 driver types — 通過 HTTP API 訪問另一個 OpenList / AList 實例
 export interface AListV3Addition {
   url: string
   meta_password?: string

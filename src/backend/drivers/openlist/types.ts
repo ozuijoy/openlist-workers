@@ -1,18 +1,18 @@
-// openlist (挂载另一个 OpenList 实例) - 直接调用对端 /api/fs/* 接口
+// openlist (掛載另一個 OpenList 實例) - 直接調用對端 /api/fs/* 介面
 // API reference: last branch src/drive/openlist
 
 export interface DriverOpenlistAddition {
-  /** 对端 OpenList 实例地址 */
+  /** 對端 OpenList 實例地址 */
   url: string
-  /** 登录用户名（可选，提供则密码登录） */
+  /** 登入用戶名（可選，提供則密碼登入） */
   username?: string
-  /** 登录密码（可选） */
+  /** 登入密碼（可選） */
   password?: string
-  /** 访问 token（可选，直接使用） */
+  /** 訪問 token（可選，直接使用） */
   token?: string
-  /** 元信息密码（可选） */
+  /** 元信息密碼（可選） */
   meta_password?: string
-  /** 根目录 */
+  /** 根目錄 */
   root_path?: string
 }
 

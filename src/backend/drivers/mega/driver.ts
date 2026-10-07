@@ -152,8 +152,8 @@ export class MegaDriver implements StorageDriver {
     srcPhys: string,
     dstPhys: string,
   ): Promise<void> {
-    // srcPhys/dstPhys 是源/目标项自身的物理路径（op/storage.ts moveItems 逐项调用），
-    // 参数即目标项路径，不得再拼 name，否则指向 `<item>/<name>` 导致静默失败。
+    // srcPhys/dstPhys 是源/目標項自身的物理路徑（op/storage.ts moveItems 逐項調用），
+    // 參數即目標項路徑，不得再拼 name，否則指向 `<item>/<name>` 導致靜默失敗。
     const srcPath = this.cleanPath(srcPhys)
     const dstPath = this.cleanPath(dstPhys)
     const dstParentPath = dstPath.substring(0, dstPath.lastIndexOf("/")) || "/"
@@ -184,9 +184,9 @@ export class MegaDriver implements StorageDriver {
     physicalPath: string,
     names: string[],
   ): Promise<void> {
-    // physicalPath 是目标项自身的物理路径（op/storage.ts removeItems 逐项调用），
-    // 参数即目标项路径，不得再拼 name，否则指向 `<item>/<name>`，resolveNodeByPath
-    // 返回 null 后被静默跳过，接口成功但节点仍在。
+    // physicalPath 是目標項自身的物理路徑（op/storage.ts removeItems 逐項調用），
+    // 參數即目標項路徑，不得再拼 name，否則指向 `<item>/<name>`，resolveNodeByPath
+    // 返回 null 後被靜默跳過，介面成功但節點仍在。
     const node = this.resolveNodeByPath(this.cleanPath(physicalPath))
     if (node) {
       await this.client.deleteNode(node.id)

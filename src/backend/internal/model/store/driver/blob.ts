@@ -1,5 +1,5 @@
 /**
- * Blob 驱动：EdgeOne Blob Storage / ESA Blob
+ * Blob 驅動：EdgeOne Blob Storage / ESA Blob
  * 
  * EdgeOne Blob 使用 SDK 方式（不是 binding）
  * ESA Blob 使用 binding 方式
@@ -7,17 +7,17 @@
 import type { Driver } from "../types"
 
 /**
- * 判断对象是否具备 Blob binding 的接口形态。
+ * 判斷對象是否具備 Blob binding 的介面形態。
  *
- * 与 KV 同理，必须做接口校验：环境变量可能只是「绑定名」字符串，
- * 而非绑定对象本身；直接当作 binding 使用会得到
+ * 與 KV 同理，必須做介面校驗：環境變量可能只是「綁定名」字符串，
+ * 而非綁定對象本身；直接當作 binding 使用會得到
  * "xxx.get is not a function"。
  */
 function isBlobLike(b: any): boolean {
   if (!b || typeof b !== "object") return false
-  // 属性访问可能触发异常 getter，任何异常都视为「不是可用绑定」。
+  // 屬性訪問可能觸發異常 getter，任何異常都視為「不是可用綁定」。
   try {
-    // ESA Blob 至少需要读取能力
+    // ESA Blob 至少需要讀取能力
     if (typeof b.get !== "function") return false
     return typeof b.put === "function" || typeof b.set === "function"
   } catch {
@@ -26,9 +26,9 @@ function isBlobLike(b: any): boolean {
 }
 
 /**
- * 检测 ESA Blob binding（阿里云）。
+ * 檢測 ESA Blob binding（阿里雲）。
  *
- * env 与 globalThis 独立检查：env 为真值时不应阻断对 globalThis 的探测。
+ * env 與 globalThis 獨立檢查：env 為真值時不應阻斷對 globalThis 的探測。
  */
 function getEsaBlobBinding(env?: any): any | null {
   const g = globalThis as any
@@ -43,7 +43,7 @@ function getEsaBlobBinding(env?: any): any | null {
 }
 
 /**
- * 获取 EdgeOne Blob Store（使用 SDK）
+ * 獲取 EdgeOne Blob Store（使用 SDK）
  */
 async function getEdgeOneStore(namespace: string = "default"): Promise<any | null> {
   try {
@@ -58,28 +58,28 @@ export const blobDriver: Driver = {
   name: "blob",
 
   async isAvailable(env?: any): Promise<boolean> {
-    // 检查 ESA Blob binding
+    // 檢查 ESA Blob binding
     if (getEsaBlobBinding(env) !== null) {
       return true
     }
     
-    // 检查 EdgeOne Blob SDK
+    // 檢查 EdgeOne Blob SDK
     const store = await getEdgeOneStore()
     return store !== null
   },
 
   async init(env?: any): Promise<void> {
-    // Blob 无需初始化
+    // Blob 無需初始化
   },
 
   async get(key: string, env?: any): Promise<string | null> {
-    // 优先使用 ESA Blob binding
+    // 優先使用 ESA Blob binding
     const esaBlob = getEsaBlobBinding(env)
     if (esaBlob) {
       try {
         const obj = await esaBlob.get(key)
         if (!obj) return null
-        return await obj.text()  // ESA Blob 返回对象，需要 .text()
+        return await obj.text()  // ESA Blob 返回對象，需要 .text()
       } catch (err) {
         console.warn(`[Blob] ESA get key="${key}" failed:`, err)
         return null
@@ -91,7 +91,7 @@ export const blobDriver: Driver = {
     if (!store) throw new Error("Blob not available")
     
     try {
-      // EdgeOne SDK 默认 type="text" 返回字符串
+      // EdgeOne SDK 默認 type="text" 返回字符串
       const v = await store.get(key)
       if (v == null) return null
       return typeof v === "string" ? v : JSON.stringify(v)
@@ -102,7 +102,7 @@ export const blobDriver: Driver = {
   },
 
   async put(key: string, value: string, env?: any): Promise<void> {
-    // 优先使用 ESA Blob binding
+    // 優先使用 ESA Blob binding
     const esaBlob = getEsaBlobBinding(env)
     if (esaBlob) {
       await esaBlob.put(key, value)
@@ -117,7 +117,7 @@ export const blobDriver: Driver = {
   },
 
   async delete(key: string, env?: any): Promise<void> {
-    // 优先使用 ESA Blob binding
+    // 優先使用 ESA Blob binding
     const esaBlob = getEsaBlobBinding(env)
     if (esaBlob) {
       await esaBlob.delete(key)
@@ -132,7 +132,7 @@ export const blobDriver: Driver = {
   },
 
   async list(prefix: string, env?: any): Promise<string[]> {
-    // 优先使用 ESA Blob binding
+    // 優先使用 ESA Blob binding
     const esaBlob = getEsaBlobBinding(env)
     if (esaBlob) {
       const keys: string[] = []
@@ -151,7 +151,7 @@ export const blobDriver: Driver = {
     const store = await getEdgeOneStore()
     if (!store) throw new Error("Blob not available")
     
-    // 文档：list({ prefix, paginate: true }) 自动聚合所有分页，返回 { blobs: [{ key, etag }] }
+    // 文件：list({ prefix, paginate: true }) 自動聚合所有分頁，返回 { blobs: [{ key, etag }] }
     const result = await store.list({ prefix, paginate: true })
     return (result?.blobs || []).map((b: any) => b.key)
   },
@@ -180,7 +180,7 @@ export const blobDriver: Driver = {
     
     if (edgeOneStore) {
       try {
-        // EdgeOne SDK 没有 head 方法，用 get 测试（不存在不报错）
+        // EdgeOne SDK 沒有 head 方法，用 get 測試（不存在不報錯）
         await edgeOneStore.get("__health_check__")
         return {
           driver: "blob",

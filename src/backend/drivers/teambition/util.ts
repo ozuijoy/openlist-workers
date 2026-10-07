@@ -1,4 +1,4 @@
-// Teambition API 客户端
+// Teambition API 客戶端
 import {
   DriverTeambitionAddition,
   TbCollection,
@@ -21,7 +21,7 @@ export class ClientTeambition {
   async init(): Promise<void> {
     if (!this.addition.cookie) throw new Error("[Teambition] cookie is required")
     if (!this.addition.project_id) throw new Error("[Teambition] project_id is required")
-    // 验证 cookie 有效
+    // 驗證 cookie 有效
     const resp = await fetch(`${this.baseUrl}/api/v2/roles`, {
       headers: { Cookie: this.addition.cookie },
     })
@@ -54,7 +54,7 @@ export class ClientTeambition {
       count: "50",
     }
 
-    // 文件夹
+    // 文件夾
     const folders: TbCollection[] = []
     let page = 1
     while (true) {
@@ -85,7 +85,7 @@ export class ClientTeambition {
     return { folders, works }
   }
 
-  /** 下载链接：先请求一次拿 302 最终地址 */
+  /** 下載鏈接：先請求一次拿 302 最終地址 */
   async resolveDownloadUrl(url: string): Promise<string> {
     const resp = await fetch(url, {
       headers: { Cookie: this.addition.cookie },

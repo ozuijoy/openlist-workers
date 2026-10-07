@@ -43,8 +43,8 @@ import { assertSafeUrl, getTrustedHosts } from "../pkg/http"
 import { seedRouter } from "./seed"
 
 /**
- * 该路径所属存储是否禁止目录列表（对齐 Go handles.FsList 的 DisableIndex 判断）。
- * 存储无法解析时返回 false，避免误伤虚拟目录。
+ * 該路徑所屬儲存是否禁止目錄列表（對齊 Go handles.FsList 的 DisableIndex 判斷）。
+ * 儲存無法解析時返回 false，避免誤傷虛擬目錄。
  */
 async function isStorageIndexDisabled(reqPath: string): Promise<boolean> {
   try {
@@ -78,23 +78,23 @@ const getStorageRequestContext = (c: any) => {
     }
     return {
       waitUntil: (promise: Promise<unknown>) => executionCtx.waitUntil(promise),
-      env: c.env, // 传递 env 用于请求级 KV 缓存复用
+      env: c.env, // 傳遞 env 用於請求級 KV 快取複用
     }
   } catch {
     return undefined
   }
 }
 
-// ---- 写操作权限校验 ----
-// 游客（未登录 / 无凭证 / token 无效）一律 403，普通用户需具备
-// WRITE_CONTENT 权限位，管理员放行。修复「任何人可匿名上传/删除文件」
-// 的安全漏洞，同时让 /fs/list 的 write 字段如实反映请求者身份。
+// ---- 寫操作權限校驗 ----
+// 遊客（未登入 / 無憑證 / token 無效）一律 403，普通用戶需具備
+// WRITE_CONTENT 權限位，管理員放行。修復「任何人可匿名上傳/刪除文件」
+// 的安全漏洞，同時讓 /fs/list 的 write 欄位如實反映請求者身份。
 const permissionDenied = (c: any) =>
   c.json({ code: 403, message: "Permission denied", data: null }, 403)
 
-// ---- 上传大小限制（M-5：防止超大请求体被整体读入内存导致 Worker OOM）----
-// 单次整体上传（/put /form）与分片单片（/upload/part）分开设限，
-// 均可通过环境变量 MAX_UPLOAD / MAX_UPPART 覆盖。
+// ---- 上傳大小限制（M-5：防止超大請求體被整體讀入記憶體導致 Worker OOM）----
+// 單次整體上傳（/put /form）與分片單片（/upload/part）分開設限，
+// 均可通過環境變量 MAX_UPLOAD / MAX_UPPART 覆蓋。
 const DEFAULT_MAX_UPLOAD = 25 * 1024 * 1024 // 25MB
 const DEFAULT_MAX_UPPART = 16 * 1024 * 1024 // 16MB
 
@@ -110,7 +110,7 @@ function getUploadSizeLimit(c: any, part: boolean): number {
   return part ? DEFAULT_MAX_UPPART : DEFAULT_MAX_UPLOAD
 }
 
-/** 返回超限时的上限字节数；未超限或无法判断（无 Content-Length）返回 null */
+/** 返回超限時的上限字節數；未超限或無法判斷（無 Content-Length）返回 null */
 function exceedsUploadLimit(c: any, part = false): number | null {
   const contentLength = parseInt(c.req.header("Content-Length") || "0", 10)
   if (!contentLength) return null
@@ -118,9 +118,9 @@ function exceedsUploadLimit(c: any, part = false): number | null {
   return contentLength > max ? max : null
 }
 
-// 分享请求错误统一出口：
-// - 密码错误 → 403，前端据此弹出提取码输入框（State.NeedPassword）
-// - 其他（不存在/禁用/过期/超次数/为空）→ 400，前端显示友好提示
+// 分享請求錯誤統一出口：
+// - 密碼錯誤 → 403，前端據此彈出提取碼輸入框（State.NeedPassword）
+// - 其他（不存在/禁用/過期/超次數/為空）→ 400，前端顯示友好提示
 const shareErrorResponse = (c: any, error?: string) => {
   const isWrongPassword = error === "wrong password"
   const msg = error || "share error"
@@ -320,7 +320,7 @@ fsRouter.post("/list", async (c) => {
       })
     }
 
-    // 普通路径：应用 meta 权限（密码 + read_users + readme/header + hide 过滤）
+    // 普通路徑：應用 meta 權限（密碼 + read_users + readme/header + hide 過濾）
     const meta = await getNearestMeta(reqPath, c.env)
     if (!canAccess(user, meta, reqPath, body.password || "")) {
       return c.json(
@@ -329,8 +329,8 @@ fsRouter.post("/list", async (c) => {
       )
     }
 
-    // disable_index（对齐 Go handles.FsList）：该存储禁止目录列表时，
-    // 即使有读权限也不返回内容，避免分享单文件后被逐级浏览整个存储。
+    // disable_index（對齊 Go handles.FsList）：該儲存禁止目錄列表時，
+    // 即使有讀權限也不返回內容，避免分享單文件後被逐級瀏覽整個儲存。
     if (await isStorageIndexDisabled(reqPath)) {
       return c.json(
         { code: 403, message: "Index is disabled for this storage", data: null },
@@ -342,15 +342,15 @@ fsRouter.post("/list", async (c) => {
       reqPath,
       requestContext,
     )
-    // write：用户写权限 + meta.write_users 白名单（对齐 Go common.CanWrite）
+    // write：用戶寫權限 + meta.write_users 白名單（對齊 Go common.CanWrite）
     const writable = canWrite(user) && canWriteMeta(user, meta, reqPath)
     const writeContentBypass = canWriteContentBypassUserPerms(meta, reqPath)
-    // 下载签名（对齐 Go server/common.Sign + handles.isEncrypt）：
-    //   目录不签名；sign_all（或 TS 扩展的 link_expiration）开启、
-    //   或该目录被设了密码的 meta 覆盖时，为文件项签发 HMAC 签名。
-    // 必须与 raw.ts 的 needDownloadSign 保持对称，否则直链会验签失败。
-    // 注意：不能回退 item.sign —— sign 由本层统一签发，驱动不参与
-    //（历史上 webdav/autoindex 驱动曾把远程路径/URL 塞进该字段）。
+    // 下載簽名（對齊 Go server/common.Sign + handles.isEncrypt）：
+    //   目錄不簽名；sign_all（或 TS 擴展的 link_expiration）開啟、
+    //   或該目錄被設了密碼的 meta 覆蓋時，為文件項簽發 HMAC 簽名。
+    // 必須與 raw.ts 的 needDownloadSign 保持對稱，否則直鏈會驗籤失敗。
+    // 注意：不能回退 item.sign —— sign 由本層統一簽發，驅動不參與
+    //（歷史上 webdav/autoindex 驅動曾把遠程路徑/URL 塞進該欄位）。
     const signPolicy = await getSignPolicy(c)
     const encrypt = await isEncryptPath(c, reqPath)
     const signNeeded = signPolicy.enabled || encrypt
@@ -367,8 +367,8 @@ fsRouter.post("/list", async (c) => {
             !item.is_dir && signNeeded
               ? await signDownloadPath(c, fullPath, signExpiresIn)
               : ""
-          // hashinfo / hash_info：从驱动透传哈希信息（Go ObjResp 字段）
-          // 驱动不支持时为空字符串/空对象，保持与 Go 响应结构兼容
+          // hashinfo / hash_info：從驅動透傳哈希信息（Go ObjResp 欄位）
+          // 驅動不支持時為空字符串/空對象，保持與 Go 響應結構相容
           const hashInfoStr: string = (item as any).hashinfo || (item as any).hash_info_str || ""
           const hashInfo: Record<string, string> = (item as any).hash_info || {}
           return {
@@ -416,17 +416,17 @@ fsRouter.post("/list", async (c) => {
       }
     }
 
-    // direct_upload_tools：从 storage 透传支持的直传工具列表（对齐 Go FsListResp）
-    // storage 不支持时为空数组，保持与 Go 响应结构兼容
+    // direct_upload_tools：從 storage 透傳支持的直傳工具列表（對齊 Go FsListResp）
+    // storage 不支持時為空數組，保持與 Go 響應結構相容
     const directUploadTools: string[] = (() => {
       if (!storage) return []
       const tools: string[] = []
       const driver = (storage as any)
-      // S3 系列驱动支持 s3_presigned 直传
+      // S3 系列驅動支持 s3_presigned 直傳
       if (/^(s3|minio|cos|oss|r2|b2|cloudflare_r2)/i.test(driver.driver || "")) {
         tools.push("s3_presigned")
       }
-      // 驱动自声明的 direct_upload_tools 字段（驱动扩展点）
+      // 驅動自聲明的 direct_upload_tools 欄位（驅動擴展點）
       if (Array.isArray(driver.direct_upload_tools)) {
         for (const t of driver.direct_upload_tools) {
           if (!tools.includes(t)) tools.push(t)
@@ -436,8 +436,8 @@ fsRouter.post("/list", async (c) => {
     })()
 
     const { content: pagedContent, total } = paginateStorageItems(normalized)
-    // cache_expiration：由 custom_cache_policies 按路径覆盖后得出（分钟）。
-    // 对齐 Go 的路径级缓存策略；前端/上层可据此决定该目录的列表缓存时长。
+    // cache_expiration：由 custom_cache_policies 按路徑覆蓋後得出（分鐘）。
+    // 對齊 Go 的路徑級快取策略；前端/上層可據此決定該目錄的列表快取時長。
     const cacheExpiration = storage
       ? resolveCacheExpiration(storage, reqPath)
       : undefined
@@ -535,7 +535,7 @@ fsRouter.post("/get", async (c) => {
       })
     }
 
-    // 普通路径：应用 meta 权限（密码 + read_users + readme/header）
+    // 普通路徑：應用 meta 權限（密碼 + read_users + readme/header）
     const meta = await getNearestMeta(reqPath, c.env)
     if (!canAccess(user, meta, reqPath, body.password || "")) {
       return c.json(
@@ -545,7 +545,7 @@ fsRouter.post("/get", async (c) => {
     }
 
     const { item, provider, rawUrl } = await getItem(reqPath, requestContext)
-    // 与 /fs/list 同源逻辑，见上方注释
+    // 與 /fs/list 同源邏輯，見上方註釋
     const signPolicy = await getSignPolicy(c)
     const signNeeded = signPolicy.enabled || (await isEncryptPath(c, reqPath))
     const sign =
@@ -556,16 +556,16 @@ fsRouter.post("/get", async (c) => {
             signPolicy.expiresIn || (await getSignExpiresIn(c)),
           )
         : ""
-    // raw_url 必须自带签名（Issue #66）。
+    // raw_url 必須自帶簽名（Issue #66）。
     //
-    // 前端把本接口的 raw_url 直接当下载地址使用：预览页的「下载」按钮就是
-    // <a href={raw_url}>（pages/home/previews/download.tsx），图片/视频预览也
-    // 直接把它塞进 <img>/<video> 的 src，都不会再自己拼 ?sign=。而 raw_url
-    // 指向的是需要验签的 /p 或 /d 端点（前缀由 getItem 按 canProxy() 选定）：
-    // sign_all、存储级 enable_sign、密码 meta 覆盖任一命中时，缺签名一律
-    // 401 "sign verify failed"——外部表现就是「预览页能正常打开，一点下载就 401」。
+    // 前端把本介面的 raw_url 直接當下載地址使用：預覽頁的「下載」按鈕就是
+    // <a href={raw_url}>（pages/home/previews/download.tsx），圖片/視頻預覽也
+    // 直接把它塞進 <img>/<video> 的 src，都不會再自己拼 ?sign=。而 raw_url
+    // 指向的是需要驗籤的 /p 或 /d 端點（前綴由 getItem 按 canProxy() 選定）：
+    // sign_all、儲存級 enable_sign、密碼 meta 覆蓋任一命中時，缺簽名一律
+    // 401 "sign verify failed"——外部表現就是「預覽頁能正常打開，一點下載就 401」。
     //
-    // 对齐 Go server/handles/fsread.go FsGet：
+    // 對齊 Go server/handles/fsread.go FsGet：
     //   if isEncrypt(meta, reqPath) || setting.GetBool(conf.SignAll) {
     //       query = "?sign=" + sign.Sign(reqPath)
     //   }
@@ -577,9 +577,9 @@ fsRouter.post("/get", async (c) => {
     const writable = canWrite(user) && canWriteMeta(user, meta, reqPath)
     const writeContentBypass = canWriteContentBypassUserPerms(meta, reqPath)
 
-    // Related：查找同目录中文件名前缀相同的文件（字幕 .srt/.ass/.vtt、NFO 等）
-    // 对齐 Go server/handles/fsread.go getRelated 逻辑：
-    //   stem = 去掉最后一个扩展名的文件名；related = 同目录中 stem 相同的其他文件
+    // Related：查找同目錄中文件名前綴相同的文件（字幕 .srt/.ass/.vtt、NFO 等）
+    // 對齊 Go server/handles/fsread.go getRelated 邏輯：
+    //   stem = 去掉最後一個擴展名的文件名；related = 同目錄中 stem 相同的其他文件
     let related: any[] = []
     if (!item.is_dir) {
       try {
@@ -608,7 +608,7 @@ fsRouter.post("/get", async (c) => {
             type: s.type ?? 0,
           }))
       } catch {
-        // 获取关联文件失败不影响主文件响应
+        // 獲取關聯文件失敗不影響主文件響應
         related = []
       }
     }
@@ -888,10 +888,10 @@ fsRouter.put("/form", async (c) => {
   }
 })
 
-// ---- 分片会话上传：解决大文件整体缓冲导致的卡死/OOM ----
-// 流程：POST /fs/upload/create 建会话 → PUT /fs/upload/part 逐片上传
-//      → POST /fs/upload/complete 收尾。每片是独立 HTTP 请求，Worker
-//      内存占用恒定，不受 CF Workers 请求体/内存上限约束。
+// ---- 分片會話上傳：解決大文件整體緩衝導致的卡死/OOM ----
+// 流程：POST /fs/upload/create 建會話 → PUT /fs/upload/part 逐片上傳
+//      → POST /fs/upload/complete 收尾。每片是獨立 HTTP 請求，Worker
+//      記憶體佔用恆定，不受 CF Workers 請求體/記憶體上限約束。
 
 fsRouter.post("/upload/create", async (c) => {
   const user = await getUserFromContext(c)
@@ -902,7 +902,7 @@ fsRouter.post("/upload/create", async (c) => {
     size,
     md5,
   } = await c.req.json().catch(() => ({}))
-  // 根目录上传时调用方可能传 ""，归一化为 "/"
+  // 根目錄上傳時調用方可能傳 ""，歸一化為 "/"
   const dirPath = getActualPath(user, rawPath || "/")
   const requestContext = getStorageRequestContext(c)
   if (!file_name) {
@@ -919,7 +919,7 @@ fsRouter.post("/upload/create", async (c) => {
     }
     const driver = await getDriver(resolved.storage!.driver, resolved.storage)
     if (typeof (driver as any).createUploadSession !== "function") {
-      // 当前存储不支持分片会话上传：返回 null，前端自动回退到流式上传
+      // 當前儲存不支持分片會話上傳：返回 null，前端自動回退到流式上傳
       return c.json({ code: 200, message: "success", data: null })
     }
     let info
@@ -1006,7 +1006,7 @@ fsRouter.post("/upload/complete", async (c) => {
     session,
     partMd5s,
   } = await c.req.json().catch(() => ({}))
-  // 根目录上传时调用方可能传 ""，归一化为 "/"
+  // 根目錄上傳時調用方可能傳 ""，歸一化為 "/"
   const dirPath = getActualPath(user, rawPath || "/")
   const requestContext = getStorageRequestContext(c)
   if (!session) {
@@ -1129,7 +1129,7 @@ fsRouter.post("/other", async (c) => {
   }
 })
 
-// ---- batch_rename / regex_rename（与 Go server/handles/fsbatch.go 对齐）----
+// ---- batch_rename / regex_rename（與 Go server/handles/fsbatch.go 對齊）----
 
 fsRouter.post("/batch_rename", async (c) => {
   const user = await getUserFromContext(c)
@@ -1189,7 +1189,7 @@ fsRouter.post("/regex_rename", async (c) => {
   }
 })
 
-// ---- recursive_move（与 Go FsRecursiveMove 对齐：递归枚举文件后扁平移动到 dst_dir）----
+// ---- recursive_move（與 Go FsRecursiveMove 對齊：遞歸枚舉文件後扁平移動到 dst_dir）----
 
 fsRouter.post("/recursive_move", async (c) => {
   const user = await getUserFromContext(c)
@@ -1202,7 +1202,7 @@ fsRouter.post("/recursive_move", async (c) => {
   const policy = conflict_policy || "overwrite"
   const requestContext = getStorageRequestContext(c)
   try {
-    // 预取目标目录现有文件名（用于 cancel/skip 冲突策略）
+    // 預取目標目錄現有文件名（用於 cancel/skip 衝突策略）
     let existing = new Set<string>()
     if (policy !== "overwrite") {
       const dst = await listItems(dstPath, requestContext)
@@ -1246,7 +1246,7 @@ fsRouter.post("/recursive_move", async (c) => {
   }
 })
 
-// ---- remove_empty_directory（与 Go FsRemoveEmptyDirectory 对齐）----
+// ---- remove_empty_directory（與 Go FsRemoveEmptyDirectory 對齊）----
 
 fsRouter.post("/remove_empty_directory", async (c) => {
   const user = await getUserFromContext(c)
@@ -1262,7 +1262,7 @@ fsRouter.post("/remove_empty_directory", async (c) => {
           await removeEmptyDirs(`${dir}/${item.name}`.replace(/\/{2,}/g, "/"))
         }
       }
-      if (dir === srcPath) return // 不删除根目录本身
+      if (dir === srcPath) return // 不刪除根目錄本身
       const after = await listItems(dir, requestContext)
       if (after.content.length === 0) {
         const parent = dir.split("/").slice(0, -1).join("/") || "/"
@@ -1277,7 +1277,7 @@ fsRouter.post("/remove_empty_directory", async (c) => {
   }
 })
 
-// ---- link（与 Go Link 对齐，admin 权限，返回真实直链）----
+// ---- link（與 Go Link 對齊，admin 權限，返回真實直鏈）----
 
 fsRouter.post("/link", async (c) => {
   const user = await getUserFromContext(c)
@@ -1311,13 +1311,13 @@ fsRouter.post("/link", async (c) => {
         requestContext,
       )
     }
-    // 无直链（如本地/加密驱动）：返回代理下载地址。
+    // 無直鏈（如本地/加密驅動）：返回代理下載地址。
     //
-    // 对齐 Go server/handles/fsmanage.go Link：
+    // 對齊 Go server/handles/fsmanage.go Link：
     //   fmt.Sprintf("%s/p%s?d&sign=%s", GetApiUrl(c), EncodePath(rawPath, true), sign.Sign(rawPath))
-    // 即路径逐段编码 + **无条件**带签名（Go 不看 needSign；这里同样补齐，
-    // 否则在 sign_all / enable_sign / 密码 meta 生效时复制出来的链接必然 401）。
-    // 「?d」（强制 attachment 下载）TS 侧无对应语义，故不追加。
+    // 即路徑逐段編碼 + **無條件**帶簽名（Go 不看 needSign；這裡同樣補齊，
+    // 否則在 sign_all / enable_sign / 密碼 meta 生效時複製出來的鏈接必然 401）。
+    // 「?d」（強制 attachment 下載）TS 側無對應語義，故不追加。
     const sign = await signDownloadPath(c, reqPath, await getSignExpiresIn(c))
     return c.json({
       code: 200,
@@ -1331,7 +1331,7 @@ fsRouter.post("/link", async (c) => {
   }
 })
 
-// ---- get_direct_upload_info（与 Go FsGetDirectUploadInfo 对齐）----
+// ---- get_direct_upload_info（與 Go FsGetDirectUploadInfo 對齊）----
 
 fsRouter.post("/get_direct_upload_info", async (c) => {
   const user = await getUserFromContext(c)
@@ -1345,7 +1345,7 @@ fsRouter.post("/get_direct_upload_info", async (c) => {
     }
     const driver = await getDriver(resolved.storage.driver, resolved.storage)
     const d = driver as any
-    // 优先使用驱动的直传能力
+    // 優先使用驅動的直傳能力
     if (typeof d.getDirectUploadInfo === "function") {
       const info = await d.getDirectUploadInfo(
         resolved.relative,
@@ -1364,7 +1364,7 @@ fsRouter.post("/get_direct_upload_info", async (c) => {
           })
           if (info) return c.json({ code: 200, message: "success", data: info })
         } catch {
-          // 尝试下一个 method
+          // 嘗試下一個 method
         }
       }
     }
@@ -1374,9 +1374,9 @@ fsRouter.post("/get_direct_upload_info", async (c) => {
   }
 })
 
-// ---- Multipart 分片上传（与官方前端 multipart.ts API 契约对齐）----
-// 服务层会话管理器：/fs/multipart/init | chunk | complete | status
-// 内部桥接到驱动层 createUploadSession / uploadPart / completeUploadSession。
+// ---- Multipart 分片上傳（與官方前端 multipart.ts API 契約對齊）----
+// 服務層會話管理器：/fs/multipart/init | chunk | complete | status
+// 內部橋接到驅動層 createUploadSession / uploadPart / completeUploadSession。
 
 function splitUploadPath(uploadPath: string): { dir: string; name: string } {
   const clean = uploadPath.startsWith("/") ? uploadPath : "/" + uploadPath
@@ -1413,14 +1413,14 @@ fsRouter.post("/multipart/init", async (c) => {
     }
     const driver = await getDriver(resolved.storage!.driver, resolved.storage)
     if (typeof (driver as any).createUploadSession !== "function") {
-      // 存储不支持分片：返回 data:null，前端自动回退到流式上传
+      // 儲存不支持分片：返回 data:null，前端自動回退到流式上傳
       return c.json({ code: 200, message: "success", data: null })
     }
 
     const chunkSize = clampChunkSize(rawChunk)
     const totalChunks = Math.max(1, Math.ceil(size / chunkSize))
 
-    // 断点续传：同 path+size 的未完成会话直接复用
+    // 斷點續傳：同 path+size 的未完成會話直接複用
     let session: MultipartSession
     let resumed = false
     const existing = findReceivingSession(rawPath, size)
@@ -1449,7 +1449,7 @@ fsRouter.post("/multipart/init", async (c) => {
         storage_driver: resolved.storage!.driver,
         created_at: Date.now(),
       }
-      // 秒传：驱动返回 reuse 标记
+      // 秒傳：驅動返回 reuse 標記
       if (info?.reuse) {
         session.state = "completed"
         session.received = new Set(
@@ -1492,7 +1492,7 @@ fsRouter.put("/multipart/chunk", async (c) => {
     return c.json({ code: 400, message: "invalid X-Chunk-Index", data: null }, 400)
   }
 
-  // 幂等：已收分片直接返回当前快照
+  // 冪等：已收分片直接返回當前快照
   if (session.received.has(chunkIndex)) {
     return c.json({ code: 200, message: "success", data: mpSnapshot(session) })
   }
@@ -1603,12 +1603,12 @@ fsRouter.get("/multipart/status", async (c) => {
   return c.json({ code: 200, message: "success", data: mpSnapshot(session) })
 })
 
-// ---- 归档（Archive）----
-// ZIP（Store/Deflate）：Worker 内置 DecompressionStream，完整支持。
-// tar/tar.gz/tgz/tar.bz2/tar.xz：需要对应解压实现，当前运行时若无
-//   原生支持则返回 501（能力不足，非请求错误），前端可据此提示用户。
-// 7z/rar：Worker 运行时无原生解析库，明确返回 501。
-// 归档内容在内存中解析，受 Worker 内存限制，适合中小型归档。
+// ---- 歸檔（Archive）----
+// ZIP（Store/Deflate）：Worker 內置 DecompressionStream，完整支持。
+// tar/tar.gz/tgz/tar.bz2/tar.xz：需要對應解壓實現，當前運行時若無
+//   原生支持則返回 501（能力不足，非請求錯誤），前端可據此提示用戶。
+// 7z/rar：Worker 運行時無原生解析庫，明確返回 501。
+// 歸檔內容在記憶體中解析，受 Worker 記憶體限制，適合中小型歸檔。
 
 type ArchiveFormat = "zip" | "tar" | "tar.gz" | "tar.bz2" | "tar.xz" | "7z" | "rar"
 
@@ -1624,12 +1624,12 @@ function detectArchiveFormat(name: string): ArchiveFormat | null {
   return null
 }
 
-/** 当前运行时实际可解析的格式（ZIP 始终可用；其他格式按需扩展） */
+/** 當前運行時實際可解析的格式（ZIP 始終可用；其他格式按需擴展） */
 function isNativelySupported(fmt: ArchiveFormat): boolean {
   return fmt === "zip"
 }
 
-/** 下载归档文件字节（复用驱动 get() 的 raw_url + SSRF 防护） */
+/** 下載歸檔文件字節（複用驅動 get() 的 raw_url + SSRF 防護） */
 async function fetchArchiveBytes(
   c: any,
   user: any,
@@ -1653,8 +1653,8 @@ async function fetchArchiveBytes(
   if (!item || !item.raw_url) {
     throw new Error("archive driver did not return download link")
   }
-  // 管理员配置的受信存储 endpoint host（内网自建 S3/WebDAV/MinIO）+ 全局
-  // 环境变量 SSRF_ALLOWED_HOSTS 加入白名单
+  // 管理員配置的受信儲存 endpoint host（內網自建 S3/WebDAV/MinIO）+ 全局
+  // 環境變量 SSRF_ALLOWED_HOSTS 加入白名單
   const trustedHosts = getTrustedHosts(resolved.storage?.addition, c.env)
   assertSafeUrl(item.raw_url, "Archive download", trustedHosts)
   const resp = await fetch(item.raw_url, {
@@ -1664,7 +1664,7 @@ async function fetchArchiveBytes(
   return await resp.arrayBuffer()
 }
 
-/** 将扁平条目构建为树形结构（对齐 Go ArchiveContentResp） */
+/** 將扁平條目構建為樹形結構（對齊 Go ArchiveContentResp） */
 function buildArchiveTree(archive: ZipArchive): any[] {
   const root: any[] = []
   const dirMap = new Map<string, any>()

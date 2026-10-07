@@ -14,7 +14,7 @@ function sanitizePath(p: string): string {
   return "/" + segments.join("/")
 }
 
-// 分享管理接口需要管理员权限（list/get/update/delete）
+// 分享管理介面需要管理員權限（list/get/update/delete）
 shareRouter.use("/list", adminAuthMiddleware)
 shareRouter.use("/get", adminAuthMiddleware)
 shareRouter.use("/update", adminAuthMiddleware)
@@ -52,7 +52,7 @@ shareRouter.post("/create", async (c) => {
     return c.json({ code: 401, message: "Unauthorized", data: null }, 401)
   }
 
-  // 检查分享权限位
+  // 檢查分享權限位
   if (!isAdmin(user) && !can(user, PermissionBit.SHARE)) {
     return c.json({ code: 403, message: "Permission denied", data: null }, 403)
   }
@@ -60,7 +60,7 @@ shareRouter.post("/create", async (c) => {
   const body = await c.req.json().catch(() => ({}))
   const db = await getDb(c.env)
 
-  // 校验并清理分享路径
+  // 校驗並清理分享路徑
   let files: string[] = []
   if (Array.isArray(body.files)) {
     try {
@@ -76,7 +76,7 @@ shareRouter.post("/create", async (c) => {
     }
   }
 
-  // 校验自定义 ID 格式
+  // 校驗自定義 ID 格式
   const rawId = body.id ? String(body.id).trim() : ""
   if (rawId && !/^[a-zA-Z0-9_-]{1,64}$/.test(rawId)) {
     return c.json(
@@ -106,8 +106,8 @@ shareRouter.post("/create", async (c) => {
   const newShare = {
     id: shareId,
     new_id: body.new_id || shareId,
-    // 对齐 Go CreateSharing：管理员恢复分享时可通过 creator/creator_role 字段
-    // 保留原创建者，否则默认当前登录用户。
+    // 對齊 Go CreateSharing：管理員恢復分享時可通過 creator/creator_role 欄位
+    // 保留原創建者，否則默認當前登入用戶。
     creator: body.creator || user.username || "user",
     creator_role:
       body.creator_role !== undefined ? body.creator_role : (user.role ?? 1),

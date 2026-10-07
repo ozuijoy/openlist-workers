@@ -1,39 +1,39 @@
 /**
- * KV HTTP 代理共享实现（EdgeOne Node 云函数专用）。
+ * KV HTTP 代理共享實現（EdgeOne Node 雲函數專用）。
  *
- * 背景：EdgeOne 的 KV 绑定只注入到 Edge Functions（V8 运行时），不会注入到
- * Node 云函数（SCF）。因此 Node 侧拿不到 binding，必须经同部署的 Edge Function
- * （functions/kv-get|kv-put|kv-delete|kv-list）代为访问 KV。
+ * 背景：EdgeOne 的 KV 綁定只注入到 Edge Functions（V8 運行時），不會注入到
+ * Node 雲函數（SCF）。因此 Node 側拿不到 binding，必須經同部署的 Edge Function
+ * （functions/kv-get|kv-put|kv-delete|kv-list）代為訪問 KV。
  *
- * 本模块是该代理协议的**唯一实现**，被两处消费：
- *   - driver/kv.ts  —— 业务数据读写（Driver 接口）
- *   - store/json.ts —— 密钥/黑名单等既有 binding 形态调用方
- * 放在独立模块是为了避免 json.ts ↔ driver/kv.ts 互相导入形成循环依赖。
+ * 本模塊是該代理協議的**唯一實現**，被兩處消費：
+ *   - driver/kv.ts  —— 業務資料讀寫（Driver 介面）
+ *   - store/json.ts —— 密鑰/黑名單等既有 binding 形態調用方
+ * 放在獨立模塊是為了避免 json.ts ↔ driver/kv.ts 互相導入形成循環依賴。
  */
 
 /**
- * 校验并归一化 KV 代理目标 origin。
+ * 校驗並歸一化 KV 代理目標 origin。
  *
- * 安全背景：`__requestOrigin` 由中间件从 `c.req.url` 派生，而后者源自请求的
- * Host 头。若平台未严格校验 Host，攻击者构造 `Host: evil.com` 可能让 Node 侧
- * 把携带 **完整 JWT_SECRET** 的 `X-Internal-Call` 请求发往攻击者服务器（SSRF
- * 兼密钥泄漏）。因此这里做三重约束：
+ * 安全背景：`__requestOrigin` 由中間件從 `c.req.url` 派生，而後者源自請求的
+ * Host 頭。若平台未嚴格校驗 Host，攻擊者構造 `Host: evil.com` 可能讓 Node 側
+ * 把攜帶 **完整 JWT_SECRET** 的 `X-Internal-Call` 請求發往攻擊者伺服器（SSRF
+ * 兼密鑰洩漏）。因此這裡做三重約束：
  *
- *  1. **必须是 http/https 绝对地址**（拒绝相对路径、协议相对 URL）；
- *  2. **必须是能解析出 hostname 的合法 URL**；
- *  3. **生产环境（非 localhost）必须为 https**，避免明文传输密钥。
+ *  1. **必須是 http/https 絕對地址**（拒絕相對路徑、協議相對 URL）；
+ *  2. **必須是能解析出 hostname 的合法 URL**；
+ *  3. **生產環境（非 localhost）必須為 https**，避免明文傳輸密鑰。
  *
- * 显式配置的 `EO_KV_URLS` 视为可信（运维意图），但仍需通过 1/2；
- * 对它的 https 要求放宽，便于本地 http 调试。
+ * 顯式配置的 `EO_KV_URLS` 視為可信（運維意圖），但仍需通過 1/2；
+ * 對它的 https 要求放寬，便於本地 http 調試。
  *
- * 刻意**不做**内网地址（RFC1918 / 云元数据 169.254.169.254）黑名单：
- *   - 该类校验需先做 DNS 解析才能防住重绑定，而边缘运行时无法可靠解析；
- *   - 纯字符串判断防不住 `evil.com -> 内网IP` 的解析结果，属虚假安全感；
- *   - 会误伤合法的内网自托管部署（`EO_KV_URLS` 本就可指向内网 origin）。
- * 真正的防线是上面第 3 条：请求派生的 origin 必须是 https，且 Host 由
- * 平台校验，攻击者无法在不控制 Host 的前提下把密钥外发出去。
+ * 刻意**不做**內網地址（RFC1918 / 雲元資料 169.254.169.254）黑名單：
+ *   - 該類校驗需先做 DNS 解析才能防住重綁定，而邊緣運行時無法可靠解析；
+ *   - 純字符串判斷防不住 `evil.com -> 內網IP` 的解析結果，屬虛假安全感；
+ *   - 會誤傷合法的內網自託管部署（`EO_KV_URLS` 本就可指向內網 origin）。
+ * 真正的防線是上面第 3 條：請求派生的 origin 必須是 https，且 Host 由
+ * 平台校驗，攻擊者無法在不控制 Host 的前提下把密鑰外發出去。
  *
- * @returns 归一化后的 origin（去掉结尾 `/`），不可用时返回 null
+ * @returns 歸一化後的 origin（去掉結尾 `/`），不可用時返回 null
  */
 export function sanitizeProxyOrigin(raw: any, env?: any): string | null {
   if (typeof raw !== "string") return null
@@ -47,11 +47,11 @@ export function sanitizeProxyOrigin(raw: any, env?: any): string | null {
     return null
   }
 
-  // 仅允许 http / https，拒绝其他协议（file:、ftp: 等）
+  // 僅允許 http / https，拒絕其他協議（file:、ftp: 等）
   if (url.protocol !== "http:" && url.protocol !== "https:") return null
   if (!url.hostname) return null
 
-  // 显式配置的基址视为可信来源，仅做协议与 hostname 校验
+  // 顯式配置的基址視為可信來源，僅做協議與 hostname 校驗
   const explicit = env?.EO_KV_URLS
   const isExplicit = typeof explicit === "string" && explicit.trim() === trimmed
 
@@ -60,7 +60,7 @@ export function sanitizeProxyOrigin(raw: any, env?: any): string | null {
       url.hostname === "localhost" ||
       url.hostname === "127.0.0.1" ||
       url.hostname === "[::1]"
-    // 请求派生的 origin 在非本地环境必须为 https，杜绝明文外发密钥
+    // 請求派生的 origin 在非本地環境必須為 https，杜絕明文外發密鑰
     if (!isLocal && url.protocol !== "https:") {
       console.warn(
         "[DB] Rejecting non-HTTPS proxy origin derived from request: " +

@@ -1,4 +1,4 @@
-// AList V3 driver — 通过 HTTP API 访问另一个 OpenList / AList 实例
+// AList V3 driver — 通過 HTTP API 訪問另一個 OpenList / AList 實例
 // 移植自 OpenList Go 版 drivers/alist_v3。
 import {
   StorageDriver,
@@ -30,7 +30,7 @@ export class AListV3Driver implements StorageDriver {
     if (!this.baseUrl) {
       throw new Error("[AListV3] url is required")
     }
-    // 验证 token；username 不匹配时重新登录
+    // 驗證 token；username 不匹配時重新登入
     try {
       const me = await this.request<{ username: string }>("/me", "GET")
       if (this.addition.username && me.username !== this.addition.username) {

@@ -69,7 +69,7 @@ export class Driver115 implements StorageDriver {
       return item
     }
 
-    // Fallback: path 可能是文件夹（根目录等未在父目录列出）
+    // Fallback: path 可能是文件夾（根目錄等未在父目錄列出）
     try {
       const fid = await this.client.resolvePathId(physicalPath, this.pathCache)
       await this.client.getFiles(fid)

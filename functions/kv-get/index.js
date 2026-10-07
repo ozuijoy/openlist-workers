@@ -1,7 +1,7 @@
 /**
  * GET /kv-get?key=xxx
  *
- * 读取 KV。需通过鉴权（内部调用标识 或 管理员 JWT）。
+ * 讀取 KV。需通過鑑權（內部調用標識 或 管理員 JWT）。
  */
 import { authorize, deny, json, kvMissing, resolveKv } from "../_kv-proxy.js"
 

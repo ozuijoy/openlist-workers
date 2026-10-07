@@ -1,4 +1,4 @@
-// 夸克/UC TV 版网盘 API 客户端（只读）
+// 夸克/UC TV 版網盤 API 客戶端（只讀）
 import { md5, sha256 } from "../../pkg/crypto"
 import {
   DriverQuarkUcTvAddition,
@@ -29,8 +29,8 @@ interface Conf {
   codeApi: string
 }
 
-// 说明：clientID 与 signKey 是夸克/UC 服务端固定的协议参数（签名密钥），
-// 并非可申请替换的 OAuth 凭据，删除会导致请求签名失败、驱动不可用，请保持默认值。
+// 說明：clientID 與 signKey 是夸克/UC 服務端固定的協議參數（簽名密鑰），
+// 並非可申請替換的 OAuth 憑據，刪除會導致請求籤名失敗、驅動不可用，請保持默認值。
 const CONFS: Record<"quark" | "uc", Conf> = {
   quark: {
     api: "https://open-api-drive.quark.cn",
@@ -128,8 +128,8 @@ export class ClientQuarkUcTv {
       (data.status === -1 && (data.errno === 10001 || data.errno === 11001)) ||
       errInfo.includes("access token") ||
       errInfo.includes("access_token") ||
-      errInfo.includes("token无效") ||
-      errInfo.includes("token 无效")
+      errInfo.includes("token無效") ||
+      errInfo.includes("token 無效")
     if (tokenInvalid) {
       await this.refreshToken()
       return this.request<T>(pathname, method, extraQuery)

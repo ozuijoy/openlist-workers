@@ -1,4 +1,4 @@
-// GuangYaPan (光亚盘) driver
+// GuangYaPan (光亞盤) driver
 // Ported from: OpenList-Backends/drivers/guangyapan
 import {
   StorageDriver,
@@ -104,7 +104,7 @@ export class GuangYaPanDriver implements StorageDriver {
 
   private async resolveId(path: string): Promise<string> {
     const clean = this.cleanPath(path)
-    if (clean === "/") return "" // 光亚盘根目录 ID 为空串
+    if (clean === "/") return "" // 光亞盤根目錄 ID 為空串
     const cached = this.idCache.get(clean)
     if (cached) return cached
 
@@ -129,7 +129,7 @@ export class GuangYaPanDriver implements StorageDriver {
     return curId
   }
 
-  /** 解析任意条目（文件或文件夹）的 ID，末段不限定为文件夹 */
+  /** 解析任意條目（文件或文件夾）的 ID，末段不限定為文件夾 */
   private async resolveItemId(path: string): Promise<string> {
     const clean = this.cleanPath(path)
     if (clean === "/") return ""
@@ -306,7 +306,7 @@ export class GuangYaPanDriver implements StorageDriver {
     )
     const taskId = token?.taskId || ""
 
-    // 秒传命中：无需真实上传，直接等待后端完成登记
+    // 秒傳命中：無需真實上傳，直接等待後端完成登記
     if (alreadyDone) {
       if (!taskId) throw new Error("instant upload returns empty task id")
       await this.client.waitUploadTaskInfo(taskId)
@@ -323,7 +323,7 @@ export class GuangYaPanDriver implements StorageDriver {
       throw new Error("upload token is incomplete")
     }
 
-    // 单次 PUT 上传（<5GB）；大文件分片上传未在本移植版本中实现
+    // 單次 PUT 上傳（<5GB）；大文件分片上傳未在本移植版本中實現
     const endpoint = normalizeOSSEndpoint(token.endPoint, token.bucketName)
     const uploadURL = `https://${token.bucketName}.${new URL(endpoint).host}/${token.objectPath.replace(/^\/+/, "")}`
 

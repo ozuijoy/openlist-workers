@@ -10,7 +10,7 @@ import {
 import { BunnyStorageDriver, normalizeBunnyAddition } from "./driver"
 
 test("normalizeBaseURL adds scheme and strips trailing slash", () => {
-  // 根路径 URL 会被 URL 标准规范化为带尾斜杠 "/"
+  // 根路徑 URL 會被 URL 標準規範化為帶尾斜槓 "/"
   assert.equal(
     normalizeBaseURL("storage.bunnycdn.com/", "storage.bunnycdn.com"),
     "https://storage.bunnycdn.com/",

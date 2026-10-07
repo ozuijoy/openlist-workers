@@ -1,28 +1,28 @@
 /**
- * ChaCha20-Poly1305（RFC 8439）纯 JS 实现。
+ * ChaCha20-Poly1305（RFC 8439）純 JS 實現。
  *
- * 为什么需要自带实现：
- *   - WebCrypto（CF Workers / 浏览器 / Node 的 `crypto.subtle`）**不提供 ChaCha20**；
- *   - 本仓库的边缘构建（`scripts/node-shim.mjs`）会把 `node:crypto` 替换成抛错 shim，
- *     因此也不能依赖 Node 的原生 `chacha20-poly1305`。
+ * 為什麼需要自帶實現：
+ *   - WebCrypto（CF Workers / 瀏覽器 / Node 的 `crypto.subtle`）**不提供 ChaCha20**；
+ *   - 本倉庫的邊緣構建（`scripts/node-shim.mjs`）會把 `node:crypto` 替換成拋錯 shim，
+ *     因此也不能依賴 Node 的原生 `chacha20-poly1305`。
  *
- * 实现要点：
- *   - ChaCha20：20 轮（10 次 double-round），32 位字运算；AEAD 中 nonce 为 12 字节，
- *     counter 从 0 开始（block 0 用于派生 Poly1305 一次性密钥，密文从 counter=1 开始）。
- *   - Poly1305：使用 BigInt 做 130 位模运算（字段很短，几十~几百字节，
- *     BigInt 的实现简洁且足够快；密码学正确性优先于极限性能）。
- *   - 认证标签按 RFC 8439 §2.8 计算：aad ‖ pad16 ‖ ciphertext ‖ pad16 ‖ len(aad) ‖ len(ct)。
- *   - 校验标签使用**定长比较**，避免早退泄露信息。
+ * 實現要點：
+ *   - ChaCha20：20 輪（10 次 double-round），32 位字運算；AEAD 中 nonce 為 12 字節，
+ *     counter 從 0 開始（block 0 用於派生 Poly1305 一次性密鑰，密文從 counter=1 開始）。
+ *   - Poly1305：使用 BigInt 做 130 位模運算（欄位很短，幾十~幾百字節，
+ *     BigInt 的實現簡潔且足夠快；密碼學正確性優先於極限性能）。
+ *   - 認證標籤按 RFC 8439 §2.8 計算：aad ‖ pad16 ‖ ciphertext ‖ pad16 ‖ len(aad) ‖ len(ct)。
+ *   - 校驗標籤使用**定長比較**，避免早退洩露信息。
  *
- * 正确性验证：`cipher_algorithms.test.ts` 使用 RFC 8439 官方测试向量，
- * 并与 Node 原生 `chacha20-poly1305` 交叉比对。
+ * 正確性驗證：`cipher_algorithms.test.ts` 使用 RFC 8439 官方測試向量，
+ * 並與 Node 原生 `chacha20-poly1305` 交叉比對。
  */
 
 const CHACHA_BLOCK = 64
 const TAG_LEN = 16
-/** RFC 8439 的模数：2^130 - 5 */
+/** RFC 8439 的模數：2^130 - 5 */
 const POLY_P = (1n << 130n) - 5n
-/** r 的 clamp 掩码（RFC 8439 §2.5） */
+/** r 的 clamp 掩碼（RFC 8439 §2.5） */
 const POLY_R_MASK = 0x0ffffffc0ffffffc0ffffffc0fffffffn
 
 function rotl(v: number, c: number): number {
@@ -56,7 +56,7 @@ function readU32LE(bytes: Uint8Array, offset: number): number {
   )
 }
 
-/** 生成一个 64 字节 ChaCha20 密钥流块（写入 out） */
+/** 生成一個 64 字節 ChaCha20 密鑰流塊（寫入 out） */
 function chacha20Block(
   key: Uint32Array,
   counter: number,
@@ -118,9 +118,9 @@ function nonceToWords(nonce: Uint8Array): Uint32Array {
 }
 
 /**
- * ChaCha20 加/解密（XOR 密钥流，对称操作）。
+ * ChaCha20 加/解密（XOR 密鑰流，對稱操作）。
  *
- * @param counter 起始块计数（AEAD 用 1；原始流从 0 开始）
+ * @param counter 起始塊計數（AEAD 用 1；原始流從 0 開始）
  */
 export function chacha20Xor(
   key: Uint8Array,
@@ -156,7 +156,7 @@ function bigIntToLe(value: bigint, length: number): Uint8Array {
   return out
 }
 
-/** Poly1305 一次性认证（msg 无需自行填充，本函数按 16 字节分块） */
+/** Poly1305 一次性認證（msg 無需自行填充，本函數按 16 字節分塊） */
 export function poly1305(msg: Uint8Array, oneTimeKey: Uint8Array): Uint8Array {
   if (oneTimeKey.length !== 32) {
     throw new Error("Poly1305 one-time key must be 32 bytes")
@@ -167,7 +167,7 @@ export function poly1305(msg: Uint8Array, oneTimeKey: Uint8Array): Uint8Array {
   let acc = 0n
   for (let i = 0; i < msg.length; i += 16) {
     const chunk = msg.subarray(i, Math.min(i + 16, msg.length))
-    // 每个分块最高位补 1（RFC 8439 §2.5.1）
+    // 每個分塊最高位補 1（RFC 8439 §2.5.1）
     const n = leToBigInt(chunk) | (1n << BigInt(chunk.length * 8))
     acc = ((acc + n) * r) % POLY_P
   }
@@ -175,7 +175,7 @@ export function poly1305(msg: Uint8Array, oneTimeKey: Uint8Array): Uint8Array {
   return bigIntToLe(acc, TAG_LEN)
 }
 
-/** aad/ciphertext 的 16 字节对齐填充 */
+/** aad/ciphertext 的 16 字節對齊填充 */
 function pad16(bytes: Uint8Array): Uint8Array {
   const rem = bytes.length % 16
   if (rem === 0) return new Uint8Array(0)
@@ -203,19 +203,19 @@ function concat(parts: Uint8Array[]): Uint8Array {
   return out
 }
 
-/** RFC 8439 §2.8：构造 Poly1305 的认证输入（AAD 可为空） */
+/** RFC 8439 §2.8：構造 Poly1305 的認證輸入（AAD 可為空） */
 function macData(ciphertext: Uint8Array, aad: Uint8Array): Uint8Array {
   return concat([aad, pad16(aad), ciphertext, pad16(ciphertext), leU64(aad.length), leU64(ciphertext.length)])
 }
 
-/** 由 ChaCha20 block 0 的前 32 字节派生 Poly1305 一次性密钥 */
+/** 由 ChaCha20 block 0 的前 32 字節派生 Poly1305 一次性密鑰 */
 function polyKey(key: Uint8Array, nonce: Uint8Array): Uint8Array {
   const block0 = new Uint8Array(CHACHA_BLOCK)
   chacha20Block(keyToWords(key), 0, nonceToWords(nonce), block0)
   return block0.subarray(0, 32)
 }
 
-/** AEAD 加密：返回密文与 16 字节认证标签 */
+/** AEAD 加密：返回密文與 16 字節認證標籤 */
 export function chacha20Poly1305Seal(
   key: Uint8Array,
   nonce: Uint8Array,
@@ -227,7 +227,7 @@ export function chacha20Poly1305Seal(
   return { ciphertext, tag }
 }
 
-/** AEAD 解密：标签不匹配时抛错（不返回任何明文） */
+/** AEAD 解密：標籤不匹配時拋錯（不返回任何明文） */
 export function chacha20Poly1305Open(
   key: Uint8Array,
   nonce: Uint8Array,
@@ -245,7 +245,7 @@ export function chacha20Poly1305Open(
   return chacha20Xor(key, nonce, ciphertext, 1)
 }
 
-/** 定长比较（不早退） */
+/** 定長比較（不早退） */
 export function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {
   if (a.length !== b.length) return false
   let diff = 0

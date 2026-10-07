@@ -44,7 +44,7 @@ function decodeUploadSession(token: string): WeiyunUploadSession {
     }
     return session
   } catch {
-    throw new Error("[WeiYun] 上传会话无效或已损坏")
+    throw new Error("[WeiYun] 上傳會話無效或已損壞")
   }
 }
 
@@ -259,7 +259,7 @@ export class WeiyunDriver implements StorageDriver {
     const segs = String(physicalPath || "")
       .split("/")
       .filter(Boolean)
-    if (segs.length === 0) throw new Error("[WeiYun] 路径无效")
+    if (segs.length === 0) throw new Error("[WeiYun] 路徑無效")
 
     const rawName = segs[segs.length - 1]
     const decodedName = (() => {
@@ -299,7 +299,7 @@ export class WeiyunDriver implements StorageDriver {
       return { folder, parent, isDir: true }
     }
 
-    throw new Error(`[WeiYun] 文件或目录未找到: ${rawName}`)
+    throw new Error(`[WeiYun] 文件或目錄未找到: ${rawName}`)
   }
 
   async list(_virtualPath: string, physicalPath: string): Promise<FileItem[]> {
@@ -410,13 +410,13 @@ export class WeiyunDriver implements StorageDriver {
           Cookie: `${downloadData.cookie_name}=${downloadData.cookie_value}`,
         }
       } catch (e: any) {
-        console.warn(`[WeiYun] 获取 ${file.filename} 下载链接失败:`, e.message)
+        console.warn(`[WeiYun] 獲取 ${file.filename} 下載鏈接失敗:`, e.message)
         item.raw_url_error = e.message
       }
       return item
     }
 
-    throw new Error(`[WeiYun] 条目未找到: ${physicalPath}`)
+    throw new Error(`[WeiYun] 條目未找到: ${physicalPath}`)
   }
 
   async mkdir(_virtualPath: string, physicalPath: string): Promise<void> {
@@ -424,7 +424,7 @@ export class WeiyunDriver implements StorageDriver {
     const parts = String(physicalPath || "")
       .split("/")
       .filter(Boolean)
-    const dirName = parts.pop() || "新建文件夹"
+    const dirName = parts.pop() || "新建文件夾"
     const parentPath = "/" + parts.join("/")
     const parent = await this.resolveFolder(parentPath)
 
@@ -541,7 +541,7 @@ export class WeiyunDriver implements StorageDriver {
     _srcPhys: string,
     _dstPhys: string,
   ): Promise<void> {
-    throw new Error("[WeiYun] 微云接口不支持复制操作 (Copy not supported)")
+    throw new Error("[WeiYun] 微雲介面不支持複製操作 (Copy not supported)")
   }
 
   async put(
@@ -553,7 +553,7 @@ export class WeiyunDriver implements StorageDriver {
       .split("/")
       .filter(Boolean)
     const fileName = parts.pop()
-    if (!fileName) throw new Error("[WeiYun] 上传路径无效")
+    if (!fileName) throw new Error("[WeiYun] 上傳路徑無效")
 
     const parentPath = "/" + parts.join("/")
     const parent = await this.resolveFolder(parentPath)
@@ -603,7 +603,7 @@ export class WeiyunDriver implements StorageDriver {
     }
   }
 
-  // ---- 分片会话上传接口（支持边缘与网页前端大文件直接分片上传） ----
+  // ---- 分片會話上傳介面（支持邊緣與網頁前端大文件直接分片上傳） ----
 
   async createUploadSession(
     _virtualDir: string,
@@ -689,7 +689,7 @@ export class WeiyunDriver implements StorageDriver {
       partNumber < 1 ||
       partNumber > session.partCount
     ) {
-      throw new Error(`[WeiYun] 分片序号无效: ${partNumber}`)
+      throw new Error(`[WeiYun] 分片序號無效: ${partNumber}`)
     }
 
     const offset = (partNumber - 1) * session.chunkSize

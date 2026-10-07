@@ -289,8 +289,8 @@ async function readStoredSeed(
   const max = envNumber(c, "SEED_MAX_METADATA_SIZE", DEFAULT_MAX_SEED_BYTES)
   if (item.is_dir || item.size < 0 || item.size > max)
     throw new Error(`Seed file exceeds the ${max} byte limit`)
-  // 驱动直链优先；否则回退到 getItem 给出的代理地址（前缀已按 canProxy() 选好，
-  // 路径已编码，不能在这里硬编码 /api/p，否则未开代理的存储会 403）。
+  // 驅動直鏈優先；否則回退到 getItem 給出的代理地址（前綴已按 canProxy() 選好，
+  // 路徑已編碼，不能在這裡硬編碼 /api/p，否則未開代理的儲存會 403）。
   const rawUrl = item.raw_url || new URL(apiRawUrl, c.req.url).toString()
   const headers = item.raw_url_headers || {}
   if (!item.raw_url && c.req.header("Authorization"))
@@ -381,7 +381,7 @@ async function collectSourceFiles(
       storageContext(c),
     )
     if (!item.is_dir) {
-      // 同 readStoredSeed：直链优先，否则用 getItem 的代理地址（前缀/编码已定）
+      // 同 readStoredSeed：直鏈優先，否則用 getItem 的代理地址（前綴/編碼已定）
       const rawUrl = item.raw_url || new URL(apiRawUrl, c.req.url).toString()
       const headers = { ...(item.raw_url_headers || {}) }
       if (!item.raw_url && c.req.header("Authorization"))
@@ -924,8 +924,8 @@ seedRouter.post("/capabilities", async (c) => {
       typeof dynamic.rapidUpload === "function" ||
       typeof dynamic.putRapid === "function" ||
       typeof dynamic.createUploadSession === "function"
-    // 驱动可声明其秒传接受的哈希算法与是否需要分片哈希；
-    // 未声明时按宽松策略推断，避免误判导致能力缺失。
+    // 驅動可聲明其秒傳接受的哈希算法與是否需要分片哈希；
+    // 未聲明時按寬鬆策略推斷，避免誤判導致能力缺失。
     const rapidAlgos: string[] = Array.isArray(dynamic.rapidHashAlgos)
       ? dynamic.rapidHashAlgos
           .map((algo: unknown) => String(algo).toLowerCase())

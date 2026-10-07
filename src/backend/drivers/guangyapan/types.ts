@@ -1,4 +1,4 @@
-// GuangYaPan (光亚盘) driver types
+// GuangYaPan (光亞盤) driver types
 // Ported from: OpenList-Backends/drivers/guangyapan
 
 export interface GuangYaPanAddition {

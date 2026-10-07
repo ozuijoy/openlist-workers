@@ -1,18 +1,18 @@
 /**
- * Cloudflare D1 驱动（SQLite）
+ * Cloudflare D1 驅動（SQLite）
  * 
- * 环境变量：
+ * 環境變量：
  * - DB (Cloudflare D1 binding)
- * - OPENLIST_DB (别名)
+ * - OPENLIST_DB (別名)
  */
 import type { Driver } from "../types"
 import { buildDdl, KV_SCHEMA_SQLITE } from "../schema"
 
 /**
- * 判断对象是否具备 D1 绑定接口形态。
+ * 判斷對象是否具備 D1 綁定介面形態。
  *
- * 必须校验：环境变量 `DB` 可能只是「绑定名」字符串，而非绑定对象，
- * 直接使用会得到 "db.prepare is not a function"。
+ * 必須校驗：環境變量 `DB` 可能只是「綁定名」字符串，而非綁定對象，
+ * 直接使用會得到 "db.prepare is not a function"。
  */
 function isD1Like(b: any): boolean {
   if (!b || typeof b !== "object") return false
@@ -24,10 +24,10 @@ function isD1Like(b: any): boolean {
 }
 
 /**
- * 获取 D1 绑定。
+ * 獲取 D1 綁定。
  *
- * env 与 globalThis 独立检查：env 为真值时不阻断对 globalThis 的探测
- * （EdgeOne Edge Functions 会把绑定注入为全局标识符）。
+ * env 與 globalThis 獨立檢查：env 為真值時不阻斷對 globalThis 的探測
+ * （EdgeOne Edge Functions 會把綁定注入為全局標識符）。
  */
 function getD1(env?: any): any | null {
   const g = typeof globalThis !== "undefined" ? (globalThis as any) : {}
@@ -46,7 +46,7 @@ const d1Inited = new WeakMap<object, boolean>()
 
 async function ensureSchema(db: any, env?: any): Promise<void> {
   if (d1Inited.get(db)) return
-  // KV 表（map/key 格式）+ 列式表（sql 格式）一并创建
+  // KV 表（map/key 格式）+ 列式表（sql 格式）一併創建
   for (const ddl of [...KV_SCHEMA_SQLITE, ...buildDdl("sqlite", env)]) {
     await db.prepare(ddl).run()
   }
@@ -136,7 +136,7 @@ export const d1Driver: Driver = {
 
     await ensureSchema(db, env)
     
-    // D1 batch 单次语句数上限约 100，分批提交
+    // D1 batch 單次語句數上限約 100，分批提交
     const BATCH = 100
     const stmts = statements.map((s) => db.prepare(s.sql).bind(...s.params))
     

@@ -245,7 +245,7 @@ export async function unlockUserKeys(
     try {
       userKR.push(await unlockPrivateKey(key.PrivateKey, saltedKeyPass))
     } catch {
-      // 跳过无法解锁的 key（如非活跃 key）
+      // 跳過無法解鎖的 key（如非活躍 key）
     }
   }
   if (userKR.length === 0) {

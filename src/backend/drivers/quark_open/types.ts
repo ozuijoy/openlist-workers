@@ -1,4 +1,4 @@
-// quark_open (夸克网盘开放平台 API) - 签名认证
+// quark_open (夸克網盤開放平台 API) - 簽名認證
 // API reference: Go drivers/quark_open
 
 export interface DriverQuarkOpenAddition {
@@ -17,7 +17,7 @@ export interface QuarkFile {
   parent_fid?: string
   filename: string
   size: number
-  file_type: string // "0" = 文件夹
+  file_type: string // "0" = 文件夾
   thumbnail_url?: string
   created_at?: number
   updated_at?: number

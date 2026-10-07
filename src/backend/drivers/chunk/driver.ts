@@ -1,6 +1,6 @@
-// Chunk driver — 分片打包存储
-// 将大文件按 part_size 切成多个分片，存入底层存储的 `[chunk_prefix]name/` 目录；
-// 读取时合并分片为一个虚拟文件。remote_path 指向另一个挂载的存储。
+// Chunk driver — 分片打包儲存
+// 將大文件按 part_size 切成多個分片，存入底層儲存的 `[chunk_prefix]name/` 目錄；
+// 讀取時合併分片為一個虛擬文件。remote_path 指向另一個掛載的儲存。
 // 移植自 OpenList Go 版 drivers/chunk。
 import {
   StorageDriver,
@@ -48,13 +48,13 @@ export class ChunkDriver implements StorageDriver {
     if (!this.chunkPrefix) {
       throw new Error("[Chunk] chunk_prefix must not be empty")
     }
-    // 动态 import 避免循环依赖
+    // 動態 import 避免循環依賴
     const { resolvePath } = await import("../../internal/model/db")
     const { getDriver } = await import("../../internal/op/storage")
     const resolved = await resolvePath(this.addition.remote_path || "/")
     if (resolved.isVirtual || !resolved.storage) {
       throw new Error(
-        `[Chunk] remote_path 未匹配到有效存储: ${this.addition.remote_path}`,
+        `[Chunk] remote_path 未匹配到有效儲存: ${this.addition.remote_path}`,
       )
     }
     this.remoteRoot = resolved.physical || "/"
@@ -70,7 +70,7 @@ export class ChunkDriver implements StorageDriver {
     }
   }
 
-  /** chunk 物理路径 → 底层物理路径 */
+  /** chunk 物理路徑 → 底層物理路徑 */
   private joinRemote(physicalPath: string): string {
     const p = String(physicalPath || "/")
     const base = this.remoteRoot === "/" ? "" : this.remoteRoot
@@ -81,14 +81,14 @@ export class ChunkDriver implements StorageDriver {
     return `${part}${this.customExt}`
   }
 
-  /** 分片目录底层路径（虚拟文件 → 分片目录） */
+  /** 分片目錄底層路徑（虛擬文件 → 分片目錄） */
   private chunkDirRemote(physicalPath: string): string {
     const dir = dirname(this.joinRemote(physicalPath))
     const name = basename(physicalPath)
     return joinPath(dir, this.chunkPrefix + name)
   }
 
-  /** 列出分片目录，返回有序分片列表（按分片序号） */
+  /** 列出分片目錄，返回有序分片列表（按分片序號） */
   private async listParts(physicalPath: string): Promise<ChunkPart[]> {
     this.ensureReady()
     const chunkDir = this.chunkDirRemote(physicalPath)
@@ -112,7 +112,7 @@ export class ChunkDriver implements StorageDriver {
     return parts.filter((p) => !!p)
   }
 
-  /** 分片文件总大小（通过分片目录合并计算） */
+  /** 分片文件總大小（通過分片目錄合併計算） */
   private async totalChunkSize(physicalPath: string): Promise<number> {
     const parts = await this.listParts(physicalPath)
     return parts.reduce((sum, p) => sum + p.size, 0)
@@ -142,7 +142,7 @@ export class ChunkDriver implements StorageDriver {
                 modified: item.modified,
                 sign: this.chunkPrefix + name,
                 type: calcFileType(name, false),
-                raw_url: "", // 触发 createReadStream 合并分片
+                raw_url: "", // 觸發 createReadStream 合併分片
               }
             })(),
           )
@@ -159,7 +159,7 @@ export class ChunkDriver implements StorageDriver {
   async get(_virtualPath: string, physicalPath: string): Promise<FileItem> {
     this.ensureReady()
     const remotePath = this.joinRemote(physicalPath)
-    // 先尝试普通文件
+    // 先嚐試普通文件
     try {
       const item = await this.remoteDriver!.get("", remotePath)
       if (item && !item.is_dir) return item
@@ -199,7 +199,7 @@ export class ChunkDriver implements StorageDriver {
       await this.remoteDriver!.get("", remotePath)
       await this.remoteDriver!.rename("", remotePath, newName)
     } catch {
-      // 分片文件：rename 分片目录
+      // 分片文件：rename 分片目錄
       const dir = dirname(remotePath)
       const chunkDir = joinPath(dir, this.chunkPrefix + basename(physicalPath))
       await this.remoteDriver!.rename("", chunkDir, this.chunkPrefix + newName)
@@ -239,8 +239,8 @@ export class ChunkDriver implements StorageDriver {
       await this.remoteDriver!.get("", srcRemote)
       await this.remoteDriver!.move(srcDir, dstDir, names, srcRemote, dstRemote)
     } catch {
-      // 分片文件：dst 端必须是目标项自己的分片目录（与虚拟文件同级），
-      // 拼成 `<目标项>/<chunkPrefix><name>` 会指向不存在的路径。
+      // 分片文件：dst 端必須是目標項自己的分片目錄（與虛擬文件同級），
+      // 拼成 `<目標項>/<chunkPrefix><name>` 會指向不存在的路徑。
       await this.remoteDriver!.move(
         srcDir,
         dstDir,
@@ -265,7 +265,7 @@ export class ChunkDriver implements StorageDriver {
       await this.remoteDriver!.get("", srcRemote)
       await this.remoteDriver!.copy(srcDir, dstDir, names, srcRemote, dstRemote)
     } catch {
-      // 分片文件：同 move，dst 端用目标项自己的分片目录。
+      // 分片文件：同 move，dst 端用目標項自己的分片目錄。
       await this.remoteDriver!.copy(
         srcDir,
         dstDir,
@@ -285,24 +285,24 @@ export class ChunkDriver implements StorageDriver {
     const size = content.length
     const remotePath = this.joinRemote(physicalPath)
 
-    // 小文件直接透传（不分片）
+    // 小文件直接透傳（不分片）
     if (this.addition.chunk_large_file_only && size <= this.partSize) {
       await this.remoteDriver!.put("", remotePath, content)
       return
     }
-    // 空文件或小于分片大小，直接透传
+    // 空文件或小於分片大小，直接透傳
     if (size <= this.partSize) {
       await this.remoteDriver!.put("", remotePath, content)
       return
     }
 
-    // 分片存储
+    // 分片儲存
     const chunkDir = this.chunkDirRemote(physicalPath)
-    // 创建分片目录（忽略已存在错误）
+    // 創建分片目錄（忽略已存在錯誤）
     try {
       await this.remoteDriver!.mkdir("", chunkDir)
     } catch {
-      // 目录可能已存在
+      // 目錄可能已存在
     }
 
     let offset = 0
@@ -317,7 +317,7 @@ export class ChunkDriver implements StorageDriver {
     }
   }
 
-  /** 合并分片下载，支持 Range */
+  /** 合併分片下載，支持 Range */
   async createReadStream(
     physicalPath: string,
     range?: { start: number; end: number },
@@ -341,7 +341,7 @@ export class ChunkDriver implements StorageDriver {
           }
           let url = part.raw_url
           if (!url) {
-            // 尝试重新获取该分片的下载链接
+            // 嘗試重新獲取該分片的下載鏈接
             const dir = dirname(physicalPath)
             const partPath = joinPath(
               joinPath(dir, chunkPrefix + basename(physicalPath)),

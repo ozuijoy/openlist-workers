@@ -142,7 +142,7 @@ export class CFImgBedDriver implements StorageDriver {
   }
 
   async mkdir(virtualPath: string, physicalPath: string): Promise<void> {
-    // 图床目录通常是虚拟的，无需真实创建
+    // 圖床目錄通常是虛擬的，無需真實創建
     return
   }
 
@@ -180,7 +180,7 @@ export class CFImgBedDriver implements StorageDriver {
     names: string[],
   ): Promise<void> {
     const clean = this.cleanPath(physicalPath)
-    // 无法确定是文件还是目录，默认按文件删除；目录删除后端会忽略
+    // 無法確定是文件還是目錄，默認按文件刪除；目錄刪除後端會忽略
     await this.client.remove(clean, false)
   }
 

@@ -61,15 +61,15 @@ export async function search(
 
       const nameMatch = !keyword || item.name.toLowerCase().includes(keyword)
       const isDir = !!item.is_dir
-      // 挂载点虚拟文件夹（storage.ts 合并虚拟子挂载时 sign 为空），
-      // 本身不显示，但仍需递归进入搜索其内部文件
+      // 掛載點虛擬文件夾（storage.ts 合併虛擬子掛載時 sign 為空），
+      // 本身不顯示，但仍需遞歸進入搜索其內部文件
       const isMountPoint = isDir && !item.sign
 
       let scopeMatch = true
       if (scope === 1 && !isDir) scopeMatch = false
       if (scope === 2 && isDir) scopeMatch = false
 
-      // 挂载点不作为结果项返回（避免搜到 "123云盘" 这类虚拟文件夹本身）
+      // 掛載點不作為結果項返回（避免搜到 "123雲盤" 這類虛擬文件夾本身）
       if (!isMountPoint && nameMatch && scopeMatch) {
         matches.push({
           ...item,

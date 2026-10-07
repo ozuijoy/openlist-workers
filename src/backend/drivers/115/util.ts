@@ -1,4 +1,4 @@
-// 115 Open API 客户端
+// 115 Open API 客戶端
 import {
   Driver115Addition,
   Cloud115File,
@@ -53,7 +53,7 @@ export class Client115 {
     })
     const data: any = await resp.json().catch(() => ({}))
     if (data?.state === false || data?.errno) {
-      // token 过期尝试刷新
+      // token 過期嘗試刷新
       if (
         data.errno === 990001 ||
         data.errcode === 990001 ||
@@ -107,7 +107,7 @@ export class Client115 {
       fc_mix: 1,
     })
     if (resp?.data && Array.isArray(resp.data)) return resp.data
-    // 旧格式（小写字段）兼容
+    // 舊格式（小寫欄位）相容
     if (resp?.files && Array.isArray(resp.files)) {
       return resp.files.map((f: any) => ({
         Fid: f.fid ?? f.id,
@@ -126,7 +126,7 @@ export class Client115 {
     return []
   }
 
-  /** 通过路径逐级解析文件夹 ID（带缓存由 driver 层管理） */
+  /** 通過路徑逐級解析文件夾 ID（帶快取由 driver 層管理） */
   async resolvePathId(
     path: string,
     cache: Map<string, string>,

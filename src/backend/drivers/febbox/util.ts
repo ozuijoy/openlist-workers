@@ -1,4 +1,4 @@
-// FebBox API 客户端
+// FebBox API 客戶端
 import {
   DriverFebBoxAddition,
   FebBoxFile,
@@ -68,7 +68,7 @@ export class ClientFebBox {
       body: fd,
     })
     const data = (await resp.json().catch(() => ({}))) as FebBoxErrResp & any
-    // access_token 过期：-10001 且带 server_name 时刷新后重试
+    // access_token 過期：-10001 且帶 server_name 時刷新後重試
     if (data.code === -10001 && data.server_name) {
       await this.refreshToken()
       return this.request(params)

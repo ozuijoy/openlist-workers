@@ -3,16 +3,16 @@ import { test } from "node:test"
 import { isDbShell } from "./db"
 
 /**
- * 回归测试：写前守卫的「空壳判定」。
+ * 迴歸測試：寫前守衛的「空殼判定」。
  *
- * 背景（必须长期守护的约束）：
- *   读取持久化存储失败时，loadDb() 会回退到默认（空）库。历史上
- *   ensureDefaultSettings() 会隐式 saveDb()，把这个空壳写回存储，导致真实配置
- *   被覆盖、系统反复回到「未初始化」——用户看到的就是「数据库被清空」。
+ * 背景（必須長期守護的約束）：
+ *   讀取持久化儲存失敗時，loadDb() 會回退到默認（空）庫。歷史上
+ *   ensureDefaultSettings() 會隱式 saveDb()，把這個空殼寫回儲存，導致真實配置
+ *   被覆蓋、系統反覆回到「未初始化」——用戶看到的就是「資料庫被清空」。
  *
- *   saveDb() 现在依据 isDbShell() 判定是否为空壳，并拒绝在「不可信」状态下写入。
- *   因此 isDbShell() 的语义必须稳定：既不能把有数据的库误判为空壳（会阻断正常写入），
- *   也不能把空壳误判为有数据（会让守卫失效）。
+ *   saveDb() 現在依據 isDbShell() 判定是否為空殼，並拒絕在「不可信」狀態下寫入。
+ *   因此 isDbShell() 的語義必須穩定：既不能把有資料的庫誤判為空殼（會阻斷正常寫入），
+ *   也不能把空殼誤判為有資料（會讓守衛失效）。
  */
 
 const FULL_DB = {
@@ -27,12 +27,12 @@ const FULL_DB = {
   plugins: [],
 }
 
-test("isDbShell: 含存储挂载的库不是空壳", () => {
+test("isDbShell: 含儲存掛載的庫不是空殼", () => {
   assert.equal(isDbShell(FULL_DB), false)
 })
 
-test("isDbShell: 仅有管理员占位用户（未设密码）的库仍是空壳", () => {
-  // defaultDb 自带 admin/guest 占位用户且密码为空，不能被误判为「有数据的真实库」。
+test("isDbShell: 僅有管理員佔位用戶（未設密碼）的庫仍是空殼", () => {
+  // defaultDb 自帶 admin/guest 佔位用戶且密碼為空，不能被誤判為「有資料的真實庫」。
   assert.equal(
     isDbShell({
       settings: [],
@@ -46,7 +46,7 @@ test("isDbShell: 仅有管理员占位用户（未设密码）的库仍是空壳
   )
 })
 
-test("isDbShell: 已设置密码的用户说明库已初始化，不是空壳", () => {
+test("isDbShell: 已設置密碼的用戶說明庫已初始化，不是空殼", () => {
   assert.equal(
     isDbShell({
       settings: [],
@@ -57,14 +57,14 @@ test("isDbShell: 已设置密码的用户说明库已初始化，不是空壳", 
   )
 })
 
-test("isDbShell: 仅有分享/元数据/插件的库不是空壳", () => {
+test("isDbShell: 僅有分享/元資料/插件的庫不是空殼", () => {
   assert.equal(isDbShell({ shares: [{ id: 1 }] }), false)
   assert.equal(isDbShell({ metas: [{ id: 1 }] }), false)
   assert.equal(isDbShell({ plugins: [{ id: 1 }] }), false)
 })
 
-test("isDbShell: 默认空库（defaultDb 克隆）被判定为空壳", () => {
-  // 与 loadDb() 的兜底分支形状一致：各实体均为空数组。
+test("isDbShell: 默認空庫（defaultDb 克隆）被判定為空殼", () => {
+  // 與 loadDb() 的兜底分支形狀一致：各實體均為空數組。
   const shell = {
     settings: [{ key: "site_title", value: "OpenList" }],
     users: [],
@@ -76,22 +76,22 @@ test("isDbShell: 默认空库（defaultDb 克隆）被判定为空壳", () => {
   assert.equal(isDbShell(shell), true)
 })
 
-test("isDbShell: 空数组/纯空对象的极端输入视为空壳", () => {
+test("isDbShell: 空數組/純空對象的極端輸入視為空殼", () => {
   assert.equal(isDbShell({ settings: [], users: [], storages: [] }), true)
   assert.equal(isDbShell({}), true)
 })
 
-test("isDbShell: 非对象输入视为空壳（防御性）", () => {
+test("isDbShell: 非對象輸入視為空殼（防禦性）", () => {
   assert.equal(isDbShell(null), true)
   assert.equal(isDbShell(undefined), true)
   assert.equal(isDbShell("db"), true)
   assert.equal(isDbShell(123), true)
 })
 
-test("isDbShell: 已修改过设置（非默认值）的库不算空壳", () => {
-  // 用户只改过设置、尚未添加任何挂载时，也不应被误判为空壳而阻断保存。
+test("isDbShell: 已修改過設置（非默認值）的庫不算空殼", () => {
+  // 用戶只改過設置、尚未添加任何掛載時，也不應被誤判為空殼而阻斷保存。
   const settingsOnly = {
-    settings: [{ key: "site_title", value: "用户自定义站点标题" }],
+    settings: [{ key: "site_title", value: "用戶自定義站點標題" }],
     users: [],
     storages: [],
     shares: [],

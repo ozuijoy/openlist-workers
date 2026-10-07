@@ -11,7 +11,7 @@ export const ProtonAddressesURL = ProtonAPIBase + "/core/v4/addresses"
 export const ProtonSharesURL = ProtonAPIBase + "/drive/shares"
 export const ProtonVolumesURL = ProtonAPIBase + "/drive/volumes"
 
-// 与 Go 侧对齐的客户端指纹（用于 API 请求头）
+// 與 Go 側對齊的客戶端指紋（用於 API 請求頭）
 export const ProtonAppVersion = "windows-drive@1.11.3+rclone+proton"
 export const ProtonJsonMime = "application/vnd.protonmail.v1+json"
 export const ProtonSDKVersion = "js@0.3.0"

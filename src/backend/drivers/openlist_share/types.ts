@@ -1,14 +1,14 @@
-// openlist_share (挂载 OpenList 分享链接) - 只读
+// openlist_share (掛載 OpenList 分享鏈接) - 只讀
 // API reference: Go drivers/openlist_share
 
 export interface DriverOpenlistShareAddition {
-  /** 对端 OpenList 实例地址 */
+  /** 對端 OpenList 實例地址 */
   url: string
   /** 分享 ID */
   sid: string
-  /** 分享密码（可选） */
+  /** 分享密碼（可選） */
   pwd?: string
-  /** 转发归档请求（可选） */
+  /** 轉發歸檔請求（可選） */
   forward_archive_requests?: boolean
 }
 

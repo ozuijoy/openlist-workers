@@ -1,26 +1,26 @@
 /**
- * KV 驱动（自动适配 Cloudflare / EdgeOne）
+ * KV 驅動（自動適配 Cloudflare / EdgeOne）
  *
- * 支持两种模式：
- * 1. Binding 模式：直接访问 KV binding（Cloudflare Workers / EdgeOne Edge Functions）
- * 2. HTTP 代理模式：通过 Edge Function 代理访问（EdgeOne Node Functions）
+ * 支持兩種模式：
+ * 1. Binding 模式：直接訪問 KV binding（Cloudflare Workers / EdgeOne Edge Functions）
+ * 2. HTTP 代理模式：通過 Edge Function 代理訪問（EdgeOne Node Functions）
  *
- * 自动检测环境并选择合适的模式。
+ * 自動檢測環境並選擇合適的模式。
  */
 import { sanitizeProxyOrigin } from "../proxy"
 import type { Driver, EnvContext } from "../types"
 
 /**
- * 判断某个值是否具备 KV Web API 的接口形态。
+ * 判斷某個值是否具備 KV Web API 的介面形態。
  *
- * 这一步是必需的：EdgeOne Node 云函数也会注入一个名为 `KV` 的绑定，
- * 但它走的是 RESP/Redis 协议（TCP socket），调用 put/get 会抛出
+ * 這一步是必需的：EdgeOne Node 雲函數也會注入一個名為 `KV` 的綁定，
+ * 但它走的是 RESP/Redis 協議（TCP socket），調用 put/get 會拋出
  * "cannot find the collection by name"，而不是提供 Web KV API。
- * 必须靠接口形状区分，否则会把 RESP 客户端误当作 KV 使用。
+ * 必須靠介面形狀區分，否則會把 RESP 客戶端誤當作 KV 使用。
  */
 function isWebKvLike(b: any): boolean {
   if (!b || typeof b !== "object") return false
-  // 属性访问可能触发异常 getter，任何异常都视为「不是可用绑定」。
+  // 屬性訪問可能觸發異常 getter，任何異常都視為「不是可用綁定」。
   try {
     if (typeof b.get !== "function") return false
     return typeof b.put === "function" || typeof b.set === "function"
@@ -30,41 +30,41 @@ function isWebKvLike(b: any): boolean {
 }
 
 /**
- * 获取 KV binding（仅返回符合 Web KV API 的绑定）。
+ * 獲取 KV binding（僅返回符合 Web KV API 的綁定）。
  *
- * 注意：不能写成 `env || globalThis` —— 只要 env 是真值就不会回退到
- * globalThis，而 EdgeOne Edge Functions 会把绑定名注入为全局标识符。
- * 因此这里两处都要检查，且都要通过接口形态校验。
+ * 注意：不能寫成 `env || globalThis` —— 只要 env 是真值就不會回退到
+ * globalThis，而 EdgeOne Edge Functions 會把綁定名注入為全局標識符。
+ * 因此這裡兩處都要檢查，且都要通過介面形態校驗。
  */
 function getKvBinding(env?: any): any | null {
   const g = globalThis as any
-  // 绑定名统一为 KV（KV namespace binding 的通用约定名）
+  // 綁定名統一為 KV（KV namespace binding 的通用約定名）
   if (isWebKvLike(env?.KV)) return env.KV
   if (isWebKvLike(g?.KV)) return g.KV
   return null
 }
 
 /**
- * 获取代理内部调用密钥。
+ * 獲取代理內部調用密鑰。
  *
- * Edge Function 侧用**完整密钥**校验 X-Internal-Call。
+ * Edge Function 側用**完整密鑰**校驗 X-Internal-Call。
  *
- * 只从环境变量读取，原因：
- *  1. 若走 KV 回退读取密钥，则需要先访问 KV 才能拿密钥、拿密钥才能访问 KV，
- *     形成循环依赖；
- *  2. 打包产物中不能依赖源码相对路径的动态 import。
+ * 只從環境變量讀取，原因：
+ *  1. 若走 KV 回退讀取密鑰，則需要先訪問 KV 才能拿密鑰、拿密鑰才能訪問 KV，
+ *     形成循環依賴；
+ *  2. 打包產物中不能依賴源碼相對路徑的動態 import。
  *
- * 因此 KV 代理模式要求显式配置 JWT_SECRET（推荐 32+ 字符，不强制长度）。
+ * 因此 KV 代理模式要求顯式配置 JWT_SECRET（推薦 32+ 字符，不強制長度）。
  */
 function getProxySecret(env?: EnvContext): string | null {
   try {
     const s = env?.JWT_SECRET
-    // 只要求「非空」，不再强制 >=16：
-    //   - 强制长度会把用户合法设置的短密钥判成「未配置」，进而报一个
-    //     看起来无关的 NO_STORAGE / PROXY_CONFIG 错误，误导排查方向；
-    //   - 密钥强度是**运维建议**（推荐 32+ / openssl rand -hex 32），
-    //     不是程序可以替他决定的门槛。此处与 db.ts:readEnvEncryptionKey
-    //     的策略保持一致，避免同一变量在不同路径下长度要求不同。
+    // 只要求「非空」，不再強制 >=16：
+    //   - 強制長度會把用戶合法設置的短密鑰判成「未配置」，進而報一個
+    //     看起來無關的 NO_STORAGE / PROXY_CONFIG 錯誤，誤導排查方向；
+    //   - 密鑰強度是**運維建議**（推薦 32+ / openssl rand -hex 32），
+    //     不是程式可以替他決定的門檻。此處與 db.ts:readEnvEncryptionKey
+    //     的策略保持一致，避免同一變量在不同路徑下長度要求不同。
     return typeof s === "string" && s.trim().length > 0 ? s : null
   } catch {
     return null
@@ -72,17 +72,17 @@ function getProxySecret(env?: EnvContext): string | null {
 }
 
 /**
- * 当前环境是否有充分依据启用 EdgeOne KV HTTP 代理探测。
+ * 當前環境是否有充分依據啟用 EdgeOne KV HTTP 代理探測。
  *
- * `__requestOrigin` 不能作为平台依据：index.ts 会给所有平台和自托管请求注入它。
- * 旧实现只要同时看到 origin 与 JWT_SECRET，就会在 DB_DRIVER=auto 时请求当前站点
- * 的 /kv-list；没有该代理的站点若恰好把未知路径回退成 HTML 200，便会被误判为
- * KV 可用，随后把 HTML 当 JSON 读取，并让 /env_check 错报 ready=true。
+ * `__requestOrigin` 不能作為平台依據：index.ts 會給所有平台和自託管請求注入它。
+ * 舊實現只要同時看到 origin 與 JWT_SECRET，就會在 DB_DRIVER=auto 時請求當前站點
+ * 的 /kv-list；沒有該代理的站點若恰好把未知路徑回退成 HTML 200，便會被誤判為
+ * KV 可用，隨後把 HTML 當 JSON 讀取，並讓 /env_check 錯報 ready=true。
  *
- * 只有以下情况才允许无 binding 的代理模式：
- *  1. 用户显式指定 DB_DRIVER=kv；
- *  2. 用户显式提供 EO_KV_URLS；
- *  3. EdgeOne Node 云函数的可靠 SCF 运行时标记存在。
+ * 只有以下情況才允許無 binding 的代理模式：
+ *  1. 用戶顯式指定 DB_DRIVER=kv；
+ *  2. 用戶顯式提供 EO_KV_URLS；
+ *  3. EdgeOne Node 雲函數的可靠 SCF 運行時標記存在。
  */
 function shouldProbeProxy(env?: any): boolean {
   const configured = String(env?.DB_DRIVER || "")
@@ -117,8 +117,8 @@ export function checkProxyConfig(env?: any): string | null {
     if (getKvBinding(env) !== null) return null // binding mode, no secret needed
     if (getProxySecret(env)) return null // secret present
   } catch {
-    // 探测自身异常（异常 getter 等）视为「无可用 binding」，
-    // 继续走到报错分支，而不是让调用方崩溃。
+    // 探測自身異常（異常 getter 等）視為「無可用 binding」，
+    // 繼續走到報錯分支，而不是讓調用方崩潰。
   }
 
   return (
@@ -134,21 +134,21 @@ export function checkProxyConfig(env?: any): string | null {
 }
 
 /**
- * 构建 HTTP 代理请求头
+ * 構建 HTTP 代理請求頭
  */
 function buildProxyHeaders(env?: EnvContext): HeadersInit {
   const headers: HeadersInit = {
     "Content-Type": "application/json",
   }
 
-  // 内部调用标识：提交**完整密钥**（Edge Function 侧常量时间比对）。
-  // 不截断 —— 截断会把熵降到 64 bit，且该通道绕过管理员角色校验。
+  // 內部調用標識：提交**完整密鑰**（Edge Function 側常量時間比對）。
+  // 不截斷 —— 截斷會把熵降到 64 bit，且該通道繞過管理員角色校驗。
   const sharedSecret = getProxySecret(env)
   if (sharedSecret) {
     headers["X-Internal-Call"] = sharedSecret
   }
 
-  // 如果有用户 token，也携带上（用于角色校验）
+  // 如果有用戶 token，也攜帶上（用於角色校驗）
   const userToken = (env as any)?._currentUserToken
   if (userToken) {
     headers["Authorization"] = `Bearer ${userToken}`
@@ -158,13 +158,13 @@ function buildProxyHeaders(env?: EnvContext): HeadersInit {
 }
 
 /**
- * 获取 HTTP 代理基础 URL（必须是绝对地址）。
+ * 獲取 HTTP 代理基礎 URL（必須是絕對地址）。
  *
- * Node 的 fetch 不接受相对 URL（会抛 ERR_INVALID_URL），因此这里不能返回 ""。
- * 优先级：
- *  1. EO_KV_URLS —— 显式配置的完整地址（跨域 / 本地调试）
- *  2. __requestOrigin —— 由 index.ts 中间件注入的当前请求 origin，
- *     即同一部署的自身域名，用于 Node 云函数自调用 Edge Function
+ * Node 的 fetch 不接受相對 URL（會拋 ERR_INVALID_URL），因此這裡不能返回 ""。
+ * 優先級：
+ *  1. EO_KV_URLS —— 顯式配置的完整地址（跨域 / 本地調試）
+ *  2. __requestOrigin —— 由 index.ts 中間件注入的當前請求 origin，
+ *     即同一部署的自身域名，用於 Node 雲函數自調用 Edge Function
  */
 function getProxyBaseUrl(env?: EnvContext): string {
   if (!env) return ""
@@ -185,16 +185,16 @@ function getProxyBaseUrl(env?: EnvContext): string {
 }
 
 /**
- * KV 代理健康探测（唯一实现）。
+ * KV 代理健康探測（唯一實現）。
  *
- * isAvailable() 与 health() 共用，避免两处各自实现导致判定标准漂移。
- * 判定：HTTP 200 表示代理与 KV 均可用；401 表示代理可达但鉴权失败，
- * 属于「代理部署存在但密钥不对」。
+ * isAvailable() 與 health() 共用，避免兩處各自實現導致判定標準漂移。
+ * 判定：HTTP 200 表示代理與 KV 均可用；401 表示代理可達但鑑權失敗，
+ * 屬於「代理部署存在但密鑰不對」。
  *
- * 注意两个调用方对 401 的取舍不同，故这里只返回原始探测结果，
- * 由 probeToAvailability() / probeToHealth() 分别映射（见其注释）：
- *   - isAvailable() 把 401 视为可用（代理已部署，驱动可被选中）
- *   - health() 把 401 视为不可用（鉴权失败，持久化不可依赖）
+ * 注意兩個調用方對 401 的取捨不同，故這裡只返回原始探測結果，
+ * 由 probeToAvailability() / probeToHealth() 分別映射（見其註釋）：
+ *   - isAvailable() 把 401 視為可用（代理已部署，驅動可被選中）
+ *   - health() 把 401 視為不可用（鑑權失敗，持久化不可依賴）
  */
 async function probeProxy(
   env?: EnvContext,
@@ -228,35 +228,35 @@ async function probeProxy(
 }
 
 /**
- * 把「原始探测结果」映射为**可用性**（`isAvailable` 的语义）。
+ * 把「原始探測結果」映射為**可用性**（`isAvailable` 的語義）。
  *
- * 401 视为可用：代理已部署，只是密钥不匹配 —— 此时应让 kv 被选中，
- * 再由 `health()` 报出不健康。若这里判为不可用，`auto` 会悄悄换用别的后端，
- * 而用户明明配了 KV 代理，只会更困惑。
+ * 401 視為可用：代理已部署，只是密鑰不匹配 —— 此時應讓 kv 被選中，
+ * 再由 `health()` 報出不健康。若這裡判為不可用，`auto` 會悄悄換用別的後端，
+ * 而用戶明明配了 KV 代理，只會更困惑。
  */
 function probeToAvailability(probe: { ok: boolean; status: number }): boolean {
   return probe.ok || probe.status === 401
 }
 
 /**
- * 把「原始探测结果」映射为**健康状态**（`health()` 的语义）。
+ * 把「原始探測結果」映射為**健康狀態**（`health()` 的語義）。
  *
- * 401 视为不健康：对依赖持久化的接口而言，鉴权失败就是不能读写，
- * `/env_check` 不应把它判成 ready。
+ * 401 視為不健康：對依賴持久化的介面而言，鑑權失敗就是不能讀寫，
+ * `/env_check` 不應把它判成 ready。
  *
- * 两者对 401 的取舍**不同且是有意为之**。抽成具名函数是为了让这个差异
- * 在调用点显式可见，而不是散落在 `!probe.ok && probe.status !== 401`
- * 这类字面表达式里（那需要读者反推语义）。
+ * 兩者對 401 的取捨**不同且是有意為之**。抽成具名函數是為了讓這個差異
+ * 在調用點顯式可見，而不是散落在 `!probe.ok && probe.status !== 401`
+ * 這類字面表達式裡（那需要讀者反推語義）。
  */
 function probeToHealth(probe: { ok: boolean }): boolean {
   return probe.ok
 }
 
 /**
- * 解析代理基础 URL，无法确定时抛出明确错误。
+ * 解析代理基礎 URL，無法確定時拋出明確錯誤。
  *
- * 集中校验「密钥 + origin」两个前置条件，避免各方法重复检查，
- * 也让 Node 的 ERR_INVALID_URL 不会以晦涩形式出现在日志里。
+ * 集中校驗「密鑰 + origin」兩個前置條件，避免各方法重複檢查，
+ * 也讓 Node 的 ERR_INVALID_URL 不會以晦澀形式出現在日誌裡。
  */
 function requireProxyBaseUrl(env?: EnvContext): string {
   const configError = checkProxyConfig(env)
@@ -279,14 +279,14 @@ export const kvDriver: Driver = {
   name: "kv",
 
   async isAvailable(env?: any): Promise<boolean> {
-    // 模式1: 检查 KV binding
+    // 模式1: 檢查 KV binding
     if (getKvBinding(env) !== null) {
       return true
     }
 
     // 模式2: HTTP 代理（EdgeOne Node Functions 拿不到 binding）
-    // __requestOrigin 本身不能证明代理存在；auto 模式下必须有显式配置或
-    // EdgeOne Node 的平台标记，否则未知路由的 HTML 200 会造成假阳性。
+    // __requestOrigin 本身不能證明代理存在；auto 模式下必須有顯式配置或
+    // EdgeOne Node 的平台標記，否則未知路由的 HTML 200 會造成假陽性。
     if (!shouldProbeProxy(env)) return false
     const probe = await probeProxy(env)
     if (!probeToAvailability(probe)) {
@@ -298,7 +298,7 @@ export const kvDriver: Driver = {
   },
 
   async init(env?: any): Promise<void> {
-    // KV 无需初始化
+    // KV 無需初始化
   },
 
   async get(key: string, env?: any): Promise<string | null> {
@@ -307,12 +307,12 @@ export const kvDriver: Driver = {
     // 模式1: Binding 模式
     if (kv) {
       // Cloudflare KV 用 get(key, "text")，EdgeOne KV 用 get(key, {type:"text"})，
-      // 两者签名不兼容，需按序尝试并归一化返回值（避免拿到对象导致上游 JSON.parse 失败）。
+      // 兩者簽名不相容，需按序嘗試並歸一化返回值（避免拿到對象導致上游 JSON.parse 失敗）。
       //
-      // 但要区分「签名不兼容」与「真实故障」：
-      //   - 签名不兼容会抛 TypeError（参数类型不符），此时才应回退到第二种签名；
-      //   - 网络/权限错误（401、超时等）必须**原样抛出**，否则会被第二次尝试
-      //     掩盖成 "key not found"，让调用方误判为数据不存在而写入错误状态。
+      // 但要區分「簽名不相容」與「真實故障」：
+      //   - 簽名不相容會拋 TypeError（參數類型不符），此時才應回退到第二種簽名；
+      //   - 網路/權限錯誤（401、超時等）必須**原樣拋出**，否則會被第二次嘗試
+      //     掩蓋成 "key not found"，讓調用方誤判為資料不存在而寫入錯誤狀態。
       const isSignatureError = (e: any): boolean =>
         e instanceof TypeError ||
         /not a function|invalid|unexpected|argument/i.test(
@@ -331,8 +331,8 @@ export const kvDriver: Driver = {
         try {
           value = await kv.get(key, { type: "text" })
         } catch (e) {
-          // 若第一种签名已成功执行（未抛签名错误），说明第二种只是"空结果"的回退，
-          // 此时真实错误同样要抛出，不得吞掉。
+          // 若第一種簽名已成功執行（未拋簽名錯誤），說明第二種只是"空結果"的回退，
+          // 此時真實錯誤同樣要拋出，不得吞掉。
           if (!isSignatureError(e)) throw e
           value = null
         }
@@ -340,11 +340,11 @@ export const kvDriver: Driver = {
 
       if (value === undefined || value === null) return null
       if (typeof value === "string") return value
-      // 绑定误返回对象时统一序列化，保持 Driver.get 的 string 契约
+      // 綁定誤返回對象時統一序列化，保持 Driver.get 的 string 契約
       return JSON.stringify(value)
     }
 
-    // 模式2: HTTP 代理模式（无原生 binding → 经 Edge Function 代理）
+    // 模式2: HTTP 代理模式（無原生 binding → 經 Edge Function 代理）
     const baseUrl = requireProxyBaseUrl(env)
     const url = `${baseUrl}/kv-get?key=${encodeURIComponent(key)}`
 
@@ -362,8 +362,8 @@ export const kvDriver: Driver = {
       }
 
       const data = (await response.json()) as { value?: string | null }
-      // 归一化为 string | null：Edge Function 在错误分支只返回 { error }，
-      // 此时 data.value 为 undefined，不能直接透传（调用方按 === null 判断会漏掉）。
+      // 歸一化為 string | null：Edge Function 在錯誤分支只返回 { error }，
+      // 此時 data.value 為 undefined，不能直接透傳（調用方按 === null 判斷會漏掉）。
       if (data?.value === undefined || data?.value === null) return null
       return typeof data.value === "string" ? data.value : String(data.value)
     } catch (err) {
@@ -434,9 +434,9 @@ export const kvDriver: Driver = {
 
     // 模式1: Binding 模式
     if (kv) {
-      // EdgeOne KV list() 语义（依据官方 functions-kv 示例）：
-      //   page.keys -> [{ key, ttl, meta }]，page.complete 为 true 表示末页，
-      //   下一页 cursor 需手动取本页最后一个 key。
+      // EdgeOne KV list() 語義（依據官方 functions-kv 示例）：
+      //   page.keys -> [{ key, ttl, meta }]，page.complete 為 true 表示末頁，
+      //   下一頁 cursor 需手動取本頁最後一個 key。
       const keys: string[] = []
       let cursor = ""
       let complete = false
@@ -509,10 +509,10 @@ export const kvDriver: Driver = {
 
     // 模式2: HTTP 代理模式。
     //
-    // 判定比 isAvailable 更严格（见 probeToHealth / probeToAvailability 的注释）：
-    // 健康状态必须真正可读写，401 表示鉴权失败（代理在但密钥不对），对依赖
-    // 持久化的接口而言应报不可用，而不是被 /env_check 判定为 ready。
-    // 共用 probeProxy 仅复用探测动作，语义映射分别具名。
+    // 判定比 isAvailable 更嚴格（見 probeToHealth / probeToAvailability 的註釋）：
+    // 健康狀態必須真正可讀寫，401 表示鑑權失敗（代理在但密鑰不對），對依賴
+    // 持久化的介面而言應報不可用，而不是被 /env_check 判定為 ready。
+    // 共用 probeProxy 僅複用探測動作，語義映射分別具名。
     const probe = await probeProxy(env)
     if (!probeToHealth(probe)) {
       return {

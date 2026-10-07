@@ -1,32 +1,32 @@
 /**
- * KV 代理共享模块
+ * KV 代理共享模塊
  *
- * EdgeOne Edge Functions 约定：
- * - 目录 functions/<name>/index.js 自动生成路由 /<name>
- * - 以 `_` 开头的文件为共享模块，不生成路由
- * - KV 绑定名在运行时直接可用（官方示例做法，非 env.KV）
+ * EdgeOne Edge Functions 約定：
+ * - 目錄 functions/<name>/index.js 自動生成路由 /<name>
+ * - 以 `_` 開頭的文件為共享模塊，不生成路由
+ * - KV 綁定名在運行時直接可用（官方示例做法，非 env.KV）
  *
- * 鉴权策略（三层）：
- *  1. 内部调用：X-Internal-Call 常量时间比对**完整**密钥
- *     —— 用于 Node 云函数（初始化、后台任务等无用户 token 的场景）
- *  2. 用户调用：真实校验 HS256 JWT 签名 + exp/nbf + 管理员角色
- *     —— 用于外部直接访问 /kv-* 的请求
- *  3. 其余一律 401
+ * 鑑權策略（三層）：
+ *  1. 內部調用：X-Internal-Call 常量時間比對**完整**密鑰
+ *     —— 用於 Node 雲函數（初始化、後台任務等無用戶 token 的場景）
+ *  2. 用戶調用：真實校驗 HS256 JWT 簽名 + exp/nbf + 管理員角色
+ *     —— 用於外部直接訪問 /kv-* 的請求
+ *  3. 其餘一律 401
  *
- * JWT 密钥来源与 Node 侧保持一致：
- *  env.JWT_SECRET -> KV 中的 openlist_jwt_secret -> （都没有则拒绝用户调用）
+ * JWT 密鑰來源與 Node 側保持一致：
+ *  env.JWT_SECRET -> KV 中的 openlist_jwt_secret -> （都沒有則拒絕用戶調用）
  */
 
 const JWT_SECRET_KV_KEY = "openlist_jwt_secret"
 const ADMIN_ROLE = 2
 
-/* ─────────────────────────── KV 绑定解析 ─────────────────────────── */
+/* ─────────────────────────── KV 綁定解析 ─────────────────────────── */
 
 /**
- * 解析 KV 绑定。
+ * 解析 KV 綁定。
  *
- * 绑定名固定为 `KV`。官方示例中绑定名是直接可用的全局标识符，
- * 这里兼容 env 挂载与全局两种形态。
+ * 綁定名固定為 `KV`。官方示例中綁定名是直接可用的全局標識符，
+ * 這裡相容 env 掛載與全局兩種形態。
  */
 export function resolveKv(env) {
   const v = env?.KV
@@ -40,26 +40,26 @@ function isKvLike(v) {
   return !!v && typeof v.get === "function" && typeof v.put === "function"
 }
 
-/* ─────────────────────────── 密钥获取 ─────────────────────────── */
+/* ─────────────────────────── 密鑰獲取 ─────────────────────────── */
 
 /**
- * 获取 JWT 密钥，优先级与 Node 侧 getJwtSecret 一致。
+ * 獲取 JWT 密鑰，優先級與 Node 側 getJwtSecret 一致。
  *
- * **不缓存**。KV 密钥可能被 Node 侧随时写入或轮换，任何形式的模块级
- * 缓存（哪怕带 TTL）都会让本实例在一段时间内持有旧值，导致
- * X-Internal-Call 鉴权失败。env 读取本身几乎无开销，KV 读取仅在
- * 未配置 env 时发生，成本可接受。用最简单的方式换取"永不失效"。
+ * **不快取**。KV 密鑰可能被 Node 側隨時寫入或輪換，任何形式的模塊級
+ * 快取（哪怕帶 TTL）都會讓本實例在一段時間內持有舊值，導致
+ * X-Internal-Call 鑑權失敗。env 讀取本身幾乎無開銷，KV 讀取僅在
+ * 未配置 env 時發生，成本可接受。用最簡單的方式換取"永不失效"。
  *
  * @returns {Promise<string|null>}
  */
 export async function getJwtSecret(env) {
-  // 1) 环境变量（长度需 >= 16，与 Node 侧一致）
+  // 1) 環境變量（長度需 >= 16，與 Node 側一致）
   const envSecret = env?.JWT_SECRET || globalThis?.JWT_SECRET
   if (typeof envSecret === "string" && envSecret.length >= 16) {
     return envSecret
   }
 
-  // 2) KV 持久化密钥（与 Node 侧共用 openlist_jwt_secret）
+  // 2) KV 持久化密鑰（與 Node 側共用 openlist_jwt_secret）
   try {
     const kv = resolveKv(env)
     if (kv) {
@@ -69,16 +69,16 @@ export async function getJwtSecret(env) {
       }
     }
   } catch {
-    // 读取失败则视为无密钥
+    // 讀取失敗則視為無密鑰
   }
 
   return null
 }
 
-/* ─────────────────────────── 鉴权 ─────────────────────────── */
+/* ─────────────────────────── 鑑權 ─────────────────────────── */
 
 /**
- * 常量时间字符串比较（防时序攻击）
+ * 常量時間字符串比較（防時序攻擊）
  */
 function timingSafeEqual(a, b) {
   if (typeof a !== "string" || typeof b !== "string") return false
@@ -111,8 +111,8 @@ function bytesToB64url(bytes) {
 }
 
 /**
- * 校验 HS256 JWT：签名 + exp + nbf。
- * @returns {Promise<object|null>} 校验通过的 payload，失败返回 null
+ * 校驗 HS256 JWT：簽名 + exp + nbf。
+ * @returns {Promise<object|null>} 校驗通過的 payload，失敗返回 null
  */
 export async function verifyJwt(token, secret) {
   if (!secret) return null
@@ -122,7 +122,7 @@ export async function verifyJwt(token, secret) {
 
   const [headerB64, payloadB64, signB64] = parts
 
-  // 1) 头部算法必须为 HS256，拒绝 alg=none 等降级攻击
+  // 1) 頭部算法必須為 HS256，拒絕 alg=none 等降級攻擊
   let header
   try {
     header = b64urlToJson(headerB64)
@@ -131,7 +131,7 @@ export async function verifyJwt(token, secret) {
   }
   if (!header || header.alg !== "HS256") return null
 
-  // 2) 验签
+  // 2) 驗籤
   let keyMat
   try {
     keyMat = await crypto.subtle.importKey(
@@ -165,7 +165,7 @@ export async function verifyJwt(token, secret) {
   }
   if (!valid) return null
 
-  // 3) 时间与角色校验
+  // 3) 時間與角色校驗
   let payload
   try {
     payload = b64urlToJson(payloadB64)
@@ -182,29 +182,29 @@ export async function verifyJwt(token, secret) {
 }
 
 /**
- * 统一鉴权入口
+ * 統一鑑權入口
  *
  * @returns {Promise<{ok: boolean, mode: "internal"|"user"|"anonymous", reason?: string}>}
  */
 export async function authorize(request, env) {
-  /* ── 1) 内部调用（Node 云函数） ── */
+  /* ── 1) 內部調用（Node 雲函數） ── */
   const internal = request.headers.get("X-Internal-Call")
   if (internal) {
     const secret = await getJwtSecret(env)
-    // 使用**完整密钥**比对（不做截断）。
+    // 使用**完整密鑰**比對（不做截斷）。
     //
-    // 历史实现只比对前 16 个字符，导致熵从 256 bit 降到 64 bit，
-    // 且内部通道会绕过后续的管理员角色校验 —— 一旦猜中即可任意读写 KV。
-    // 现在要求提交完整密钥，熵与 JWT_SECRET 一致。
+    // 歷史實現只比對前 16 個字符，導致熵從 256 bit 降到 64 bit，
+    // 且內部通道會繞過後續的管理員角色校驗 —— 一旦猜中即可任意讀寫 KV。
+    // 現在要求提交完整密鑰，熵與 JWT_SECRET 一致。
     if (secret && timingSafeEqual(internal, secret)) {
       return { ok: true, mode: "internal" }
     }
-    // 带了内部调用头但不匹配：直接拒绝，不继续尝试用户鉴权，
-    // 避免用错误头绕过后续逻辑
+    // 帶了內部調用頭但不匹配：直接拒絕，不繼續嘗試用戶鑑權，
+    // 避免用錯誤頭繞過後續邏輯
     return { ok: false, mode: "anonymous", reason: "invalid internal call" }
   }
 
-  /* ── 2) 用户调用（真实校验 JWT） ── */
+  /* ── 2) 用戶調用（真實校驗 JWT） ── */
   const auth = request.headers.get("Authorization") || ""
   if (auth.startsWith("Bearer ")) {
     const token = auth.slice(7)
@@ -223,7 +223,7 @@ export async function authorize(request, env) {
       return { ok: false, mode: "anonymous", reason: "invalid token" }
     }
 
-    // 管理员角色校验：KV 为数据面，仅管理员可读写
+    // 管理員角色校驗：KV 為資料面，僅管理員可讀寫
     if (Number(payload.role) !== ADMIN_ROLE) {
       return { ok: false, mode: "user", reason: "admin role required" }
     }
@@ -234,9 +234,9 @@ export async function authorize(request, env) {
   return { ok: false, mode: "anonymous", reason: "no credentials" }
 }
 
-/* ─────────────────────────── 响应工具 ─────────────────────────── */
+/* ─────────────────────────── 響應工具 ─────────────────────────── */
 
-/** 统一 JSON 响应，禁止缓存 */
+/** 統一 JSON 響應，禁止快取 */
 export function json(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -267,12 +267,12 @@ export function kvMissing() {
 }
 
 /**
- * 根据鉴权结果返回合适的错误响应
+ * 根據鑑權結果返回合適的錯誤響應
  */
 export function deny(auth) {
   if (auth.mode === "user") return forbidden(auth.reason || "Forbidden")
   return unauthorized(auth.reason || "Unauthorized")
 }
 
-// 供路由模块复用的验签工具（导出以便测试）
+// 供路由模塊複用的驗籤工具（導出以便測試）
 export { b64urlToBytes, bytesToB64url, timingSafeEqual }

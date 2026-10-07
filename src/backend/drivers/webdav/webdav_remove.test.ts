@@ -3,23 +3,23 @@ import { test } from "node:test"
 import { WebdavDriver } from "./driver"
 
 /**
- * 调用约定（src/backend/internal/op/storage.ts 的 removeItems/moveItems）：
+ * 調用約定（src/backend/internal/op/storage.ts 的 removeItems/moveItems）：
  *
  *   const resolved = await resolvePath(`${dir}/${name}`)
  *   await driver.remove(virtualPath, resolved.physical, [name])
  *
- * physicalPath/srcPhys/dstPhys 是【目标项自身】的物理路径（已含文件名），
- * 调用方恒传单元素 names。driver 不得再把 name 拼到该路径后面，否则
- * DELETE 打到 `<item>/<name>`（WebDAV 对 404 视作成功 → 接口报成功但对象仍在），
- * MOVE 的请求源与 Destination 头源/目标也会错位。
+ * physicalPath/srcPhys/dstPhys 是【目標項自身】的物理路徑（已含文件名），
+ * 調用方恆傳單元素 names。driver 不得再把 name 拼到該路徑後面，否則
+ * DELETE 打到 `<item>/<name>`（WebDAV 對 404 視作成功 → 介面報成功但對象仍在），
+ * MOVE 的請求源與 Destination 頭源/目標也會錯位。
  *
- * 状态码坑：DELETE 返回 204（实现接受 200/204/404）；MOVE 返回 201（绝不能 409，
- * 409 会触发 mkdirAll 重试链，产生额外请求干扰断言）。
+ * 狀態碼坑：DELETE 返回 204（實現接受 200/204/404）；MOVE 返回 201（絕不能 409，
+ * 409 會觸發 mkdirAll 重試鏈，產生額外請求干擾斷言）。
  */
 
 type Call = { method: string; url: string; headers: Headers }
 
-/** 记录请求；DELETE 回 204、MOVE 回 201，其余回 200 */
+/** 記錄請求；DELETE 回 204、MOVE 回 201，其餘回 200 */
 function mockWebdav(calls: Call[]) {
   return async (input: any, init: any = {}) => {
     const url = String(typeof input === "string" ? input : input.url)
@@ -44,7 +44,7 @@ function withMock<T>(calls: Call[], fn: () => Promise<T>): Promise<T> {
 }
 
 function makeDriver(rootFolderPath?: string) {
-  // 构造不联网，测试不调用 init()；root_folder_path 缺省为 "/"
+  // 構造不聯網，測試不調用 init()；root_folder_path 缺省為 "/"
   return new WebdavDriver({
     address: "https://dav.example.com",
     username: "u",
@@ -53,7 +53,7 @@ function makeDriver(rootFolderPath?: string) {
   })
 }
 
-test("Webdav remove() DELETE 目标为项自身路径，不再拼一次 name", async () => {
+test("Webdav remove() DELETE 目標為項自身路徑，不再拼一次 name", async () => {
   const calls: Call[] = []
 
   await withMock(calls, () =>
@@ -64,21 +64,21 @@ test("Webdav remove() DELETE 目标为项自身路径，不再拼一次 name", a
   assert.equal(
     deletes.length,
     1,
-    `应恰好发出 1 次 DELETE 请求，实际 ${deletes.length}`,
+    `應恰好發出 1 次 DELETE 請求，實際 ${deletes.length}`,
   )
   const pathname = decodeURIComponent(new URL(deletes[0].url).pathname)
   assert.equal(
     pathname,
     "/d/a.txt",
-    `DELETE 目标应为项自身路径 /d/a.txt，实际 ${pathname}`,
+    `DELETE 目標應為項自身路徑 /d/a.txt，實際 ${pathname}`,
   )
   assert.ok(
     !pathname.includes("a.txt/a.txt"),
-    "DELETE 目标不得出现二次拼接的 <item>/<name>",
+    "DELETE 目標不得出現二次拼接的 <item>/<name>",
   )
 })
 
-test("Webdav move() 请求源与 Destination 头分别为源/目标项自身路径", async () => {
+test("Webdav move() 請求源與 Destination 頭分別為源/目標項自身路徑", async () => {
   const calls: Call[] = []
 
   await withMock(calls, () =>
@@ -89,39 +89,39 @@ test("Webdav move() 请求源与 Destination 头分别为源/目标项自身路�
   assert.equal(
     moves.length,
     1,
-    `应恰好发出 1 次 MOVE 请求，实际 ${moves.length}`,
+    `應恰好發出 1 次 MOVE 請求，實際 ${moves.length}`,
   )
   const pathname = decodeURIComponent(new URL(moves[0].url).pathname)
   assert.equal(
     pathname,
     "/d/a.txt",
-    `MOVE 请求 URL 应为源项自身路径 /d/a.txt，实际 ${pathname}`,
+    `MOVE 請求 URL 應為源項自身路徑 /d/a.txt，實際 ${pathname}`,
   )
   assert.ok(
     !pathname.includes("a.txt/a.txt"),
-    "MOVE 请求 URL 不得出现二次拼接的 <item>/<name>",
+    "MOVE 請求 URL 不得出現二次拼接的 <item>/<name>",
   )
-  // Headers 不区分大小写，get("destination") 与写入时的 Destination 等价
+  // Headers 不區分大小寫，get("destination") 與寫入時的 Destination 等價
   const destination = moves[0].headers.get("destination")
-  assert.ok(destination, "MOVE 必须携带 Destination 头")
+  assert.ok(destination, "MOVE 必須攜帶 Destination 頭")
   const destPathname = decodeURIComponent(new URL(destination).pathname)
   assert.equal(
     destPathname,
     "/d/dst/a.txt",
-    `Destination 应指向目标项自身路径 /d/dst/a.txt，实际 ${destination}`,
+    `Destination 應指向目標項自身路徑 /d/dst/a.txt，實際 ${destination}`,
   )
   assert.ok(
     !destPathname.includes("a.txt/a.txt"),
-    "Destination 不得出现二次拼接的 <item>/<name>",
+    "Destination 不得出現二次拼接的 <item>/<name>",
   )
   assert.equal(
     calls.filter((c) => c.method === "MKCOL").length,
     0,
-    "MOVE 返回 201 不应触发 mkdirAll 重试链",
+    "MOVE 返回 201 不應觸發 mkdirAll 重試鏈",
   )
 })
 
-test("Webdav root_folder_path 前缀只拼一次（remove 与 move）", async () => {
+test("Webdav root_folder_path 前綴只拼一次（remove 與 move）", async () => {
   const removeCalls: Call[] = []
 
   await withMock(removeCalls, () =>
@@ -131,18 +131,18 @@ test("Webdav root_folder_path 前缀只拼一次（remove 与 move）", async ()
   assert.equal(
     removeDeletes.length,
     1,
-    `应恰好发出 1 次 DELETE 请求，实际 ${removeDeletes.length}`,
+    `應恰好發出 1 次 DELETE 請求，實際 ${removeDeletes.length}`,
   )
   const removePath = decodeURIComponent(new URL(removeDeletes[0].url).pathname)
   assert.equal(
     removePath,
     "/root/d/a.txt",
-    `DELETE 目标应为 <root>/<项路径> = /root/d/a.txt，实际 ${removePath}`,
+    `DELETE 目標應為 <root>/<項路徑> = /root/d/a.txt，實際 ${removePath}`,
   )
-  assert.ok(!removePath.includes("/root/root/"), "root 前缀不得被拼两次")
+  assert.ok(!removePath.includes("/root/root/"), "root 前綴不得被拼兩次")
   assert.ok(
     !removePath.includes("a.txt/a.txt"),
-    "DELETE 目标不得出现二次拼接的 <item>/<name>",
+    "DELETE 目標不得出現二次拼接的 <item>/<name>",
   )
 
   const moveCalls: Call[] = []
@@ -160,24 +160,24 @@ test("Webdav root_folder_path 前缀只拼一次（remove 与 move）", async ()
   assert.equal(
     rootMoves.length,
     1,
-    `应恰好发出 1 次 MOVE 请求，实际 ${rootMoves.length}`,
+    `應恰好發出 1 次 MOVE 請求，實際 ${rootMoves.length}`,
   )
   const srcPath = decodeURIComponent(new URL(rootMoves[0].url).pathname)
   assert.equal(
     srcPath,
     "/root/d/a.txt",
-    `MOVE 请求 URL 应为 <root>/<源项路径> = /root/d/a.txt，实际 ${srcPath}`,
+    `MOVE 請求 URL 應為 <root>/<源項路徑> = /root/d/a.txt，實際 ${srcPath}`,
   )
   const destination = rootMoves[0].headers.get("destination")
-  assert.ok(destination, "MOVE 必须携带 Destination 头")
+  assert.ok(destination, "MOVE 必須攜帶 Destination 頭")
   const destPath = decodeURIComponent(new URL(destination).pathname)
   assert.equal(
     destPath,
     "/root/d/dst/a.txt",
-    `Destination 应为 <root>/<目标项路径> = /root/d/dst/a.txt，实际 ${destPath}`,
+    `Destination 應為 <root>/<目標項路徑> = /root/d/dst/a.txt，實際 ${destPath}`,
   )
   assert.ok(
     !srcPath.includes("/root/root/") && !destPath.includes("/root/root/"),
-    "root 前缀不得被拼两次",
+    "root 前綴不得被拼兩次",
   )
 })

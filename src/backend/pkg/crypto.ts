@@ -4,9 +4,9 @@
  * compatible with Cloudflare Workers and Node.js 18+.
  * All functions are async.
  *
- * 例外：`chacha20-poly1305` 与 `des/3des` 这两类**WebCrypto 不提供**的算法，
- * 分别由 `./chacha20`（自带 RFC 8439 实现）与 `./legacy-ciphers`（crypto-js）
- * 提供，详见文件末尾的 DB_CIPHER 说明。
+ * 例外：`chacha20-poly1305` 與 `des/3des` 這兩類**WebCrypto 不提供**的算法，
+ * 分別由 `./chacha20`（自帶 RFC 8439 實現）與 `./legacy-ciphers`（crypto-js）
+ * 提供，詳見文件末尾的 DB_CIPHER 說明。
  */
 import { chacha20Poly1305Open, chacha20Poly1305Seal } from "./chacha20"
 import { desCbcDecrypt, desCbcEncrypt } from "./legacy-ciphers"
@@ -138,7 +138,7 @@ export async function hmacSha256(
   return hexEncode(sig)
 }
 
-/** HMAC-SHA1（base64 输出，阿里云 OSS V1 签名使用） */
+/** HMAC-SHA1（base64 輸出，阿里雲 OSS V1 簽名使用） */
 export async function hmacSha1Base64(
   data: string,
   key: string,
@@ -161,7 +161,7 @@ export async function hmacSha1Base64(
 
 const PBKDF2_ITERATIONS = 100000
 
-// 仅提示一次的 legacy 弱 KDF 告警标记（M-4）
+// 僅提示一次的 legacy 弱 KDF 告警標記（M-4）
 let legacyKdfWarned = false
 
 async function deriveKey(
@@ -362,41 +362,41 @@ export async function aesCbcEncryptBase64(
   return btoa(binary)
 }
 
-// ─── 静态加密算法选择（DB_CIPHER）───────────────────────────────────────────
+// ─── 靜態加密算法選擇（DB_CIPHER）───────────────────────────────────────────
 //
-// 设计要点：
+// 設計要點：
 //
-// 1. **算法由环境变量选择，历史密文由前缀识别**。写入时按所选算法加版本前缀
-//    （`enc:v1:` ~ `enc:v6:`），读取时只看前缀、完全不依赖当前配置，
-//    因此「换算法」「关掉加密」都不会让既有密文变成乱码 —— 旧密文会在本次读取时
-//    按旧算法解开，并在下一次写入时按新算法（或明文）重新落盘。
+// 1. **算法由環境變量選擇，歷史密文由前綴識別**。寫入時按所選算法加版本前綴
+//    （`enc:v1:` ~ `enc:v6:`），讀取時只看前綴、完全不依賴當前配置，
+//    因此「換算法」「關掉加密」都不會讓既有密文變成亂碼 —— 舊密文會在本次讀取時
+//    按舊算法解開，並在下一次寫入時按新算法（或明文）重新落盤。
 //
-// 2. `none` 是默认值：不加密直接落盘。
+// 2. `none` 是默認值：不加密直接落盤。
 //
-// 3. 所有算法都基于同一把密钥（JWT_SECRET / 持久化的共享密钥）：
+// 3. 所有算法都基於同一把密鑰（JWT_SECRET / 持久化的共享密鑰）：
 //
-//    | 前缀      | DB_CIPHER               | 实现                                     |
+//    | 前綴      | DB_CIPHER               | 實現                                     |
 //    |-----------|-------------------------|------------------------------------------|
-//    | enc:v1:   | aes-256-gcm-pbkdf2      | PBKDF2-SHA256(10 万次) 逐字段派生（历史） |
-//    | enc:v2:   | aes-256-gcm             | HKDF-SHA256 派生一把 AES key（#69，推荐）|
+//    | enc:v1:   | aes-256-gcm-pbkdf2      | PBKDF2-SHA256(10 萬次) 逐欄位派生（歷史） |
+//    | enc:v2:   | aes-256-gcm             | HKDF-SHA256 派生一把 AES key（#69，推薦）|
 //    | enc:v3:   | aes-256-cbc-hmac        | AES-256-CBC + HMAC-SHA256（EtM）          |
-//    | enc:v4:   | chacha20-poly1305       | ChaCha20-Poly1305（RFC 8439，纯 JS）      |
-//    | enc:v5:   | des-cbc-hmac            | 单 DES-CBC + HMAC-SHA256（仅兼容，不安全）|
-//    | enc:v6:   | 3des-cbc-hmac           | 3DES-CBC + HMAC-SHA256（仅兼容，已弃用）  |
+//    | enc:v4:   | chacha20-poly1305       | ChaCha20-Poly1305（RFC 8439，純 JS）      |
+//    | enc:v5:   | des-cbc-hmac            | 單 DES-CBC + HMAC-SHA256（僅相容，不安全）|
+//    | enc:v6:   | 3des-cbc-hmac           | 3DES-CBC + HMAC-SHA256（僅相容，已棄用）  |
 //
-//    说明：WebCrypto（CF Workers / 浏览器 / Node）**没有** ChaCha20 与 DES/3DES，
-//    且本仓库边缘构建会把 `node:crypto` 换成抛错 shim（`scripts/node-shim.mjs`），
-//    因此 v4 为自带纯 JS 实现，v5/v6 复用已有依赖 crypto-js（详见 chacha20.ts /
-//    legacy-ciphers.ts 中的安全说明）。
+//    說明：WebCrypto（CF Workers / 瀏覽器 / Node）**沒有** ChaCha20 與 DES/3DES，
+//    且本倉庫邊緣構建會把 `node:crypto` 換成拋錯 shim（`scripts/node-shim.mjs`），
+//    因此 v4 為自帶純 JS 實現，v5/v6 複用已有依賴 crypto-js（詳見 chacha20.ts /
+//    legacy-ciphers.ts 中的安全說明）。
 //
-// 4. v3 采用「长度前缀」包裹明文：WebCrypto 的 AES-CBC 在部分运行时（Node 的
-//    OpenSSL 后端）会自动做/去 PKCS#7 padding，而 CF Workers/浏览器不会。
-//    把真实长度写进密文头部（4 字节大端），解密后只取该长度即可，从而在任何
-//    运行时都得到一致结果（多余 padding 与额外整块 padding 都会被忽略）。
+// 4. v3 採用「長度前綴」包裹明文：WebCrypto 的 AES-CBC 在部分運行時（Node 的
+//    OpenSSL 後端）會自動做/去 PKCS#7 padding，而 CF Workers/瀏覽器不會。
+//    把真實長度寫進密文頭部（4 字節大端），解密後只取該長度即可，從而在任何
+//    運行時都得到一致結果（多餘 padding 與額外整塊 padding 都會被忽略）。
 //
-// 5. **密钥派生结果在进程内缓存**（见 cachedDerive）：同一 (算法, 密钥) 只派生
-//    一次，后续读/写直接复用 —— #69 的「每次操作派生一次」在此进一步降为
-//    「每个 isolate 派生一次」。这是纯 memoization，不改变任何密文内容。
+// 5. **密鑰派生結果在進程內快取**（見 cachedDerive）：同一 (算法, 密鑰) 只派生
+//    一次，後續讀/寫直接複用 —— #69 的「每次操作派生一次」在此進一步降為
+//    「每個 isolate 派生一次」。這是純 memoization，不改變任何密文內容。
 
 export type DbCipher =
   | "none"
@@ -407,10 +407,10 @@ export type DbCipher =
   | "des-cbc-hmac"
   | "3des-cbc-hmac"
 
-/** DB_CIPHER 的默认值：不加密（向后兼容「明文落盘」的既有部署） */
+/** DB_CIPHER 的默認值：不加密（向後相容「明文落盤」的既有部署） */
 export const DEFAULT_DB_CIPHER: DbCipher = "none"
 
-/** 可选算法（文档与错误提示用，顺序即推荐顺序） */
+/** 可選算法（文件與錯誤提示用，順序即推薦順序） */
 export const DB_CIPHER_VALUES: DbCipher[] = [
   "none",
   "aes-256-gcm",
@@ -422,20 +422,20 @@ export const DB_CIPHER_VALUES: DbCipher[] = [
 ]
 
 /**
- * 不推荐用于真实数据的算法（仅兼容/测试用途）。
+ * 不推薦用於真實資料的算法（僅相容/測試用途）。
  *
- * 选用它们时会打印**一次性告警**：DES 有效密钥只有 56-bit（可暴力破解）、
- * 3DES 已被 NIST SP 800-131A 弃用（64-bit 分组 + Sweet32）。实现完整性保护
- * （Encrypt-then-MAC）不代表密钥强度足够。
+ * 選用它們時會打印**一次性告警**：DES 有效密鑰只有 56-bit（可暴力破解）、
+ * 3DES 已被 NIST SP 800-131A 棄用（64-bit 分組 + Sweet32）。實現完整性保護
+ * （Encrypt-then-MAC）不代表密鑰強度足夠。
  */
 export const WEAK_DB_CIPHERS: DbCipher[] = ["des-cbc-hmac", "3des-cbc-hmac"]
 
 /**
- * 别名映射（全部小写、去空白后匹配）。
+ * 別名映射（全部小寫、去空白後匹配）。
  *
- * 允许别名是为了让 `DB_CIPHER=AES-256-GCM`、`chacha20`、`v4` 这类习惯写法都能工作，
- * 避免用户因为大小写或短名不同而静默退回 `none`（那会让「以为开了加密」的部署
- * 实际明文落盘）。
+ * 允許別名是為了讓 `DB_CIPHER=AES-256-GCM`、`chacha20`、`v4` 這類習慣寫法都能工作，
+ * 避免用戶因為大小寫或短名不同而靜默退回 `none`（那會讓「以為開了加密」的部署
+ * 實際明文落盤）。
  */
 const DB_CIPHER_ALIASES: Record<string, DbCipher> = {
   none: "none",
@@ -484,8 +484,8 @@ const DB_CIPHER_ALIASES: Record<string, DbCipher> = {
 /**
  * 解析 DB_CIPHER 取值。
  *
- * @returns `known=false` 表示取值无法识别（调用方应告警，但仍拿到安全默认值 `none`，
- *          绝不因为拼错变量而悄悄启用一把谁也不知道的算法）
+ * @returns `known=false` 表示取值無法識別（調用方應告警，但仍拿到安全默認值 `none`，
+ *          絕不因為拼錯變量而悄悄啟用一把誰也不知道的算法）
  */
 export function resolveDbCipher(raw: unknown): {
   cipher: DbCipher
@@ -500,7 +500,7 @@ export function resolveDbCipher(raw: unknown): {
   return { cipher: DEFAULT_DB_CIPHER, known: false }
 }
 
-/** 算法 → 密文版本号（前缀中的数字） */
+/** 算法 → 密文版本號（前綴中的數字） */
 const CIPHER_VERSION: Record<Exclude<DbCipher, "none">, number> = {
   "aes-256-gcm-pbkdf2": 1,
   "aes-256-gcm": 2,
@@ -510,7 +510,7 @@ const CIPHER_VERSION: Record<Exclude<DbCipher, "none">, number> = {
   "3des-cbc-hmac": 6,
 }
 
-/** 密文版本号 → 算法 */
+/** 密文版本號 → 算法 */
 const VERSION_CIPHER: Record<number, Exclude<DbCipher, "none">> = {
   1: "aes-256-gcm-pbkdf2",
   2: "aes-256-gcm",
@@ -520,19 +520,19 @@ const VERSION_CIPHER: Record<number, Exclude<DbCipher, "none">> = {
   6: "3des-cbc-hmac",
 }
 
-/** 密文前缀正则：`enc:v<数字>:` */
+/** 密文前綴正則：`enc:v<數字>:` */
 const CIPHER_PREFIX_RE = /^enc:v(\d+):/
 
-/** 算法对应的密文前缀（`none` 无前缀） */
+/** 算法對應的密文前綴（`none` 無前綴） */
 export function cipherPrefix(cipher: DbCipher): string {
   if (cipher === "none") return ""
   return `enc:v${CIPHER_VERSION[cipher]}:`
 }
 
 /**
- * 识别密文前缀。**只看前缀，不看当前配置** —— 这是「换算法/关加密不丢数据」的关键。
+ * 識別密文前綴。**只看前綴，不看當前配置** —— 這是「換算法/關加密不丟資料」的關鍵。
  *
- * @returns 命中的算法与前缀（调用方用 `prefix.length` 切出密文主体）；明文返回 null
+ * @returns 命中的算法與前綴（調用方用 `prefix.length` 切出密文主體）；明文返回 null
  */
 export function detectCipherPrefix(
   value: unknown,
@@ -545,7 +545,7 @@ export function detectCipherPrefix(
   return { cipher, prefix: m[0] }
 }
 
-/** 该值是否为本模块产生的密文（任意版本） */
+/** 該值是否為本模塊產生的密文（任意版本） */
 export function isSealedCiphertext(value: unknown): boolean {
   return detectCipherPrefix(value) !== null
 }
@@ -568,7 +568,7 @@ function concatBytes(a: Uint8Array, b: Uint8Array): Uint8Array {
   return out
 }
 
-/** 定长（时间无关）比较：用于校验 HMAC，避免比较短路泄露信息。 */
+/** 定長（時間無關）比較：用於校驗 HMAC，避免比較短路洩露信息。 */
 function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {
   if (a.length !== b.length) return false
   let diff = 0
@@ -580,17 +580,17 @@ function utf8Bytes(text: string): Uint8Array {
   return new TextEncoder().encode(text)
 }
 
-// ── 密钥派生缓存（性能：每次读/写不再重复派生）────────────────────────────
+// ── 密鑰派生快取（性能：每次讀/寫不再重複派生）────────────────────────────
 //
-// #69 已经把「逐字段派生」降为「每次 save/load 派生一次」；这里再进一步：
-// 同一 (算法, 密钥) 在**进程/isolate 内只派生一次**，后续所有读写直接复用。
+// #69 已經把「逐欄位派生」降為「每次 save/load 派生一次」；這裡再進一步：
+// 同一 (算法, 密鑰) 在**進程/isolate 內只派生一次**，後續所有讀寫直接複用。
 //
-// 为什么安全：`cachedDerive` 是纯 memoization —— 输入相同则输出必然相同，
-// 不改变任何密文/明文，也不改变密钥来源与优先级；缓存键包含密钥本身，
-// 因此密钥轮换（或 env 变更）会自动 miss 并生成新条目。
+// 為什麼安全：`cachedDerive` 是純 memoization —— 輸入相同則輸出必然相同，
+// 不改變任何密文/明文，也不改變密鑰來源與優先級；快取鍵包含密鑰本身，
+// 因此密鑰輪換（或 env 變更）會自動 miss 並生成新條目。
 //
-// 容量：只保留最近 KEY_CACHE_LIMIT 条（正常情况下 1~2 条），密钥轮换时
-// 旧的派生结果被淘汰，内存不会无限增长。
+// 容量：只保留最近 KEY_CACHE_LIMIT 條（正常情況下 1~2 條），密鑰輪換時
+// 舊的派生結果被淘汰，記憶體不會無限增長。
 
 const KEY_CACHE_LIMIT = 8
 const keyDerivationCache = new Map<string, unknown>()
@@ -604,8 +604,8 @@ async function cachedDerive<T>(
   if (keyDerivationCache.has(cacheId)) {
     return keyDerivationCache.get(cacheId) as T
   }
-  // 先 await 再入缓存：派生失败（如 WebCrypto 异常）不会被缓存，
-  // 避免一次瞬时故障被固化成「该密钥永久不可用」。
+  // 先 await 再入快取：派生失敗（如 WebCrypto 異常）不會被快取，
+  // 避免一次瞬時故障被固化成「該密鑰永久不可用」。
   const value = await factory()
   if (keyDerivationCache.size >= KEY_CACHE_LIMIT) {
     const oldest = keyDerivationCache.keys().next().value
@@ -615,27 +615,27 @@ async function cachedDerive<T>(
   return value
 }
 
-/** 仅供测试：清空密钥派生缓存（与 db.ts 的 __resetDbCacheForTest 联动）。 */
+/** 僅供測試：清空密鑰派生快取（與 db.ts 的 __resetDbCacheForTest 聯動）。 */
 export function __resetCipherKeyCacheForTest(): void {
   keyDerivationCache.clear()
   weakCipherWarned = false
 }
 
-/** 单次告警：选用了弱算法（DES/3DES） */
+/** 單次告警：選用了弱算法（DES/3DES） */
 let weakCipherWarned = false
 
-/** SHA-256 摘要（字节） */
+/** SHA-256 摘要（字節） */
 async function sha256Bytes(input: string | Uint8Array): Promise<Uint8Array> {
   const buf = await crypto.subtle.digest("SHA-256", toBytes(input))
   return new Uint8Array(buf)
 }
 
 /**
- * 由共享密钥派生 `length` 字节的密钥材料（SHA-256）。
+ * 由共享密鑰派生 `length` 字節的密鑰材料（SHA-256）。
  *
- * 前提：共享密钥本身足够随机（`openssl rand -hex 32` 或 setup 生成的 64 位 hex）。
- * 因此这里不做 KDF 拉伸（PBKDF2 的 10 万次迭代代价太高，见 v1 的历史包袱）；
- * 若密钥是低熵口令，请使用 `aes-256-gcm-pbkdf2`。
+ * 前提：共享密鑰本身足夠隨機（`openssl rand -hex 32` 或 setup 生成的 64 位 hex）。
+ * 因此這裡不做 KDF 拉伸（PBKDF2 的 10 萬次迭代代價太高，見 v1 的歷史包袱）；
+ * 若密鑰是低熵口令，請使用 `aes-256-gcm-pbkdf2`。
  */
 async function deriveKeyBytes(
   secret: string,
@@ -646,7 +646,7 @@ async function deriveKeyBytes(
   return digest.slice(0, length)
 }
 
-/** 导入 HMAC-SHA256 签名密钥 */
+/** 導入 HMAC-SHA256 簽名密鑰 */
 async function importHmacKey(bytes: Uint8Array): Promise<CryptoKey> {
   return crypto.subtle.importKey(
     "raw",
@@ -657,7 +657,7 @@ async function importHmacKey(bytes: Uint8Array): Promise<CryptoKey> {
   )
 }
 
-/** HMAC-SHA256 签名（返回 32 字节） */
+/** HMAC-SHA256 簽名（返回 32 字節） */
 async function hmacSha256Sign(
   key: CryptoKey,
   data: Uint8Array,
@@ -665,7 +665,7 @@ async function hmacSha256Sign(
   return new Uint8Array(await crypto.subtle.sign("HMAC", key, data as any))
 }
 
-/** 明文包裹：4 字节大端长度 + 原文（用于解密后精确切出原文，见上方说明 4） */
+/** 明文包裹：4 字節大端長度 + 原文（用於解密後精確切出原文，見上方說明 4） */
 function wrapWithLength(bytes: Uint8Array): Uint8Array {
   const head = new Uint8Array(4)
   new DataView(head.buffer).setUint32(0, bytes.length, false)
@@ -679,7 +679,7 @@ function unwrapWithLength(bytes: Uint8Array): Uint8Array {
   return bytes.slice(4, 4 + len)
 }
 
-/** SHA-256 派生一把 AES-CBC 密钥（v3 用；与 encrypt/decrypt 的 PBKDF2 无关） */
+/** SHA-256 派生一把 AES-CBC 密鑰（v3 用；與 encrypt/decrypt 的 PBKDF2 無關） */
 async function deriveSha256AesCbcKey(secret: string, info: string) {
   const digest = await crypto.subtle.digest("SHA-256", toBytes(`${info}|${secret}`))
   return crypto.subtle.importKey("raw", digest, { name: "AES-CBC" }, false, [
@@ -727,7 +727,7 @@ async function aesCbcHmacDecrypt(body: string, keys: V3Keys): Promise<string> {
   const cipherBytes = fromHex(parts[1])
   const mac = fromHex(parts[2])
 
-  // Encrypt-then-MAC：先验签再解密，避免把未经认证的数据送进解密器。
+  // Encrypt-then-MAC：先驗籤再解密，避免把未經認證的資料送進解密器。
   const expect = await hmacSha256Sign(keys.mac, concatBytes(iv, cipherBytes))
   if (!timingSafeEqual(expect, mac)) {
     throw new Error("Encrypted data failed integrity check (wrong key?)")
@@ -741,11 +741,11 @@ async function aesCbcHmacDecrypt(body: string, keys: V3Keys): Promise<string> {
   return new TextDecoder().decode(unwrapWithLength(new Uint8Array(plain)))
 }
 
-// ── v4：ChaCha20-Poly1305（RFC 8439，纯 JS）─────────────────────────────────
+// ── v4：ChaCha20-Poly1305（RFC 8439，純 JS）─────────────────────────────────
 //
-// WebCrypto 不提供 ChaCha20，故使用自带的 `chacha20.ts`。布局：
+// WebCrypto 不提供 ChaCha20，故使用自帶的 `chacha20.ts`。佈局：
 //   `<nonceHex(12B)>:<cipherHex>:<tagHex(16B)>`
-// 其中 key = 32 字节派生材料。AEAD 自带完整性校验（Poly1305），无需额外 HMAC。
+// 其中 key = 32 字節派生材料。AEAD 自帶完整性校驗（Poly1305），無需額外 HMAC。
 
 const V4_INFO = "openlist-db-cipher-v4-chacha20"
 
@@ -768,15 +768,15 @@ async function chachaDecrypt(body: string, key: Uint8Array): Promise<string> {
 
 // ── v5/v6：DES / 3DES-CBC + HMAC-SHA256（Encrypt-then-MAC）──────────────────
 //
-// WebCrypto 不提供 DES/3DES，故使用 crypto-js（项目已有依赖，见 legacy-ciphers.ts）。
-// 布局：`<ivHex(8B)>:<cipherHex>:<macHex(32B)>`，MAC 覆盖 iv‖cipher。
-// 注意 DES/3DES 仅作兼容用途，强度不足（见 legacy-ciphers.ts 的安全说明）。
+// WebCrypto 不提供 DES/3DES，故使用 crypto-js（項目已有依賴，見 legacy-ciphers.ts）。
+// 佈局：`<ivHex(8B)>:<cipherHex>:<macHex(32B)>`，MAC 覆蓋 iv‖cipher。
+// 注意 DES/3DES 僅作相容用途，強度不足（見 legacy-ciphers.ts 的安全說明）。
 
 const V5_INFO = "openlist-db-cipher-v5-des"
 const V6_INFO = "openlist-db-cipher-v6-3des"
 /**
- * DES/3DES 的 MAC 密钥域（与加密密钥分离，且两种算法之间也分离 ——
- * 避免「同一把密钥同时用于加密与认证」以及跨算法复用）。
+ * DES/3DES 的 MAC 密鑰域（與加密密鑰分離，且兩種算法之間也分離 ——
+ * 避免「同一把密鑰同時用於加密與認證」以及跨算法複用）。
  */
 const V5_MAC_INFO = "openlist-db-cipher-v5-des-mac"
 const V6_MAC_INFO = "openlist-db-cipher-v6-3des-mac"
@@ -811,27 +811,27 @@ async function desCbcHmacDecrypt(
 }
 
 /**
- * 字段加解密器：把「写入算法」和「共享密钥」绑定成一个对象，供 db.ts 在
- * 一次 save / load 内复用（密钥派生结果进一步在进程内缓存，见 cachedDerive）。
+ * 欄位加解密器：把「寫入算法」和「共享密鑰」綁定成一個對象，供 db.ts 在
+ * 一次 save / load 內複用（密鑰派生結果進一步在進程內快取，見 cachedDerive）。
  *
- * 关键约定：`encrypt()` 用**写入算法**，`decrypt()` 用**密文前缀**识别算法。
- * 因此历史 v1 密文、#69 写入的 v2 密文、以及本实现新增的 v3/v4/v5/v6 密文都能读；
- * 而「关掉加密 / 换算法」只影响新写入的内容。
+ * 關鍵約定：`encrypt()` 用**寫入算法**，`decrypt()` 用**密文前綴**識別算法。
+ * 因此歷史 v1 密文、#69 寫入的 v2 密文、以及本實現新增的 v3/v4/v5/v6 密文都能讀；
+ * 而「關掉加密 / 換算法」隻影響新寫入的內容。
  */
 export interface FieldCipher {
-  /** 写入时使用的算法（`none` 不会构造本对象） */
+  /** 寫入時使用的算法（`none` 不會構造本對象） */
   cipher: DbCipher
   /**
-   * 「算法 + 密钥」指纹（不含密钥本身，16 位 hex）。
+   * 「算法 + 密鑰」指紋（不含密鑰本身，16 位 hex）。
    *
-   * 用途：db.ts 的「未变化字段跳过重新加密」缓存靠它判断缓存条目是否仍然有效 ——
-   * 只要算法或密钥变了，指纹就变，缓存必然失效，绝不会把旧密钥/旧算法的密文
-   * 当成新配置下的结果写回去。
+   * 用途：db.ts 的「未變化欄位跳過重新加密」快取靠它判斷快取條目是否仍然有效 ——
+   * 只要算法或密鑰變了，指紋就變，快取必然失效，絕不會把舊密鑰/舊算法的密文
+   * 當成新配置下的結果寫回去。
    */
   fingerprint: string
-  /** 按写入算法加密，返回**不含前缀**的密文主体 */
+  /** 按寫入算法加密，返回**不含前綴**的密文主體 */
   encrypt(value: string): Promise<string>
-  /** 解密（入参是**含前缀**的完整密文），按前缀自动选择算法 */
+  /** 解密（入參是**含前綴**的完整密文），按前綴自動選擇算法 */
   decrypt(sealed: string): Promise<string>
 }
 
@@ -839,7 +839,7 @@ export async function createFieldCipher(
   cipher: DbCipher,
   secret: string,
 ): Promise<FieldCipher> {
-  // 弱算法（DES/3DES）只提示一次：它们是兼容手段，不是安全选择。
+  // 弱算法（DES/3DES）只提示一次：它們是相容手段，不是安全選擇。
   if (cipher !== "none" && WEAK_DB_CIPHERS.includes(cipher) && !weakCipherWarned) {
     weakCipherWarned = true
     console.warn(
@@ -859,7 +859,7 @@ export async function createFieldCipher(
           return bytesToHex(digest).slice(0, 16)
         })
 
-  // 各算法的密钥材料：**派生结果在进程内缓存**，同一次/后续读写都只派生一次。
+  // 各算法的密鑰材料：**派生結果在進程內快取**，同一次/後續讀寫都只派生一次。
   const getV2Key = () =>
     cachedDerive("v2", secret, () => deriveConfigEncryptionKey(secret))
   const getV3Keys = () =>

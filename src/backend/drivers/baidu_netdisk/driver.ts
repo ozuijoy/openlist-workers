@@ -84,17 +84,17 @@ export class BaiduDriver implements StorageDriver {
     if (thread > 32) thread = 32
     this.uploadThread = thread
 
-    // access_token 是必填项（对齐前端表单 required）
+    // access_token 是必填項（對齊前端表單 required）
     if (!this.client.accessToken) {
       throw new Error(
-        "百度网盘缺少访问令牌 access_token（必填）：请通过 https://api.oplist.org/ 获取后填写。",
+        "百度網盤缺少訪問令牌 access_token（必填）：請通過 https://api.oplist.org/ 獲取後填寫。",
       )
     }
 
     // Validate the token and cache vip type.
-    // 对齐 Go 原版 Init：uinfo 失败（token 无效 / 风控）→ 挂载失败并给出明确错误，
-    // 而不是静默继续导致后续 list 全部 500。若 token 已失效（errno 20016/-6/111），
-    // request() 会自动用 refresh_token 换新后重试。
+    // 對齊 Go 原版 Init：uinfo 失敗（token 無效 / 風控）→ 掛載失敗並給出明確錯誤，
+    // 而不是靜默繼續導致後續 list 全部 500。若 token 已失效（errno 20016/-6/111），
+    // request() 會自動用 refresh_token 換新後重試。
     this.vipType = await this.client.uinfo()
   }
 
@@ -240,7 +240,7 @@ export class BaiduDriver implements StorageDriver {
     physicalPath: string,
     content: Buffer,
   ): Promise<void> {
-    // 百度网盘不允许上传空文件
+    // 百度網盤不允許上傳空文件
     if (content.length < 1) {
       throw ErrBaiduEmptyFilesNotAllowed
     }
@@ -252,7 +252,7 @@ export class BaiduDriver implements StorageDriver {
     const mtime = now
     const ctime = now
 
-    // --- step 0: rapid upload (秒传) ---
+    // --- step 0: rapid upload (秒傳) ---
     const contentMd5 = md5(content)
     const rapidBlockList = JSON.stringify([contentMd5])
     try {

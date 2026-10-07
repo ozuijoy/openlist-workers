@@ -89,7 +89,7 @@ export class AliyundriveOpen implements StorageDriver {
 
   async mkdir(_virtualPath: string, physicalPath: string): Promise<void> {
     const parts = physicalPath.split("/").filter(Boolean)
-    const name = parts.pop() || "新文件夹"
+    const name = parts.pop() || "新文件夾"
     const parentPath = "/" + parts.join("/")
     const parentId = await this.resolveFileId(parentPath)
     await this.client.mkdir(parentId, name)

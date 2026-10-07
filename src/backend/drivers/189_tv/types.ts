@@ -1,8 +1,8 @@
-// 189_tv (天翼云盘 TV/家庭云) - HMAC-SHA1 签名 + AccessToken 登录
+// 189_tv (天翼雲盤 TV/家庭雲) - HMAC-SHA1 簽名 + AccessToken 登入
 // API reference: Go drivers/189_tv
 
 export interface Driver189TVAddition {
-  /** 通过二维码登录获得的 E189AccessToken */
+  /** 通過二維碼登入獲得的 E189AccessToken */
   access_token?: string
   root_folder_id?: string
   order_by?: string

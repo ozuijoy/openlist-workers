@@ -1,7 +1,7 @@
 /**
  * DELETE /kv-delete?key=xxx
  *
- * 删除 KV 键。需通过鉴权（内部调用标识 或 管理员 JWT）。
+ * 刪除 KV 鍵。需通過鑑權（內部調用標識 或 管理員 JWT）。
  */
 import { authorize, deny, json, kvMissing, resolveKv } from "../_kv-proxy.js"
 

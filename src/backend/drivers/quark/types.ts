@@ -1,26 +1,26 @@
-// quark (夸克网盘 / UC网盘) - Cookie 认证，支持夸克/UC两种模式
+// quark (夸克網盤 / UC網盤) - Cookie 認證，支持夸克/UC兩種模式
 // Based on: https://github.com/OpenListTeam/OpenList/tree/main/drivers/quark_uc
 
 export type QuarkVariant = "Quark" | "UC"
 
 export interface QuarkAddition {
-  /** 网盘类型: 夸克 or UC */
+  /** 網盤類型: 夸克 or UC */
   variant?: QuarkVariant
-  /** 登录 Cookie（必填），从浏览器复制 */
+  /** 登入 Cookie（必填），從瀏覽器複製 */
   cookie: string
-  /** 根目录文件夹 ID，默认为 0 (根目录) */
+  /** 根目錄文件夾 ID，默認為 0 (根目錄) */
   root_folder_id?: string
-  /** 排序字段 */
+  /** 排序欄位 */
   order_by?: "none" | "file_type" | "file_name" | "updated_at"
   /** 排序方向 */
   order_direction?: "asc" | "desc"
-  /** 转码地址（仅 Quark，需配合代理使用） */
+  /** 轉碼地址（僅 Quark，需配合代理使用） */
   use_transcoding_address?: boolean
-  /** 仅列出视频文件和文件夹 */
+  /** 僅列出視頻文件和文件夾 */
   only_list_video_file?: boolean
 }
 
-// --- API 响应类型 ---
+// --- API 響應類型 ---
 
 export interface QuarkResp {
   status: number
@@ -38,7 +38,7 @@ export interface QuarkFile {
   size: number
   format_type?: string
   status?: number
-  /** true = 文件, false / undefined = 文件夹 */
+  /** true = 文件, false / undefined = 文件夾 */
   file: boolean
   created_at: number
   updated_at: number

@@ -1,17 +1,17 @@
-// EdgeOne Makers 边缘中间件：SPA 路由回退
+// EdgeOne Makers 邊緣中間件：SPA 路由回退
 //
-// cloud-functions/[[default]].js（构建产物，见 scripts/build-edge.mjs）是根级
-// catch-all，会接管所有未命中静态文件的
-// 请求（包括 /add、/@manage/* 等前端路由），而 Node 函数内没有 ASSETS 绑定，
-// Hono 兜底只能返回 404 —— 这就是「访问 /add 404 后整站打不开」的原因。
-// 此中间件在边缘层先行拦截：浏览器导航请求（Accept: text/html）且不属于
-// 后端路径时，透明改写为 /index.html，由静态 CDN 直接返回页面壳；
-// /api、/d、/p、/sd、/health 等后端路径照常放行到云函数。
+// cloud-functions/[[default]].js（構建產物，見 scripts/build-edge.mjs）是根級
+// catch-all，會接管所有未命中靜態文件的
+// 請求（包括 /add、/@manage/* 等前端路由），而 Node 函數內沒有 ASSETS 綁定，
+// Hono 兜底只能返回 404 —— 這就是「訪問 /add 404 後整站打不開」的原因。
+// 此中間件在邊緣層先行攔截：瀏覽器導航請求（Accept: text/html）且不屬於
+// 後端路徑時，透明改寫為 /index.html，由靜態 CDN 直接返回頁面殼；
+// /api、/d、/p、/sd、/health 等後端路徑照常放行到雲函數。
 //
-// 注意：EdgeOne 的 middleware 属于轻量中间件，context 仅提供
-// request / next / redirect / rewrite / geo / clientIp，**没有 env**，
-// 因此无法访问 KV 或环境变量。KV 代理请使用 functions/ 目录下的
-// Edge Functions（见 functions/kv-get 等），那里才具备 KV 能力。
+// 注意：EdgeOne 的 middleware 屬於輕量中間件，context 僅提供
+// request / next / redirect / rewrite / geo / clientIp，**沒有 env**，
+// 因此無法訪問 KV 或環境變量。KV 代理請使用 functions/ 目錄下的
+// Edge Functions（見 functions/kv-get 等），那裡才具備 KV 能力。
 export function middleware(context) {
   const { request, next, rewrite } = context
   const { pathname } = new URL(request.url)

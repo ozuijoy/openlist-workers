@@ -148,7 +148,7 @@ export class DriverDegoo implements StorageDriver {
     return { id: target.ID, isDir: isFolder(target.Category) }
   }
 
-  /** 物理路径 → 目录 ID（根目录返回解析后的设备 ID） */
+  /** 物理路徑 → 目錄 ID（根目錄返回解析後的設備 ID） */
   private async pathToId(physicalPath: string): Promise<string> {
     const clean = physicalPath.split("/").filter(Boolean).join("/")
     if (!clean) return this.client.getRootId()

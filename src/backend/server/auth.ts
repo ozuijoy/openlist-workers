@@ -33,15 +33,15 @@ import { getAuditLogger } from "../pkg/audit"
 export const authRouter = new Hono()
 export const meRouter = new Hono()
 
-// --- 登录防爆破（增强版：KV 共享 + 指数退避）---
-// 2026-09-08 安全增强：
-// 1. 使用 KV 存储失败计数，支持多实例共享
-// 2. 指数退避锁定时间，增加暴力破解成本
-// 3. 失败达到阈值后要求额外验证（预留验证码集成）
+// --- 登入防爆破（增強版：KV 共享 + 指數退避）---
+// 2026-09-08 安全增強：
+// 1. 使用 KV 儲存失敗計數，支持多實例共享
+// 2. 指數退避鎖定時間，增加暴力破解成本
+// 3. 失敗達到閾值後要求額外驗證（預留驗證碼集成）
 const LOGIN_MAX_FAILURES = 5
 const LOGIN_MAX_FAILURES_GLOBAL = 20
 const LOGIN_LOCK_MS = 15 * 60 * 1000
-const LOGIN_MAX_LOCK_MS = 24 * 60 * 60 * 1000 // 最长锁定 24 小时
+const LOGIN_MAX_LOCK_MS = 24 * 60 * 60 * 1000 // 最長鎖定 24 小時
 const loginFailures = new Map<
   string,
   { count: number; lockedUntil: number; attempts: number }
@@ -60,17 +60,17 @@ function loginKey(c: Context, username: string): string {
   return `${clientIpOf(c)}|${String(username || "").toLowerCase()}`
 }
 
-// 与 IP 无关的用户名维度计数，用于抵御「伪造 IP 绕过锁定」的分布式爆破。
+// 與 IP 無關的用戶名維度計數，用於抵禦「偽造 IP 繞過鎖定」的分佈式爆破。
 function globalLoginKey(username: string): string {
   return `__global__|${String(username || "").toLowerCase()}`
 }
 
 /**
- * 计算指数退避锁定时间
- * 第 1-5 次失败：15 分钟
- * 第 6-10 次失败：30 分钟
- * 第 11-15 次失败：1 小时
- * 第 16+ 次失败：最长 24 小时
+ * 計算指數退避鎖定時間
+ * 第 1-5 次失敗：15 分鐘
+ * 第 6-10 次失敗：30 分鐘
+ * 第 11-15 次失敗：1 小時
+ * 第 16+ 次失敗：最長 24 小時
  */
 function calculateLockDuration(attempts: number): number {
   const baseTime = LOGIN_LOCK_MS
@@ -86,7 +86,7 @@ async function bumpLoginFailure(
   const now = Date.now()
   let rec = loginFailures.get(key) || { count: 0, lockedUntil: 0, attempts: 0 }
 
-  // 尝试从 KV 读取（多实例共享）
+  // 嘗試從 KV 讀取（多實例共享）
   try {
     const { getKvBinding } = await import("../internal/model/db")
     const kvInfo = await getKvBinding(env)
@@ -105,12 +105,12 @@ async function bumpLoginFailure(
         try {
           rec = JSON.parse(String(val))
         } catch {
-          // 解析失败，使用默认值
+          // 解析失敗，使用默認值
         }
       }
     }
   } catch {
-    // KV 不可用，回退到内存模式
+    // KV 不可用，回退到記憶體模式
   }
 
   if (rec.lockedUntil > now) return // already locked
@@ -136,7 +136,7 @@ async function bumpLoginFailure(
     if (kvInfo.mode !== "none" && kvInfo.binding) {
       const kvKey = `login_fail:${key}`
       const payload = JSON.stringify(rec)
-      // 设置 TTL 为最长锁定时间 + 1 小时
+      // 設置 TTL 為最長鎖定時間 + 1 小時
       const ttl = Math.ceil((LOGIN_MAX_LOCK_MS + 3600000) / 1000)
       if (typeof kvInfo.binding.put === "function") {
         await kvInfo.binding.put(kvKey, payload, { expirationTtl: ttl })
@@ -152,7 +152,7 @@ async function isLoginLocked(
   username: string,
   env: any,
 ): Promise<boolean> {
-  // 懒清理：Map 过大时清掉已过锁定期/无锁定的条目，防止无限增长
+  // 懶清理：Map 過大時清掉已過鎖定期/無鎖定的條目，防止無限增長
   if (loginFailures.size > 10000) {
     const now = Date.now()
     for (const [k, v] of loginFailures) {
@@ -164,11 +164,11 @@ async function isLoginLocked(
   const ipKey = loginKey(c, username)
   const globalKey = globalLoginKey(username)
 
-  // 检查内存缓存
+  // 檢查記憶體快取
   let rec = loginFailures.get(ipKey)
   let grec = loginFailures.get(globalKey)
 
-  // 尝试从 KV 读取（多实例共享）
+  // 嘗試從 KV 讀取（多實例共享）
   try {
     const { getKvBinding } = await import("../internal/model/db")
     const kvInfo = await getKvBinding(env)
@@ -189,16 +189,16 @@ async function isLoginLocked(
             const data = JSON.parse(String(val))
             if (key === ipKey) rec = data
             if (key === globalKey) grec = data
-            // 同步到内存缓存
+            // 同步到記憶體快取
             loginFailures.set(key, data)
           } catch {
-            // 解析失败
+            // 解析失敗
           }
         }
       }
     }
   } catch {
-    // KV 不可用，使用内存数据
+    // KV 不可用，使用記憶體資料
   }
 
   if (rec && rec.lockedUntil > now) return true
@@ -230,7 +230,7 @@ async function clearLoginFailures(
   loginFailures.delete(ipKey)
   loginFailures.delete(globalKey)
 
-  // 从 KV 中删除
+  // 從 KV 中刪除
   try {
     const { getKvBinding } = await import("../internal/model/db")
     const kvInfo = await getKvBinding(env)
@@ -248,7 +248,7 @@ async function clearLoginFailures(
 }
 
 // OpenList/AList StaticHash —— 前端 /login/hash 提交的哈希算法。
-// 与新密码模块 pkg/password.staticHash 一致，保留旧名以兼容既有调用。
+// 與新密碼模塊 pkg/password.staticHash 一致，保留舊名以相容既有調用。
 export async function hashPasswordSHA256(
   plainPassword: string,
 ): Promise<string> {
@@ -256,11 +256,11 @@ export async function hashPasswordSHA256(
 }
 
 /**
- * 校验前端提交的静态哈希是否匹配该用户（等价 Go User.ValidatePwdStaticHash）。
- * 兼容的存储格式：
- *   - Go 双层（user.salt 存在）：password === saltedHash(inputStatic, salt)
- *   - 早期 TSWorker 单层（无 salt）：password === inputStatic
- *   - bcrypt 遗留：返回 false（无明文不可还原），仅明文 /login 可逃生
+ * 校驗前端提交的靜態哈希是否匹配該用戶（等價 Go User.ValidatePwdStaticHash）。
+ * 相容的儲存格式：
+ *   - Go 雙層（user.salt 存在）：password === saltedHash(inputStatic, salt)
+ *   - 早期 TSWorker 單層（無 salt）：password === inputStatic
+ *   - bcrypt 遺留：返回 false（無明文不可還原），僅明文 /login 可逃生
  */
 export async function verifyUserStaticHash(
   user: any,
@@ -281,7 +281,7 @@ export async function verifyUserStaticHash(
 }
 
 /**
- * 校验明文密码（/login、改密旧密码校验、WebDAV Basic Auth 共用）。
+ * 校驗明文密碼（/login、改密舊密碼校驗、WebDAV Basic Auth 共用）。
  */
 export async function verifyUserPassword(
   user: any,
@@ -304,7 +304,7 @@ export function generateRandomPassword(): string {
     .join("")
 }
 
-/** 生成 JWT 唯一标识（jti），用于注销黑名单精确失效单个 token */
+/** 生成 JWT 唯一標識（jti），用於註銷黑名單精確失效單個 token */
 function generateJti(): string {
   if (
     typeof crypto !== "undefined" &&
@@ -338,7 +338,7 @@ export async function getOrInitUsers(envCtx: any) {
       pwd_update_at: new Date().toISOString(),
     }
     if (envPass) {
-      // 显式配置了 ADMIN_PASS：自动初始化 admin（保持兼容）
+      // 顯式配置了 ADMIN_PASS：自動初始化 admin（保持相容）
       const admin: any = {
         id: 1,
         username: "admin",
@@ -352,19 +352,19 @@ export async function getOrInitUsers(envCtx: any) {
         pwd_update_at: new Date().toISOString(),
       }
       await setUserPassword(admin, envPass)
-      // 自愈：数据库中完全没有用户时补回 admin/guest 占位用户。
+      // 自愈：資料庫中完全沒有用戶時補回 admin/guest 佔位用戶。
       //
-      // 注意：这里构建出的库在「尚无密码、也无其它实体」时会被 saveDb 的写前守卫
-      // 判定为空壳。只有在当前库可信（曾成功读取过真实配置）时才允许强制落盘，
-      // 否则宁可拒绝写入，也不要让「读取失败后的空库」被误当成已完成初始化。
+      // 注意：這裡構建出的庫在「尚無密碼、也無其它實體」時會被 saveDb 的寫前守衛
+      // 判定為空殼。只有在當前庫可信（曾成功讀取過真實配置）時才允許強制落盤，
+      // 否則寧可拒絕寫入，也不要讓「讀取失敗後的空庫」被誤當成已完成初始化。
       db.users = [admin, guest]
     } else {
-      // 未初始化：仅创建 guest，admin 由 Web 安装向导（POST /api/public/init/setup）创建
+      // 未初始化：僅創建 guest，admin 由 Web 安裝嚮導（POST /api/public/init/setup）創建
       db.users = [guest]
     }
-    // 只有配置了 ADMIN_PASS（或已存在真实管理员）时，这份库才不是空壳，
-    // 才应该落盘。未配置时应等待 init/setup 完成初始化，而不是抢先写入一个
-    // 未初始化的占位库（会被 saveDb 的写前守卫拦截）。
+    // 只有配置了 ADMIN_PASS（或已存在真實管理員）時，這份庫才不是空殼，
+    // 才應該落盤。未配置時應等待 init/setup 完成初始化，而不是搶先寫入一個
+    // 未初始化的佔位庫（會被 saveDb 的寫前守衛攔截）。
     const persisted = await saveDb(db, envCtx)
     if (!persisted) {
       console.warn(
@@ -393,8 +393,8 @@ export async function getOrInitUsers(envCtx: any) {
         await setUserPassword(adminUser, envPass)
         await saveDb(db, envCtx)
       } else if (!adminPass) {
-        // 未初始化：不再自动生成随机密码，交由 Web 安装向导（POST /api/public/init/setup）完成。
-        // 前端会在 /api/public/init_status 返回未初始化时自动跳转到安装向导。
+        // 未初始化：不再自動生成隨機密碼，交由 Web 安裝嚮導（POST /api/public/init/setup）完成。
+        // 前端會在 /api/public/init_status 返回未初始化時自動跳轉到安裝嚮導。
         console.warn(
           "[SECURITY] Admin password is empty and no ADMIN_PASS is set — the system is NOT initialized. " +
             "Open the site in a browser to run the setup wizard, or set ADMIN_PASS to initialize automatically.",
@@ -466,7 +466,7 @@ authRouter.post("/login", async (c) => {
   const username = (body.username || "").trim()
   const rawPassword = body.password || ""
 
-  // 防爆破：IP+用户名维度连续失败锁定（KV 共享 + 指数退避）
+  // 防爆破：IP+用戶名維度連續失敗鎖定（KV 共享 + 指數退避）
   if (await isLoginLocked(c, username, c.env)) {
     return c.json(
       {
@@ -486,11 +486,11 @@ authRouter.post("/login", async (c) => {
   )
 
   if (matchedUser) {
-    // 明文登录：服务端先 StaticHash，再比对存储哈希（兼容单层/双层/bcrypt 遗留）
+    // 明文登入：服務端先 StaticHash，再比對儲存哈希（相容單層/雙層/bcrypt 遺留）
     const isPasswordValid = await verifyUserPassword(matchedUser, rawPassword)
 
     if (isPasswordValid) {
-      // 遗留格式（bcrypt / 无盐单层 SHA256）登录成功后自动升级为 Go 双层哈希
+      // 遺留格式（bcrypt / 無鹽單層 SHA256）登入成功後自動升級為 Go 雙層哈希
       const stored = String(matchedUser.password || "").trim()
       const needsMigrate =
         /^\$2[aby]\$/.test(stored) || (!matchedUser.salt && isHex64(stored))
@@ -523,7 +523,7 @@ authRouter.post("/login", async (c) => {
       // 生成 CSRF Token
       const csrfToken = setCSRFToken(c)
 
-      // 记录审计日志
+      // 記錄審計日誌
       const auditLogger = getAuditLogger()
       await auditLogger.logLoginSuccess(c, username)
 
@@ -535,7 +535,7 @@ authRouter.post("/login", async (c) => {
     }
   }
 
-  // 登录失败 - 记录审计日志
+  // 登入失敗 - 記錄審計日誌
   const auditLogger = getAuditLogger()
   await auditLogger.logLoginFailure(c, username, "Invalid credentials")
 
@@ -551,7 +551,7 @@ authRouter.post("/login/hash", async (c) => {
     .trim()
     .toLowerCase()
 
-  // 防爆破：与 /login 同一计数体系（KV 共享 + 指数退避）
+  // 防爆破：與 /login 同一計數體系（KV 共享 + 指數退避）
   if (await isLoginLocked(c, username, c.env)) {
     return c.json(
       {
@@ -574,7 +574,7 @@ authRouter.post("/login/hash", async (c) => {
     const isHashValid = await verifyUserStaticHash(matchedUser, inputHash)
 
     if (isHashValid) {
-      // 无盐单层 SHA256 旧数据 -> 升级为 Go 双层哈希（无需明文）
+      // 無鹽單層 SHA256 舊資料 -> 升級為 Go 雙層哈希（無需明文）
       if (!matchedUser.salt) {
         console.log(`[Auth] Upgrading password hash for user: ${username}`)
         matchedUser.salt = generateSalt()
@@ -606,7 +606,7 @@ authRouter.post("/login/hash", async (c) => {
       // 生成 CSRF Token
       const csrfToken = setCSRFToken(c)
 
-      // 记录审计日志
+      // 記錄審計日誌
       const auditLogger = getAuditLogger()
       await auditLogger.logLoginSuccess(c, username)
 
@@ -618,7 +618,7 @@ authRouter.post("/login/hash", async (c) => {
     }
   }
 
-  // 登录失败 - 记录审计日志
+  // 登入失敗 - 記錄審計日誌
   const auditLogger = getAuditLogger()
   await auditLogger.logLoginFailure(c, username, "Invalid credentials")
 
@@ -692,7 +692,7 @@ authRouter.get("/me", meHandler)
 authRouter.post("/me/update", meUpdateHandler)
 
 export const logoutHandler = async (c: any) => {
-  // 真正失效 token：解析 Authorization 头中的 JWT，将其 jti 加入注销黑名单
+  // 真正失效 token：解析 Authorization 頭中的 JWT，將其 jti 加入註銷黑名單
   const authHeader = c.req.header("Authorization")
   if (authHeader) {
     const token = authHeader.startsWith("Bearer ")
@@ -705,14 +705,14 @@ export const logoutHandler = async (c: any) => {
         await revokeToken(payload.jti, payload.exp, c.env)
       }
     } catch {
-      // token 无效则无需注销
+      // token 無效則無需註銷
     }
   }
 
   // 清除 CSRF Token
   clearCSRFToken(c)
 
-  // 记录审计日志
+  // 記錄審計日誌
   const auditLogger = getAuditLogger()
   await auditLogger.logLogout(c)
 
@@ -726,7 +726,7 @@ export const logoutHandler = async (c: any) => {
 authRouter.get("/logout", logoutHandler)
 authRouter.post("/logout", logoutHandler)
 
-// GET /api/auth/csrf — 获取 CSRF token（添加日期: 2026-09-05）
+// GET /api/auth/csrf — 獲取 CSRF token（添加日期: 2026-09-05）
 authRouter.get("/csrf", async (c) => {
   try {
     const token = await generateCSRFToken(c)

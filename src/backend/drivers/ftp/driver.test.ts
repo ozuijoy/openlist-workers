@@ -25,7 +25,7 @@ describe("FTP Encoding & Address", () => {
   })
 
   it("encodes and decodes UTF-8 and GBK correctly", () => {
-    const text = "测试目录"
+    const text = "測試目錄"
     const utf8Buf = encodeFtpString(text, "utf-8")
     assert.strictEqual(decodeFtpBuffer(utf8Buf, "utf-8"), text)
 

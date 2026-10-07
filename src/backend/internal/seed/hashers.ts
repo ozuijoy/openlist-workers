@@ -1,13 +1,13 @@
-// 纯 JavaScript 的 MD5 / SHA-1 / SHA-256 流式哈希实现。
+// 純 JavaScript 的 MD5 / SHA-1 / SHA-256 流式哈希實現。
 //
-// 背景：此前种子逻辑使用 hash-wasm 库，该库在运行时通过
-// `WebAssembly.compile()` 编译内置的 WASM 二进制。Cloudflare Workers、
-// Vercel Edge、EdgeOne 等边缘运行环境可能禁止 Wasm 代码生成，导致：
+// 背景：此前種子邏輯使用 hash-wasm 庫，該庫在運行時通過
+// `WebAssembly.compile()` 編譯內置的 WASM 二進制。Cloudflare Workers、
+// Vercel Edge、EdgeOne 等邊緣運行環境可能禁止 Wasm 代碼生成，導致：
 //   "WebAssembly.compile(): Wasm code generation disallowed by embedder"
 //
-// 这里提供与 hash-wasm 的 IHasher 接口兼容的纯 JS 实现，与 Go 版
-// (crypto/md5、crypto/sha1、crypto/sha256) 输出完全一致，且不依赖 WASM。
-// 接口兼容旧调用方式：`init()`、`update(data)`、`digest("hex")`。
+// 這裡提供與 hash-wasm 的 IHasher 介面相容的純 JS 實現，與 Go 版
+// (crypto/md5、crypto/sha1、crypto/sha256) 輸出完全一致，且不依賴 WASM。
+// 介面相容舊調用方式：`init()`、`update(data)`、`digest("hex")`。
 
 export interface IHasher {
   init(): IHasher
@@ -65,14 +65,14 @@ function toBytes(data: Uint8Array | string): Uint8Array {
   return typeof data === "string" ? new TextEncoder().encode(data) : data
 }
 
-// 计算 64 位比特长度（big-endian 写入），兼容超过 4GB 的输入。
+// 計算 64 位比特長度（big-endian 寫入），相容超過 4GB 的輸入。
 function writeBitLengthBE(out: Uint8Array, offset: number, byteLength: number): void {
   const bitLength = byteLength * 8
   writeUint32BE(out, offset, Math.floor(bitLength / 0x100000000))
   writeUint32BE(out, offset + 4, bitLength >>> 0)
 }
 
-// 计算 64 位比特长度（little-endian 写入，MD5 专用）。
+// 計算 64 位比特長度（little-endian 寫入，MD5 專用）。
 function writeBitLengthLE(out: Uint8Array, offset: number, byteLength: number): void {
   const bitLength = byteLength * 8
   writeUint32LE(out, offset, bitLength >>> 0)

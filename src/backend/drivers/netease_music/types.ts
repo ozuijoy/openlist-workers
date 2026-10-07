@@ -1,4 +1,4 @@
-// netease_music (网易云音乐云盘) - Cookie 认证
+// netease_music (網易雲音樂雲盤) - Cookie 認證
 // API reference: Go drivers/netease_music
 
 export interface DriverNeteaseMusicAddition {

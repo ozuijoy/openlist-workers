@@ -2,7 +2,7 @@
 // Ported from: OpenList-Backends/drivers/emby
 
 export interface EmbyAddition {
-  /** Emby 服务器地址，例如 http://localhost:8096 */
+  /** Emby 伺服器地址，例如 http://localhost:8096 */
   url: string
   api_key: string
   user_id: string
@@ -10,7 +10,7 @@ export interface EmbyAddition {
   password: string
   /** stream | download */
   link_method: string
-  /** 根目录 ID（虚拟视图/文件夹 ID），默认 "1" */
+  /** 根目錄 ID（虛擬視圖/文件夾 ID），默認 "1" */
   root_folder_id: string
 }
 

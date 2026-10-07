@@ -1,10 +1,10 @@
-// AliDoc (钉钉文档) driver types
+// AliDoc (釘釘文件) driver types
 // Ported from: OpenList-Backends/drivers/alidoc
 
 export interface AliDocAddition {
-  /** 钉钉文档网页 Cookie */
+  /** 釘釘文件網頁 Cookie */
   cookie: string
-  /** 根目录 dentryUuid */
+  /** 根目錄 dentryUuid */
   root_folder_id: string
 }
 

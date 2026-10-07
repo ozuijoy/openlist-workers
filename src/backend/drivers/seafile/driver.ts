@@ -264,9 +264,9 @@ export class SeafileDriver implements StorageDriver {
     physicalPath: string,
     names: string[],
   ): Promise<void> {
-    // physicalPath 是目标项自身的物理路径（op/storage.ts removeItems 逐项调用），
-    // resolveRepoAndPath 已解析到目标项，参数即目标项路径，不得再拼 name，否则指向
-    // `<item>/<name>`，DELETE 到不存在的路径，接口成功但文件仍在。
+    // physicalPath 是目標項自身的物理路徑（op/storage.ts removeItems 逐項調用），
+    // resolveRepoAndPath 已解析到目標項，參數即目標項路徑，不得再拼 name，否則指向
+    // `<item>/<name>`，DELETE 到不存在的路徑，介面成功但文件仍在。
     const { repoId, innerPath } = await this.resolveRepoAndPath(physicalPath)
 
     await this.client.request(
@@ -285,9 +285,9 @@ export class SeafileDriver implements StorageDriver {
     srcPhys: string,
     dstPhys: string,
   ): Promise<void> {
-    // srcPhys/dstPhys 是源/目标项自身的物理路径（op/storage.ts moveItems 逐项调用），
-    // 参数即目标项路径，不得再拼 name，否则指向 `<item>/<name>`；
-    // 源路径直接用 src.innerPath，dst_dir 需要目录，取 dst.innerPath 的父级。
+    // srcPhys/dstPhys 是源/目標項自身的物理路徑（op/storage.ts moveItems 逐項調用），
+    // 參數即目標項路徑，不得再拼 name，否則指向 `<item>/<name>`；
+    // 源路徑直接用 src.innerPath，dst_dir 需要目錄，取 dst.innerPath 的父級。
     const src = await this.resolveRepoAndPath(srcPhys)
     const dst = await this.resolveRepoAndPath(dstPhys)
     const dstDirPath =
@@ -315,9 +315,9 @@ export class SeafileDriver implements StorageDriver {
     srcPhys: string,
     dstPhys: string,
   ): Promise<void> {
-    // srcPhys/dstPhys 是源/目标项自身的物理路径（op/storage.ts copyItems 逐项调用），
-    // 参数即目标项路径，不得再拼 name，否则指向 `<item>/<name>`；
-    // 源路径直接用 src.innerPath，dst_dir 需要目录，取 dst.innerPath 的父级。
+    // srcPhys/dstPhys 是源/目標項自身的物理路徑（op/storage.ts copyItems 逐項調用），
+    // 參數即目標項路徑，不得再拼 name，否則指向 `<item>/<name>`；
+    // 源路徑直接用 src.innerPath，dst_dir 需要目錄，取 dst.innerPath 的父級。
     const src = await this.resolveRepoAndPath(srcPhys)
     const dst = await this.resolveRepoAndPath(dstPhys)
     const dstDirPath =

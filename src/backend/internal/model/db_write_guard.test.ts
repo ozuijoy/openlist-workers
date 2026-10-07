@@ -2,24 +2,24 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 
 /**
- * 回归测试（端到端）：写前守卫必须拦截「不可信空数据」的落盘。
+ * 迴歸測試（端到端）：寫前守衛必須攔截「不可信空資料」的落盤。
  *
- * 这是本仓库最重要的一条数据安全约束：**永远不得以空数据写入数据库**。
+ * 這是本倉庫最重要的一條資料安全約束：**永遠不得以空資料寫入資料庫**。
  *
- * 复现的历史故障：
- *   1. 读取持久化存储失败（binding 未注入 / 最终一致性 / 后端切换）
- *   2. loadDb() 吞掉错误，回退到 defaultDb 克隆（空壳）
- *   3. ensureDefaultSettings() 隐式 saveDb()，把空壳写回存储
- *   4. 真实配置被覆盖 → init_status 报 initialized=false → 用户看到「数据库被清空」
+ * 復現的歷史故障：
+ *   1. 讀取持久化儲存失敗（binding 未注入 / 最終一致性 / 後端切換）
+ *   2. loadDb() 吞掉錯誤，回退到 defaultDb 克隆（空殼）
+ *   3. ensureDefaultSettings() 隱式 saveDb()，把空殼寫回儲存
+ *   4. 真實配置被覆蓋 → init_status 報 initialized=false → 用戶看到「資料庫被清空」
  *
- * 下面通过直接驱动 db.ts 的公开 API 来锁定该行为。
+ * 下面通過直接驅動 db.ts 的公開 API 來鎖定該行為。
  */
 
 /**
- * 每个用例使用独立 env 对象，避免 getStorageBackend 的 env 指纹缓存串味。
+ * 每個用例使用獨立 env 對象，避免 getStorageBackend 的 env 指紋快取串味。
  *
- * 使用 DB_DRIVER=auto：在 Node（非 serverless）运行时下，探测不到任何绑定时会
- * 回退到 memory driver —— 这正是我们来模拟「空存储 / 读取失败」的理想后端。
+ * 使用 DB_DRIVER=auto：在 Node（非 serverless）運行時下，探測不到任何綁定時會
+ * 回退到 memory driver —— 這正是我們來模擬「空儲存 / 讀取失敗」的理想後端。
  */
 function freshEnv(): any {
   return {
@@ -30,29 +30,29 @@ function freshEnv(): any {
   }
 }
 
-test("写前守卫：从未成功读取时，拒绝把空壳写回数据库", async () => {
+test("寫前守衛：從未成功讀取時，拒絕把空殼寫回資料庫", async () => {
   const db = await import("./db")
   const env = freshEnv()
 
-  // 全新 isolate：存储为空 → loadDb 返回不可信空壳。
+  // 全新 isolate：儲存為空 → loadDb 返回不可信空殼。
   const loaded = await db.getDb(env)
-  assert.equal(db.isDbTrusted(), false, "空存储首次读取不应被视为可信")
-  assert.equal(db.isDbShell(loaded), true, "初次读取应得到空壳")
+  assert.equal(db.isDbTrusted(), false, "空儲存首次讀取不應被視為可信")
+  assert.equal(db.isDbShell(loaded), true, "初次讀取應得到空殼")
 
-  // 关键断言：尝试写回空壳必须被拒绝。
+  // 關鍵斷言：嘗試寫回空殼必須被拒絕。
   const ok = await db.saveDb(
     { settings: [], users: [], storages: [], shares: [], metas: [], plugins: [] },
     env,
   )
-  assert.equal(ok, false, "空壳落盘必须被守卫拦截")
-  assert.equal(db.isDbWriteBlocked(), true, "守卫应记录本次拦截")
+  assert.equal(ok, false, "空殼落盤必須被守衛攔截")
+  assert.equal(db.isDbWriteBlocked(), true, "守衛應記錄本次攔截")
 })
 
-test("写前守卫：可信数据写入不受影响（含存储挂载的正常保存）", async () => {
+test("寫前守衛：可信資料寫入不受影響（含儲存掛載的正常保存）", async () => {
   const db = await import("./db")
   const env = freshEnv()
 
-  // 先建立一次「可信」状态：写入一份含实体的库（携带 force，模拟初始化/首次落盘）。
+  // 先建立一次「可信」狀態：寫入一份含實體的庫（攜帶 force，模擬初始化/首次落盤）。
   const realDb = {
     settings: [{ key: "site_title", value: "OpenList" }],
     users: [{ id: 1, username: "admin", role: 2, password: "hash" }],
@@ -63,13 +63,13 @@ test("写前守卫：可信数据写入不受影响（含存储挂载的正常�
   }
   assert.equal(await db.saveDb(realDb, env, { force: true }), true)
 
-  // 重新读取：此时应变为可信。
-  // 用同一个 env 并且 saveDb 已刷新请求缓存，因此 getDb 会读到刚写入的快照。
+  // 重新讀取：此時應變為可信。
+  // 用同一個 env 並且 saveDb 已刷新請求快取，因此 getDb 會讀到剛寫入的快照。
   const reloaded = await db.getDb(env)
-  assert.equal(db.isDbTrusted(), true, "成功读取后应标记为可信")
-  assert.equal(db.isDbShell(reloaded), false, "含存储挂载的库不是空壳")
+  assert.equal(db.isDbTrusted(), true, "成功讀取後應標記為可信")
+  assert.equal(db.isDbShell(reloaded), false, "含儲存掛載的庫不是空殼")
 
-  // 正常写入（非空壳）必须照常成功 —— 守卫不能误伤日常操作。
+  // 正常寫入（非空殼）必須照常成功 —— 守衛不能誤傷日常操作。
   const updated = {
     ...(reloaded as any),
     storages: [
@@ -77,14 +77,14 @@ test("写前守卫：可信数据写入不受影响（含存储挂载的正常�
       { id: 2, mount_path: "/drive2", driver: "local" },
     ],
   }
-  assert.equal(await db.saveDb(updated, env), true, "含数据的写入不应被拦截")
-  assert.equal(db.isDbWriteBlocked(), false, "未发生拦截")
+  assert.equal(await db.saveDb(updated, env), true, "含資料的寫入不應被攔截")
+  assert.equal(db.isDbWriteBlocked(), false, "未發生攔截")
 })
 
-test("写前守卫：读取失败后，即使内存中有旧快照也不允许用空壳覆盖", async () => {
+test("寫前守衛：讀取失敗後，即使記憶體中有舊快照也不允許用空殼覆蓋", async () => {
   const db = await import("./db")
 
-  // 用一个 env 建立可信状态并落盘一份真实数据。
+  // 用一個 env 建立可信狀態並落盤一份真實資料。
   const env = freshEnv()
   const realDb = {
     settings: [{ key: "site_title", value: "OpenList" }],
@@ -96,8 +96,8 @@ test("写前守卫：读取失败后，即使内存中有旧快照也不允许�
   }
   assert.equal(await db.saveDb(realDb, env, { force: true }), true)
 
-  // 模拟「读取失败」：传入一个签名不同、无法访问原后端的 env，
-  // 使 saveDb 无法通过后端校验，从而验证守卫仍以空壳为依据拒绝写入。
+  // 模擬「讀取失敗」：傳入一個簽名不同、無法訪問原後端的 env，
+  // 使 saveDb 無法通過後端校驗，從而驗證守衛仍以空殼為依據拒絕寫入。
   const emptyShell = {
     settings: [],
     users: [],
@@ -106,22 +106,22 @@ test("写前守卫：读取失败后，即使内存中有旧快照也不允许�
     metas: [],
     plugins: [],
   }
-  // 即使显式 force 绕过守卫，也应只有调用方明确知情时才可能发生；
-  // 这里断言默认行为一定是拒绝。
+  // 即使顯式 force 繞過守衛，也應只有調用方明確知情時才可能發生；
+  // 這裡斷言默認行為一定是拒絕。
   assert.equal(
     await db.saveDb(emptyShell, env),
     false,
-    "空壳写入必须默认被拒绝",
+    "空殼寫入必須默認被拒絕",
   )
 })
 
-test("不变量：读取（getDb）不得产生隐式写入", async () => {
+test("不變量：讀取（getDb）不得產生隱式寫入", async () => {
   const db = await import("./db")
   const { memoryDriver } = await import("./store/driver/memory")
   const { mapFormat } = await import("./store/format/map")
 
   const env = freshEnv()
-  // 先放入一份真实数据，使后续读取「成功」，从而暴露任何隐式落盘行为。
+  // 先放入一份真實資料，使後續讀取「成功」，從而暴露任何隱式落盤行為。
   assert.equal(
     await db.saveDb(
       {
@@ -139,11 +139,11 @@ test("不变量：读取（getDb）不得产生隐式写入", async () => {
   )
 
   const before = JSON.stringify(await mapFormat.load(memoryDriver, env))
-  // 多次读取（会走 ensureDefaultSettings/Storages/... 的补齐逻辑）。
+  // 多次讀取（會走 ensureDefaultSettings/Storages/... 的補齊邏輯）。
   await db.getDb(env)
   await db.getDb(env)
   const after = JSON.stringify(await mapFormat.load(memoryDriver, env))
 
-  // 历史缺陷：ensureDefaultSettings() 会隐式 saveDb()，读取也变成写入。
-  assert.equal(after, before, "getDb() 不得改变持久化内容（不得隐式落盘）")
+  // 歷史缺陷：ensureDefaultSettings() 會隱式 saveDb()，讀取也變成寫入。
+  assert.equal(after, before, "getDb() 不得改變持久化內容（不得隱式落盤）")
 })

@@ -1,4 +1,4 @@
-// 天翼云盘 TV/家庭云 API 客户端（HMAC-SHA1 签名 + AccessToken 登录）
+// 天翼雲盤 TV/家庭雲 API 客戶端（HMAC-SHA1 簽名 + AccessToken 登入）
 import {
   Driver189TVAddition,
   AppSessionResp,
@@ -14,8 +14,8 @@ import {
 } from "./types"
 import { hmacSha1Hex, md5Hex, randomUUID189 } from "../189/crypto"
 
-// 协议级固定签名密钥：从天翼云盘 TV/家庭云客户端逆向得到，服务端固定校验、全网共享，
-// 并非可申请替换的 OAuth 凭据，删除会导致 HMAC 签名校验失败、驱动不可用。
+// 協議級固定簽名密鑰：從天翼雲盤 TV/家庭雲客戶端逆向得到，服務端固定校驗、全網共享，
+// 並非可申請替換的 OAuth 憑據，刪除會導致 HMAC 簽名校驗失敗、驅動不可用。
 const TVAppKey = "600100885"
 const TVAppSignatureSecre = "fe5734c74c2f96a38157f420b32dc995"
 const TvVersion = "6.5.5"
@@ -69,7 +69,7 @@ export function appKeySignatureOfHmac(
   return hmacSha1Hex(data, appSignatureSecret).toUpperCase()
 }
 
-/** 保护 JSON 中大整数 ID（int64 超 JS 安全整数） */
+/** 保護 JSON 中大整數 ID（int64 超 JS 安全整數） */
 function parseJsonPreservingIds(text: string): any {
   const protectedText = text.replace(
     /("id"\s*:\s*)(-?\d{16,})(?=\s*[,}])/g,
@@ -129,7 +129,7 @@ export class Client189TV {
   async init(): Promise<void> {
     if (!this.addition.access_token) {
       throw new Error(
-        "[189TV] access_token 为空：请先在别处扫码登录获取 access_token 后填入配置",
+        "[189TV] access_token 為空：請先在別處掃碼登入獲取 access_token 後填入配置",
       )
     }
     await this.login()
@@ -242,12 +242,12 @@ export class Client189TV {
     try {
       data = parseJsonPreservingIds(text)
     } catch {
-      throw new Error(`[189TV] 非预期响应: ${text.slice(0, 200)}`)
+      throw new Error(`[189TV] 非預期響應: ${text.slice(0, 200)}`)
     }
 
     if (hasError(data as RespErr)) {
       throw new Error(
-        `[189TV] API 错误: ${(data as RespErr).res_message || (data as RespErr).errorMsg || (data as RespErr).msg || text.slice(0, 200)}`,
+        `[189TV] API 錯誤: ${(data as RespErr).res_message || (data as RespErr).errorMsg || (data as RespErr).msg || text.slice(0, 200)}`,
       )
     }
     return data
@@ -255,7 +255,7 @@ export class Client189TV {
 
   private async login(): Promise<void> {
     if (!this.addition.access_token) {
-      throw new Error("[189TV] access_token 为空，无法登录")
+      throw new Error("[189TV] access_token 為空，無法登入")
     }
     const resp = (await this.request(
       ApiUrl + "/family/manage/loginFamilyMerge.action",
@@ -332,10 +332,10 @@ export class Client189TV {
     })) as DownResp
 
     let url = resp.fileDownloadUrl || ""
-    if (!url) throw new Error("[189TV] 获取下载地址失败")
+    if (!url) throw new Error("[189TV] 獲取下載地址失敗")
     url = url.replace(/&amp;/g, "&").replace(/^http:\/\//i, "https://")
 
-    // 尝试解析一次 302 重定向获得直接 CDN 地址
+    // 嘗試解析一次 302 重定向獲得直接 CDN 地址
     try {
       const probe = await fetch(url, {
         method: "GET",
@@ -411,7 +411,7 @@ export class Client189TV {
       "POST",
       { form, isFamily: familyId !== "" },
     )) as CreateBatchTaskResp
-    if (!resp.taskId) throw new Error("[189TV] 创建批量任务失败")
+    if (!resp.taskId) throw new Error("[189TV] 創建批量任務失敗")
     return resp.taskId
   }
 
@@ -424,10 +424,10 @@ export class Client189TV {
       )) as BatchTaskStateResp
       const status = resp.taskStatus
       if (status === 4) return
-      if (status === 2) throw new Error("[189TV] 目标存在同名冲突")
+      if (status === 2) throw new Error("[189TV] 目標存在同名衝突")
       await new Promise((r) => setTimeout(r, 300))
     }
-    throw new Error("[189TV] 批量任务超时")
+    throw new Error("[189TV] 批量任務超時")
   }
 
   async move(
@@ -477,7 +477,7 @@ export class Client189TV {
     await this.waitBatchTask("DELETE", taskId)
   }
 
-  /** 单片上传（Worker 的 put 接收完整 Buffer） */
+  /** 單片上傳（Worker 的 put 接收完整 Buffer） */
   async upload(
     parentId: string,
     fileName: string,
@@ -487,7 +487,7 @@ export class Client189TV {
     const fileMd5 = md5Hex(content)
     const fileSize = content.length
 
-    // 1. 创建上传会话
+    // 1. 創建上傳會話
     const base = isFamily ? ApiUrl + "/family/file" : ApiUrl
     const createUrl =
       base +
@@ -525,10 +525,10 @@ export class Client189TV {
     const fileUploadUrl = createResp.fileUploadUrl
     const fileCommitUrl = createResp.fileCommitUrl
     if (!uploadFileId || !fileUploadUrl) {
-      throw new Error("[189TV] 创建上传会话失败")
+      throw new Error("[189TV] 創建上傳會話失敗")
     }
 
-    // 2. PUT 上传文件数据
+    // 2. PUT 上傳文件資料
     const putHeaders: Record<string, string> = {
       ResumePolicy: "1",
       Expect: "100-continue",
@@ -551,10 +551,10 @@ export class Client189TV {
       body: new Uint8Array(content),
     })
     if (putResp.status !== 200) {
-      throw new Error(`[189TV] 上传失败: HTTP ${putResp.status}`)
+      throw new Error(`[189TV] 上傳失敗: HTTP ${putResp.status}`)
     }
 
-    // 3. 提交上传
+    // 3. 提交上傳
     if (isFamily) {
       await this.request(fileCommitUrl!, "POST", {
         query: {

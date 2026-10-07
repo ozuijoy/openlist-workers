@@ -9,7 +9,7 @@ import { sortFileItems } from "../../internal/driver/sort"
 import { Pan123Addition, Pan123File, Pan123UploadResp } from "./types"
 import { Pan123Client } from "./util"
 
-/** 分片会话上传：会话令牌中携带的数据（不透明地往返于前后端） */
+/** 分片會話上傳：會話令牌中攜帶的資料（不透明地往返於前後端） */
 interface Pan123SessionData {
   bucket: string
   key: string
@@ -70,9 +70,9 @@ export class Pan123Driver implements StorageDriver {
   /** cache: physical path → folder FileId (string) */
   private pathIdCache = new Map<string, string>()
   /**
-   * Cloudflare Workers subrequest 预算（免费版单次 invocation 最多 50 个子请求）。
-   * 所有分页/路径解析调用共享该预算；超出时截断并告警，避免
-   * "Too many subrequests by single Worker invocation" 错误。
+   * Cloudflare Workers subrequest 預算（免費版單次 invocation 最多 50 個子請求）。
+   * 所有分頁/路徑解析調用共享該預算；超出時截斷並告警，避免
+   * "Too many subrequests by single Worker invocation" 錯誤。
    */
   private budget = { used: 0, limit: 45 }
 
@@ -80,8 +80,8 @@ export class Pan123Driver implements StorageDriver {
     addition: Pan123Addition,
     onTokenUpdate?: (token: string) => void,
   ) {
-    // 官方驱动方式：必填 123 网盘手机号 + 密码登录（无默认令牌）。
-    // access_token 为登录后自动持久化的会话令牌（可选，用户无需手动填写）。
+    // 官方驅動方式：必填 123 網盤手機號 + 密碼登入（無默認令牌）。
+    // access_token 為登入後自動持久化的會話令牌（可選，用戶無需手動填寫）。
     this.addition = addition
     this.client = new Pan123Client(addition, onTokenUpdate)
   }
@@ -159,9 +159,9 @@ export class Pan123Driver implements StorageDriver {
   }
 
   /**
-   * 上传场景：确保目录存在，缺失的层级自动递归创建。
-   * 与 resolveFolderId 的区别是——目录不存在时不抛 "folder not found"，
-   * 而是调用 mkdir 创建。用于上传文件夹 / 上传到尚不存在的子目录。
+   * 上傳場景：確保目錄存在，缺失的層級自動遞歸創建。
+   * 與 resolveFolderId 的區別是——目錄不存在時不拋 "folder not found"，
+   * 而是調用 mkdir 創建。用於上傳文件夾 / 上傳到尚不存在的子目錄。
    */
   private async ensureFolderId(physicalPath: string): Promise<string> {
     const rootId = this.client.getRootId()
@@ -204,8 +204,8 @@ export class Pan123Driver implements StorageDriver {
         if (folder) {
           id = String(folder.FileId)
         } else {
-          // 目录不存在：创建。并发上传多个文件时可能被别的请求抢先创建，
-          // mkdir 报"已存在"则忽略，随后重新查询拿到 FileId。
+          // 目錄不存在：創建。併發上傳多個文件時可能被別的請求搶先創建，
+          // mkdir 報"已存在"則忽略，隨後重新查詢拿到 FileId。
           try {
             const createdId = await this.client.mkdir(parentId, decodedName)
             if (createdId) {
@@ -224,7 +224,7 @@ export class Pan123Driver implements StorageDriver {
               (f) => f.Type === 1 && f.FileName === decodedName,
             )
             if (!folder) {
-              throw new Error(`[123Pan] 自动创建目录失败: ${rawName}`)
+              throw new Error(`[123Pan] 自動創建目錄失敗: ${rawName}`)
             }
             id = String(folder.FileId)
           }
@@ -275,7 +275,7 @@ export class Pan123Driver implements StorageDriver {
   }
 
   async list(_virtualPath: string, physicalPath: string): Promise<FileItem[]> {
-    // 每次外部调用重置 subrequest 预算（45 页上限，低于 CF 50 次限制）
+    // 每次外部調用重置 subrequest 預算（45 頁上限，低於 CF 50 次限制）
     this.budget.used = 0
     const folderId = await this.resolveFolderId(physicalPath)
     const files = await this.client.getFiles(folderId, { budget: this.budget })
@@ -288,7 +288,7 @@ export class Pan123Driver implements StorageDriver {
   }
 
   async get(_virtualPath: string, physicalPath: string): Promise<FileItem> {
-    // 每次外部调用重置 subrequest 预算
+    // 每次外部調用重置 subrequest 預算
     this.budget.used = 0
     const segs = String(physicalPath || "")
       .split("/")
@@ -317,21 +317,21 @@ export class Pan123Driver implements StorageDriver {
         item.raw_url = await this.client.getDownloadLink(file)
         if (!item.raw_url) {
           item.raw_url_error =
-            "123 网盘未返回下载链接（DownloadUrl 为空）。常见原因：access_token/cookie 失效，或该文件已删除/被限制下载。请到管理后台更新 access_token 后重试。"
+            "123 網盤未返回下載鏈接（DownloadUrl 為空）。常見原因：access_token/cookie 失效，或該文件已刪除/被限制下載。請到管理後台更新 access_token 後重試。"
         }
       } catch (e: any) {
         item.raw_url_error =
-          `123 网盘获取下载链接失败：${e?.message || String(e)}。` +
-          (String(e?.message || "").includes("登录失败")
-            ? "当前部署出口 IP 可能被 123 风控，请配置有效的 access_token（浏览器登录 123 网盘后复制 Bearer 令牌）。"
-            : "请检查 access_token/cookie 是否有效，或在 123 网盘网页端确认该文件可下载。")
+          `123 網盤獲取下載鏈接失敗：${e?.message || String(e)}。` +
+          (String(e?.message || "").includes("登入失敗")
+            ? "當前部署出口 IP 可能被 123 風控，請配置有效的 access_token（瀏覽器登入 123 網盤後複製 Bearer 令牌）。"
+            : "請檢查 access_token/cookie 是否有效，或在 123 網盤網頁端確認該文件可下載。")
         console.warn(
           `[123Pan] getDownloadLink warning for ${file.FileName}:`,
           e.message,
         )
       }
     } else {
-      item.raw_url_error = "该条目是文件夹，不可作为文件下载。"
+      item.raw_url_error = "該條目是文件夾，不可作為文件下載。"
     }
     return item
   }
@@ -341,7 +341,7 @@ export class Pan123Driver implements StorageDriver {
     const segs = String(physicalPath || "")
       .split("/")
       .filter(Boolean)
-    const dirName = segs.pop() || "新文件夹"
+    const dirName = segs.pop() || "新文件夾"
     const parentPath = "/" + segs.join("/")
     const parentId = await this.resolveFolderId(parentPath)
     await this.client.mkdir(parentId, dirName)
@@ -408,16 +408,16 @@ export class Pan123Driver implements StorageDriver {
     await this.client.uploadFile(parentId, decodedName, content)
   }
 
-  // ---- 分片会话上传（解决大文件整体缓冲导致的内存/请求体超限卡死）----
+  // ---- 分片會話上傳（解決大文件整體緩衝導致的記憶體/請求體超限卡死）----
 
   /**
-   * 创建分片上传会话。前端逐片上传，每片独立 HTTP 请求：
-   * Worker 内存占用恒定（单片大小），不受 CF 请求体/内存上限约束，
-   * 且浏览器端能看到每片的真实上传进度。
-   * @param physicalDir 目标目录的物理路径（不含文件名）
+   * 創建分片上傳會話。前端逐片上傳，每片獨立 HTTP 請求：
+   * Worker 記憶體佔用恆定（單片大小），不受 CF 請求體/記憶體上限約束，
+   * 且瀏覽器端能看到每片的真實上傳進度。
+   * @param physicalDir 目標目錄的物理路徑（不含文件名）
    * @param fileName 文件名
-   * @param size 文件总字节数
-   * @param md5 文件 MD5（启用秒传时由前端计算；可为空）
+   * @param size 文件總字節數
+   * @param md5 文件 MD5（啟用秒傳時由前端計算；可為空）
    */
   async createUploadSession(
     _virtualDir: string,
@@ -440,7 +440,7 @@ export class Pan123Driver implements StorageDriver {
       md5 || "",
     )
     const chunkSize = 16 * 1024 * 1024 // 16MB
-    // 秒传命中或未分配 Key：文件已存在，无需实际上传
+    // 秒傳命中或未分配 Key：文件已存在，無需實際上傳
     if (upload.Reuse || upload.Key === "") {
       return { reuse: true, partCount: 0, chunkSize, session: "" }
     }
@@ -459,7 +459,7 @@ export class Pan123Driver implements StorageDriver {
   }
 
   /**
-   * 上传单个分片：获取该片的预签名 URL 并把内容转发给 123pan。
+   * 上傳單個分片：獲取該片的預簽名 URL 並把內容轉發給 123pan。
    */
   async uploadPart(
     session: string,
@@ -477,13 +477,13 @@ export class Pan123Driver implements StorageDriver {
     if (res.status !== 200) {
       const text = await res.text().catch(() => "")
       throw new Error(
-        `[123Pan] 上传第 ${partNumber}/${s.partCount} 分片失败：HTTP ${res.status} ${text}`,
+        `[123Pan] 上傳第 ${partNumber}/${s.partCount} 分片失敗：HTTP ${res.status} ${text}`,
       )
     }
   }
 
   /**
-   * 完成分片上传会话。
+   * 完成分片上傳會話。
    */
   async completeUploadSession(session: string): Promise<void> {
     this.budget.used = 0

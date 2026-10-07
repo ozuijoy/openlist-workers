@@ -210,7 +210,7 @@ export class Driver189TV implements StorageDriver {
     return { id: target.id, isDir }
   }
 
-  /** 物理路径 → 目录 ID（根目录默认 "-11"，家庭云为 ""） */
+  /** 物理路徑 → 目錄 ID（根目錄默認 "-11"，家庭云為 ""） */
   private async pathToId(physicalPath: string): Promise<string> {
     const clean = physicalPath.split("/").filter(Boolean).join("/")
     if (!clean) {

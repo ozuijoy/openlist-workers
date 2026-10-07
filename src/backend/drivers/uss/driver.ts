@@ -1,4 +1,4 @@
-// USS (又拍云) driver — 通过 UPYUN REST API 访问又拍云对象存储
+// USS (又拍雲) driver — 通過 UPYUN REST API 訪問又拍雲對象儲存
 // 移植自 OpenList Go 版 drivers/uss。
 import {
   StorageDriver,
@@ -117,7 +117,7 @@ export class UssDriver implements StorageDriver {
   async get(_v: string, physicalPath: string): Promise<FileItem> {
     const key = this.getKey(physicalPath)
     const name = key.split("/").filter(Boolean).pop() || key
-    // 又拍云 Token 防盗链：_upt = MD5(token&expire&/key)[12:20] + expire
+    // 又拍雲 Token 防盜鏈：_upt = MD5(token&expire&/key)[12:20] + expire
     const expireAt =
       Math.floor(Date.now() / 1000) +
       (this.addition.sign_url_expire || 4) * 3600
@@ -180,8 +180,8 @@ export class UssDriver implements StorageDriver {
     srcPhys: string,
     dstPhys: string,
   ): Promise<void> {
-    // srcPhys/dstPhys 是目标项自身的物理路径（op/storage.ts moveItems 逐项调用），
-    // 参数即项路径，不得再拼 name，否则会指向 <item>/<name> 导致移动失败。
+    // srcPhys/dstPhys 是目標項自身的物理路徑（op/storage.ts moveItems 逐項調用），
+    // 參數即項路徑，不得再拼 name，否則會指向 <item>/<name> 導致移動失敗。
     await this.moveOrCopy(this.getKey(srcPhys), this.getKey(dstPhys), "move")
   }
 
@@ -192,7 +192,7 @@ export class UssDriver implements StorageDriver {
     srcPhys: string,
     dstPhys: string,
   ): Promise<void> {
-    // 同 move：srcPhys/dstPhys 已是目标项自身路径，参数即项路径，不得再拼 name。
+    // 同 move：srcPhys/dstPhys 已是目標項自身路徑，參數即項路徑，不得再拼 name。
     await this.moveOrCopy(this.getKey(srcPhys), this.getKey(dstPhys), "copy")
   }
 

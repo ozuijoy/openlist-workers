@@ -1,14 +1,14 @@
-// mediafire (MediaFire 网盘) - session_token 认证
+// mediafire (MediaFire 網盤) - session_token 認證
 // API base: https://www.mediafire.com/api/1.5
 
 export interface DriverMediafireAddition {
-  /** 登录 Cookie（必填，用于获取 session_token） */
+  /** 登入 Cookie（必填，用於獲取 session_token） */
   cookie: string
-  /** 会话 token（可选，缺省从 cookie 获取） */
+  /** 會話 token（可選，缺省從 cookie 獲取） */
   session_token?: string
-  /** 每页数量 */
+  /** 每頁數量 */
   chunk_size?: number
-  /** 排序字段 */
+  /** 排序欄位 */
   order_by?: string
   /** 排序方向 */
   order_direction?: string

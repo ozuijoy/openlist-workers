@@ -3,20 +3,20 @@ import { test } from "node:test"
 import { S3Driver } from "./driver"
 
 /**
- * 调用约定（src/backend/internal/op/storage.ts 的 removeItems/moveItems/copyItems）：
+ * 調用約定（src/backend/internal/op/storage.ts 的 removeItems/moveItems/copyItems）：
  *
  *   const resolved = await resolvePath(`${dir}/${name}`)
  *   await driver.remove(virtualPath, resolved.physical, [name])
  *
- * 即 physicalPath 是【目标项自身】的物理路径（文件路径），与 123pan/github/
- * azure_blob 等 driver 的用法一致。driver 不得再把 name 拼接到 physicalPath 后面，
- * 否则会得到 `<file>/<name>` 这种不存在的 key：HEAD 404 → 退化成按目录递归删 →
- * prefix 同样查不到任何对象 → 静默返回成功（接口报 success，对象仍在）。
+ * 即 physicalPath 是【目標項自身】的物理路徑（文件路徑），與 123pan/github/
+ * azure_blob 等 driver 的用法一致。driver 不得再把 name 拼接到 physicalPath 後面，
+ * 否則會得到 `<file>/<name>` 這種不存在的 key：HEAD 404 → 退化成按目錄遞歸刪 →
+ * prefix 同樣查不到任何對象 → 靜默返回成功（介面報 success，對象仍在）。
  */
 
 type Call = { method: string; url: string }
 
-/** 内存版 S3：object key 存 URL pathname，记录所有请求以便断言目标 key */
+/** 記憶體版 S3：object key 存 URL pathname，記錄所有請求以便斷言目標 key */
 function mockS3(objects: Set<string>, calls: Call[]) {
   return async (input: any, init: any = {}) => {
     const url = new URL(String(typeof input === "string" ? input : input.url))

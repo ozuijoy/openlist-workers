@@ -1,9 +1,9 @@
 import CryptoJS from "crypto-js"
 
 /**
- * 跨平台 RSA PKCS#1 v1.5 加密与 ASN.1 解析实现。
- * 纯 TypeScript + BigInt 实现，无需 Node.js 原生 crypto 模块，
- * 100% 兼容 Cloudflare Workers (V8 Isolates)、浏览器以及 Node.js。
+ * 跨平台 RSA PKCS#1 v1.5 加密與 ASN.1 解析實現。
+ * 純 TypeScript + BigInt 實現，無需 Node.js 原生 crypto 模塊，
+ * 100% 相容 Cloudflare Workers (V8 Isolates)、瀏覽器以及 Node.js。
  */
 
 function base64ToBytes(b64: string): Uint8Array {
@@ -68,7 +68,7 @@ interface RsaPublicKey {
 }
 
 /**
- * 解析 PEM 或 Base64 格式的 RSA 公钥（支持 SubjectPublicKeyInfo 与 PKCS#1 RSAPublicKey 格式）
+ * 解析 PEM 或 Base64 格式的 RSA 公鑰（支持 SubjectPublicKeyInfo 與 PKCS#1 RSAPublicKey 格式）
  */
 function parseRsaPublicKey(pemOrBase64: string): RsaPublicKey {
   let cleanB64 = pemOrBase64
@@ -78,7 +78,7 @@ function parseRsaPublicKey(pemOrBase64: string): RsaPublicKey {
 
   const der = base64ToBytes(cleanB64)
 
-  // ASN.1 DER 简单解析获取所有 INTEGER
+  // ASN.1 DER 簡單解析獲取所有 INTEGER
   let offset = 0
   function readTagAndLength(): {
     tag: number
@@ -143,7 +143,7 @@ function parseRsaPublicKey(pemOrBase64: string): RsaPublicKey {
     )
   }
 
-  // 最大的 INTEGER 为 modulus (n)，较小的为 exponent (e)
+  // 最大的 INTEGER 為 modulus (n)，較小的為 exponent (e)
   let nBytes = integers[0]
   let eBytes = integers[1]
   if (nBytes.length < eBytes.length) {
@@ -161,9 +161,9 @@ function parseRsaPublicKey(pemOrBase64: string): RsaPublicKey {
 
 /**
  * RSA PKCS#1 v1.5 加密
- * @param data 待加密数据（字符串或字节数组）
- * @param pubKeyPEM 公钥内容
- * @param toHex 输出为十六进制字符串（true）还是 Base64 字符串（false）
+ * @param data 待加密資料（字符串或字節數組）
+ * @param pubKeyPEM 公鑰內容
+ * @param toHex 輸出為十六進制字符串（true）還是 Base64 字符串（false）
  */
 export function rsaEncode(
   data: string | Uint8Array,
@@ -216,7 +216,7 @@ export function rsaEncode(
 }
 
 /**
- * AES-128-ECB PKCS7 加密（天翼云盘上传参数加密）
+ * AES-128-ECB PKCS7 加密（天翼雲盤上傳參數加密）
  */
 export function aes128EcbEncryptHex(
   text: string,
@@ -235,7 +235,7 @@ export function aes128EcbEncryptHex(
 }
 
 /**
- * HMAC-SHA1 签名（十六进制输出）
+ * HMAC-SHA1 簽名（十六進制輸出）
  */
 export function hmacSha1Hex(data: string, key: string): string {
   return CryptoJS.HmacSHA1(data, key).toString(CryptoJS.enc.Hex)
@@ -257,7 +257,7 @@ export function md5Base64(data: Uint8Array | string): string {
 }
 
 /**
- * 生成 189 专用的 UUID 格式随机字符串
+ * 生成 189 專用的 UUID 格式隨機字符串
  */
 export function randomUUID189(
   pattern: string = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx",
@@ -270,7 +270,7 @@ export function randomUUID189(
 }
 
 /**
- * 生成 189 URL 查询缓存随机数
+ * 生成 189 URL 查詢快取隨機數
  */
 export function randomNoCache(): string {
   return (

@@ -28,7 +28,7 @@ function fileToItem(f: HCloudFile): FileItem {
   }
 }
 
-/** 规范化路径（根为 "/"） */
+/** 規範化路徑（根為 "/"） */
 function normPath(p: string): string {
   if (!p || p === "/") return "/"
   return p.startsWith("/") ? p : "/" + p

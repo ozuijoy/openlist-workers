@@ -1,4 +1,4 @@
-// 百度相册 API 客户端（photo.baidu.com）
+// 百度相冊 API 客戶端（photo.baidu.com）
 import {
   DriverBaiduPhotoAddition,
   BaiduPhotoFile,
@@ -20,7 +20,7 @@ const USER_API_URL = API_URL + "/user/v1"
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
-const DEFAULT = 4 * 1024 * 1024 // 4MB 分块
+const DEFAULT = 4 * 1024 * 1024 // 4MB 分塊
 const SLICE_SIZE = 256 * 1024 // 256KB slice-md5
 
 export function getTid(): string {
@@ -200,7 +200,7 @@ export class ClientBaiduPhoto {
       FILE_API_URL_V2 + "/download",
       { query: { fsid: String(fsid) } },
     )
-    if (!resp.dlink) throw new Error("[BaiduPhoto] 获取下载地址失败")
+    if (!resp.dlink) throw new Error("[BaiduPhoto] 獲取下載地址失敗")
     return resp.dlink
   }
 
@@ -220,7 +220,7 @@ export class ClientBaiduPhoto {
       redirect: "manual",
     })
     const location = resp.headers.get("location")
-    if (!location) throw new Error("[BaiduPhoto] 相册文件未返回 302 跳转")
+    if (!location) throw new Error("[BaiduPhoto] 相冊文件未返回 302 跳轉")
     return location
   }
 
@@ -234,7 +234,7 @@ export class ClientBaiduPhoto {
       ALBUM_API_URL + "/create",
       { query: { title: name, tid: getTid(), source: "0" } },
     )
-    if (!resp.album_id) throw new Error("[BaiduPhoto] 创建相册失败")
+    if (!resp.album_id) throw new Error("[BaiduPhoto] 創建相冊失敗")
     return this.getAlbumDetail(resp.album_id)
   }
 
@@ -245,14 +245,14 @@ export class ClientBaiduPhoto {
       query: { pcode: code, web: "1" },
     })
     if (!resp.pdata?.invite_code) {
-      throw new Error("[BaiduPhoto] 邀请码无效")
+      throw new Error("[BaiduPhoto] 邀請碼無效")
     }
     const resp2 = await this.requestJson<{ album_id?: string }>(
       "GET",
       ALBUM_API_URL + "/join",
       { query: { invite_code: resp.pdata.invite_code } },
     )
-    if (!resp2.album_id) throw new Error("[BaiduPhoto] 加入相册失败")
+    if (!resp2.album_id) throw new Error("[BaiduPhoto] 加入相冊失敗")
     return this.getAlbumDetail(resp2.album_id)
   }
 
@@ -334,12 +334,12 @@ export class ClientBaiduPhoto {
       },
     })
     if (!resp.list || resp.list.length === 0) {
-      throw new Error("[BaiduPhoto] 复制相册文件失败")
+      throw new Error("[BaiduPhoto] 複製相冊文件失敗")
     }
     return resp.list[0].fsid
   }
 
-  /** 分片上传（Worker 单线程版） */
+  /** 分片上傳（Worker 單執行緒版） */
   async upload(
     parentAlbum: BaiduPhotoAlbum | null,
     fileName: string,
@@ -384,7 +384,7 @@ export class ClientBaiduPhoto {
 
     switch (precreate.return_type) {
       case 1: {
-        // step.2 上传切片
+        // step.2 上傳切片
         const uploadid = precreate.uploadid
         const count = Math.ceil(content.length / DEFAULT)
         for (const partseq of precreate.block_list || []) {
@@ -419,7 +419,7 @@ export class ClientBaiduPhoto {
             body: fd,
           })
           if (!upResp.ok) {
-            throw new Error(`[BaiduPhoto] 上传切片失败: HTTP ${upResp.status}`)
+            throw new Error(`[BaiduPhoto] 上傳切片失敗: HTTP ${upResp.status}`)
           }
         }
         // step.3 create
@@ -433,7 +433,7 @@ export class ClientBaiduPhoto {
         break
       }
       case 2: {
-        // 秒传（已存在）
+        // 秒傳（已存在）
         newFsid = precreate.data?.fs_id
         break
       }
@@ -446,7 +446,7 @@ export class ClientBaiduPhoto {
         throw new Error("[BaiduPhoto] precreate 返回未知 return_type")
     }
 
-    // step.4 若上传到相册，则加入相册
+    // step.4 若上傳到相冊，則加入相冊
     if (parentAlbum && newFsid) {
       await this.addAlbumFile(parentAlbum.album_id, parentAlbum.tid, newFsid)
     }

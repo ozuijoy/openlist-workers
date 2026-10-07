@@ -1,16 +1,16 @@
 /**
- * 服务层 Multipart 上传会话管理器。
+ * 服務層 Multipart 上傳會話管理器。
  *
- * 目标：让 TS 后端提供与官方前端 `multipart.ts` 完全一致的 API 契约
- * （/fs/multipart/init | chunk | complete | status），内部桥接到驱动层的
- * createUploadSession / uploadPart / completeUploadSession（会话式分片）。
+ * 目標：讓 TS 後端提供與官方前端 `multipart.ts` 完全一致的 API 契約
+ * （/fs/multipart/init | chunk | complete | status），內部橋接到驅動層的
+ * createUploadSession / uploadPart / completeUploadSession（會話式分片）。
  *
- * 说明：
- * - 会话状态存于进程内 Map（Worker 单实例存活期间可断点续传）。
- *   跨实例/冷启动恢复依赖驱动 session token 的自包含性，本层不做 KV 持久化。
- * - chunk 按 index（0-based）桥接到驱动 uploadPart(partNumber = index + 1)，
- *   与官方前端 multipart.ts 的 chunk index 语义对齐。
- * - received 以区间数组 [number, number][] 表示，供前端断点续传跳过已收分片。
+ * 說明：
+ * - 會話狀態存於進程內 Map（Worker 單實例存活期間可斷點續傳）。
+ *   跨實例/冷啟動恢復依賴驅動 session token 的自包含性，本層不做 KV 持久化。
+ * - chunk 按 index（0-based）橋接到驅動 uploadPart(partNumber = index + 1)，
+ *   與官方前端 multipart.ts 的 chunk index 語義對齊。
+ * - received 以區間數組 [number, number][] 表示，供前端斷點續傳跳過已收分片。
  */
 
 export type MultipartState =
@@ -30,11 +30,11 @@ export interface MultipartSession {
   total_chunks: number
   /** 已收到分片 index 集合（0-based） */
   received: Set<number>
-  /** 驱动层 session token（createUploadSession 返回） */
+  /** 驅動層 session token（createUploadSession 返回） */
   driver_session: string
-  /** 驱动层分片 md5（complete 时传给 completeUploadSession） */
+  /** 驅動層分片 md5（complete 時傳給 completeUploadSession） */
   partMd5s: (string | undefined)[]
-  /** 驱动名 + 存储引用，用于 chunk/complete 时重新 resolve 驱动 */
+  /** 驅動名 + 儲存引用，用於 chunk/complete 時重新 resolve 驅動 */
   storage_driver: string
   created_at: number
   error?: string
@@ -61,13 +61,13 @@ const CHUNK_MIN = 1 * 1024 * 1024 // 1MB
 const CHUNK_MAX = 64 * 1024 * 1024 // 64MB
 const CHUNK_DEFAULT = 10 * 1024 * 1024 // 10MB
 
-/** 将前端建议的 chunk_size clamp 到 [1MB, 64MB] */
+/** 將前端建議的 chunk_size clamp 到 [1MB, 64MB] */
 export function clampChunkSize(raw: number): number {
   if (!Number.isFinite(raw) || raw <= 0) return CHUNK_DEFAULT
   return Math.min(CHUNK_MAX, Math.max(CHUNK_MIN, Math.floor(raw)))
 }
 
-/** 区间数组 → 有序区间列表（合并相邻） */
+/** 區間數組 → 有序區間列表（合併相鄰） */
 function intervalsOf(set: Set<number>): [number, number][] {
   const arr = Array.from(set).sort((a, b) => a - b)
   if (arr.length === 0) return []
@@ -89,7 +89,7 @@ function intervalsOf(set: Set<number>): [number, number][] {
 export function snapshot(s: MultipartSession): MultipartSnapshot {
   const intervals = intervalsOf(s.received)
   const receivedBytes = s.received.size * s.chunk_size
-  // frontier：连续已收的最大 index + 1（驱动顺序写入进度）
+  // frontier：連續已收的最大 index + 1（驅動順序寫入進度）
   let frontier = 0
   for (let i = 0; i < s.total_chunks; i++) {
     if (!s.received.has(i)) break
@@ -119,7 +119,7 @@ export function getSession(uploadId: string): MultipartSession | undefined {
   return sessions.get(uploadId)
 }
 
-/** 查找同 path+size 的未完成会话（用于断点续传） */
+/** 查找同 path+size 的未完成會話（用於斷點續傳） */
 export function findReceivingSession(
   path: string,
   size: number,
@@ -153,7 +153,7 @@ export function newUploadId(): string {
   return `mp_${rnd}`
 }
 
-/** 清理过期的 completed / aborted 会话（简单防内存泄漏） */
+/** 清理過期的 completed / aborted 會話（簡單防記憶體洩漏） */
 export function pruneSessions(maxAgeMs = 60 * 60 * 1000): void {
   const now = Date.now()
   for (const [id, s] of sessions) {

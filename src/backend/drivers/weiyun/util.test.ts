@@ -85,6 +85,6 @@ describe("WeiyunDriver", () => {
         "/src/file.txt",
         "/dst/file.txt",
       )
-    }, /不支持复制操作/)
+    }, /不支持複製操作/)
   })
 })

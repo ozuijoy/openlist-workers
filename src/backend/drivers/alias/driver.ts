@@ -22,7 +22,7 @@ export class AliasDriver implements StorageDriver {
     return s === "/" ? "/" : s
   }
 
-  /** 取所在目录：physicalPath 是目标项自身路径时，去掉最后一段即其父目录 */
+  /** 取所在目錄：physicalPath 是目標項自身路徑時，去掉最後一段即其父目錄 */
   private parentPath(p: string): string {
     const clean = this.cleanPath(p)
     return clean.substring(0, clean.lastIndexOf("/")) || "/"
@@ -237,9 +237,9 @@ export class AliasDriver implements StorageDriver {
     physicalPath: string,
     names: string[],
   ): Promise<void> {
-    // physicalPath 是目标项自身的路径（op/storage.ts removeItems 逐项调用），
-    // 而 removeItems 需要「父目录 + names」（内部会再拼 name）；直接把项路径
-    // 当目录传入会得到 <item>/<name>，目标不存在导致删除静默失败。
+    // physicalPath 是目標項自身的路徑（op/storage.ts removeItems 逐項調用），
+    // 而 removeItems 需要「父目錄 + names」（內部會再拼 name）；直接把項路徑
+    // 當目錄傳入會得到 <item>/<name>，目標不存在導致刪除靜默失敗。
     const dirPath = this.parentPath(physicalPath)
     const targets = this.getTargetsForPath(dirPath)
     if (targets.length === 0) return
@@ -254,9 +254,9 @@ export class AliasDriver implements StorageDriver {
     srcPhys: string,
     dstPhys: string,
   ): Promise<void> {
-    // srcPhys/dstPhys 是源/目标项自身的路径（已含 name），moveItems 需要的
-    // 是各自所在父目录（内部会再拼 name）；传项路径会得到 <item>/<name>，
-    // 操作静默失败。
+    // srcPhys/dstPhys 是源/目標項自身的路徑（已含 name），moveItems 需要的
+    // 是各自所在父目錄（內部會再拼 name）；傳項路徑會得到 <item>/<name>，
+    // 操作靜默失敗。
     const srcDirPath = this.parentPath(srcPhys)
     const dstDirPath = this.parentPath(dstPhys)
     const srcTargets = this.getTargetsForPath(srcDirPath)
@@ -279,7 +279,7 @@ export class AliasDriver implements StorageDriver {
     srcPhys: string,
     dstPhys: string,
   ): Promise<void> {
-    // 同 move：srcPhys/dstPhys 是项自身路径，copyItems 需要各自所在父目录。
+    // 同 move：srcPhys/dstPhys 是項自身路徑，copyItems 需要各自所在父目錄。
     const srcDirPath = this.parentPath(srcPhys)
     const dstDirPath = this.parentPath(dstPhys)
     const srcTargets = this.getTargetsForPath(srcDirPath)

@@ -1,14 +1,14 @@
 /**
- * 安全日志工具 - 自动脱敏敏感信息
+ * 安全日誌工具 - 自動脫敏敏感信息
  * 
  * 使用方法：
  * import { secureLog, secureWarn, secureError } from './secure-log'
- * secureLog('User data:', userData)  // 自动脱敏 password、token 等字段
+ * secureLog('User data:', userData)  // 自動脫敏 password、token 等欄位
  * 
- * 2026-09-08 创建
+ * 2026-09-08 創建
  */
 
-/** 需要脱敏的敏感字段名（不区分大小写） */
+/** 需要脫敏的敏感欄位名（不區分大小寫） */
 const SENSITIVE_KEYS = new Set([
   "password",
   "pwd",
@@ -32,7 +32,7 @@ const SENSITIVE_KEYS = new Set([
   "hash",
 ])
 
-/** 需要部分脱敏的字段（显示前几位） */
+/** 需要部分脫敏的欄位（顯示前幾位） */
 const PARTIAL_MASK_KEYS = new Set([
   "email",
   "phone",
@@ -44,7 +44,7 @@ const PARTIAL_MASK_KEYS = new Set([
 ])
 
 /**
- * 检查字段名是否为敏感字段
+ * 檢查欄位名是否為敏感欄位
  */
 function isSensitiveKey(key: string): boolean {
   const lower = key.toLowerCase()
@@ -55,7 +55,7 @@ function isSensitiveKey(key: string): boolean {
 }
 
 /**
- * 检查字段名是否需要部分脱敏
+ * 檢查欄位名是否需要部分脫敏
  */
 function isPartialMaskKey(key: string): boolean {
   const lower = key.toLowerCase()
@@ -63,7 +63,7 @@ function isPartialMaskKey(key: string): boolean {
 }
 
 /**
- * 部分脱敏（保留前3位，其余用*代替）
+ * 部分脫敏（保留前3位，其餘用*代替）
  */
 function partialMask(value: string): string {
   if (value.length <= 3) return "***"
@@ -71,43 +71,43 @@ function partialMask(value: string): string {
 }
 
 /**
- * 递归脱敏对象/数组中的敏感信息
+ * 遞歸脫敏對象/數組中的敏感信息
  */
 function sanitize(obj: any, depth = 0): any {
-  // 防止循环引用导致的无限递归
+  // 防止循環引用導致的無限遞歸
   if (depth > 10) return "[Max Depth]"
 
   // null/undefined 直接返回
   if (obj === null || obj === undefined) return obj
 
-  // 字符串检查（避免在日志中输出长 token）
+  // 字符串檢查（避免在日誌中輸出長 token）
   if (typeof obj === "string") {
     if (obj.length > 200) {
       return obj.slice(0, 200) + "... [truncated]"
     }
-    // 检测类似 JWT 的字符串（格式：xxxxx.xxxxx.xxxxx）
+    // 檢測類似 JWT 的字符串（格式：xxxxx.xxxxx.xxxxx）
     if (/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(obj)) {
       return "[JWT_TOKEN]"
     }
-    // 检测类似 API key 的长随机字符串
+    // 檢測類似 API key 的長隨機字符串
     if (/^[A-Za-z0-9_-]{32,}$/.test(obj)) {
       return "[API_KEY]"
     }
     return obj
   }
 
-  // 数字/布尔值直接返回
+  // 數字/布爾值直接返回
   if (typeof obj === "number" || typeof obj === "boolean") return obj
 
-  // 函数不输出
+  // 函數不輸出
   if (typeof obj === "function") return "[Function]"
 
-  // 数组递归处理
+  // 數組遞歸處理
   if (Array.isArray(obj)) {
     return obj.map((item) => sanitize(item, depth + 1))
   }
 
-  // 对象递归处理
+  // 對象遞歸處理
   if (typeof obj === "object") {
     const copy: any = {}
     for (const key of Object.keys(obj)) {
@@ -126,28 +126,28 @@ function sanitize(obj: any, depth = 0): any {
 }
 
 /**
- * 脱敏后输出日志（info 级别）
+ * 脫敏後輸出日誌（info 級別）
  */
 export function secureLog(...args: any[]): void {
   console.log(...args.map((arg) => sanitize(arg)))
 }
 
 /**
- * 脱敏后输出警告日志
+ * 脫敏後輸出警告日誌
  */
 export function secureWarn(...args: any[]): void {
   console.warn(...args.map((arg) => sanitize(arg)))
 }
 
 /**
- * 脱敏后输出错误日志
+ * 脫敏後輸出錯誤日誌
  */
 export function secureError(...args: any[]): void {
   console.error(...args.map((arg) => sanitize(arg)))
 }
 
 /**
- * 直接对数据进行脱敏（不输出日志）
+ * 直接對資料進行脫敏（不輸出日誌）
  */
 export function sanitizeData<T = any>(data: T): T {
   return sanitize(data) as T

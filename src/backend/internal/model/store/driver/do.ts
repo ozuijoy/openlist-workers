@@ -1,12 +1,12 @@
 /**
- * Cloudflare Durable Objects 驱动。
+ * Cloudflare Durable Objects 驅動。
  *
- * 通过 DO binding 获取 stub，RPC 调用 OpenListDB 实例的方法。每个实例用
- * `idFromName` 定位（默认 ID "openlist-db"），保证数据持久在同一实例。
+ * 通過 DO binding 獲取 stub，RPC 調用 OpenListDB 實例的方法。每個實例用
+ * `idFromName` 定位（默認 ID "openlist-db"），保證資料持久在同一實例。
  *
  * 配置：
- * - DO binding 名固定为 `DO`
- * - DO_ID: DO 实例名称（可选，默认 "openlist-db"）
+ * - DO binding 名固定為 `DO`
+ * - DO_ID: DO 實例名稱（可選，默認 "openlist-db"）
  *
  * 需在 wrangler.toml 配置：
  *   [[durable_objects.bindings]]
@@ -19,10 +19,10 @@
 import type { Driver } from "../types"
 
 /**
- * 判断对象是否具备 Durable Object 命名空间接口形态。
+ * 判斷對象是否具備 Durable Object 命名空間介面形態。
  *
- * 必须校验：环境变量可能只是「绑定名」字符串，而非绑定对象，
- * 直接使用会得到 "binding.idFromName is not a function"。
+ * 必須校驗：環境變量可能只是「綁定名」字符串，而非綁定對象，
+ * 直接使用會得到 "binding.idFromName is not a function"。
  */
 function isDoNamespaceLike(b: any): boolean {
   if (!b || typeof b !== "object") return false
@@ -34,10 +34,10 @@ function isDoNamespaceLike(b: any): boolean {
 }
 
 /**
- * 获取 Durable Object 绑定。
+ * 獲取 Durable Object 綁定。
  *
- * 绑定名固定为 DO。env 与 globalThis 独立检查：env 为真值时不阻断对
- * globalThis 的探测。
+ * 綁定名固定為 DO。env 與 globalThis 獨立檢查：env 為真值時不阻斷對
+ * globalThis 的探測。
  */
 function getDoBinding(env?: any): any | null {
   const g = typeof globalThis !== "undefined" ? (globalThis as any) : {}

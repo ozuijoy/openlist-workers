@@ -20,18 +20,18 @@ const SignIn = LOGIN_API + "/user/sign_in"
 // --- Cookie → token extraction ---
 
 /**
- * 从浏览器 Cookie 字符串（或仅 Bearer/裸 JWT 值）中提取 123 网盘鉴权 JWT。
- * 支持以下来源，按优先级返回首个命中的有效令牌：
+ * 從瀏覽器 Cookie 字符串（或僅 Bearer/裸 JWT 值）中提取 123 網盤鑑權 JWT。
+ * 支持以下來源，按優先級返回首個命中的有效令牌：
  *   1. 裸 `Bearer xxx` 或裸 JWT（`eyJ...` 形式）
- *   2. Cookie 中的 `sso-token=`（123 网页登录令牌，即 Authorization 用的 JWT）
+ *   2. Cookie 中的 `sso-token=`（123 網頁登入令牌，即 Authorization 用的 JWT）
  *   3. Cookie 中的 `token=` / `authorization=`
- * 解析不到时返回空字符串，调用方应回退到账号密码登录。
+ * 解析不到時返回空字符串，調用方應回退到賬號密碼登入。
  */
 function extractTokenFromCookie(raw: string): string {
   const s = (raw || "").trim()
   if (!s) return ""
 
-  // 1) 纯 Bearer / 纯 JWT
+  // 1) 純 Bearer / 純 JWT
   if (/^Bearer\s+/i.test(s)) {
     return s.replace(/^Bearer\s+/i, "").trim()
   }
@@ -39,7 +39,7 @@ function extractTokenFromCookie(raw: string): string {
     return s
   }
 
-  // 2) Cookie 字符串：拆成键值对再取令牌字段
+  // 2) Cookie 字符串：拆成鍵值對再取令牌欄位
   const cookieMap: Record<string, string> = {}
   for (const part of s.split(";")) {
     const idx = part.indexOf("=")
@@ -64,7 +64,7 @@ const Move = MAIN_API + "/file/mod_pid"
 const Rename = MAIN_API + "/file/rename"
 const Trash = MAIN_API + "/file/trash"
 
-// --- 上传（S3 分片上传会话）---
+// --- 上傳（S3 分片上傳會話）---
 const UploadRequest = MAIN_API + "/file/upload_request"
 const S3Auth = MAIN_API + "/file/s3_upload_object/auth"
 const S3PreSignedUrls = MAIN_API + "/file/s3_repare_upload_parts_batch"
@@ -182,17 +182,17 @@ export class Pan123Client {
 
   /**
    * Login strategy to avoid overseas-IP risk control (precedence):
-   * 1. 显式 access_token —— 直接校验，有效即用（最高优先级）。
-   * 2. cookie —— 解析其中 JWT 作 Bearer 令牌并校验；成功后持久化，
-   *    适合出口 IP 被风控、账号密码登录失败的环境。
-   * 3. 账号密码 —— 仅在前两者都缺失/失效时回退。
+   * 1. 顯式 access_token —— 直接校驗，有效即用（最高優先級）。
+   * 2. cookie —— 解析其中 JWT 作 Bearer 令牌並校驗；成功後持久化，
+   *    適合出口 IP 被風控、賬號密碼登入失敗的環境。
+   * 3. 賬號密碼 —— 僅在前兩者都缺失/失效時回退。
    */
   public async login(): Promise<void> {
     if (this.addition.access_token) {
       this.accessToken = this.addition.access_token
       try {
-        // skipLoginRetry=true：token 校验请求遇到 401 直接抛错，
-        // 防止 request() 的 401 分支再次调用 login() 造成无限递归
+        // skipLoginRetry=true：token 校驗請求遇到 401 直接拋錯，
+        // 防止 request() 的 401 分支再次調用 login() 造成無限遞歸
         await this.userInfo(true)
         return // token is valid
       } catch {
@@ -201,14 +201,14 @@ export class Pan123Client {
       }
     }
 
-    // 2) 从浏览器 Cookie 解析令牌（等同于 access_token）
+    // 2) 從瀏覽器 Cookie 解析令牌（等同於 access_token）
     if (this.addition.cookie) {
       const token = extractTokenFromCookie(this.addition.cookie)
       if (token) {
         this.accessToken = token
         try {
-          await this.userInfo(true) // 校验令牌有效性（跳过登录重试，避免递归）
-          // 解析成功：持久化为 access_token，后续冷启动免 cookie 也可登录
+          await this.userInfo(true) // 校驗令牌有效性（跳過登入重試，避免遞歸）
+          // 解析成功：持久化為 access_token，後續冷啟動免 cookie 也可登入
           this.addition.access_token = token
           this.onTokenUpdate?.(token)
           return
@@ -218,13 +218,13 @@ export class Pan123Client {
       }
     }
 
-    // 3) 无 token / cookie 或均失效：需要账号密码
+    // 3) 無 token / cookie 或均失效：需要賬號密碼
     if (!this.addition.username || !this.addition.password) {
       throw new Error(
-        "123 网盘登录凭证缺失：请填写 123 网盘手机号 + 密码；" +
-          "若部署环境（如 Cloudflare Workers 数据中心 IP）密码登录会被风控，" +
-          "可在「Cookie」字段粘贴浏览器登录后的 Cookie（含 sso-token），" +
-          "或填写有效的访问令牌 access_token（在本机浏览器登录 https://www.123pan.com/ 后从开发者工具获取）。",
+        "123 網盤登入憑證缺失：請填寫 123 網盤手機號 + 密碼；" +
+          "若部署環境（如 Cloudflare Workers 資料中心 IP）密碼登入會被風控，" +
+          "可在「Cookie」欄位粘貼瀏覽器登入後的 Cookie（含 sso-token），" +
+          "或填寫有效的訪問令牌 access_token（在本機瀏覽器登入 https://www.123pan.com/ 後從開發者工具獲取）。",
       )
     }
     await this.signIn()
@@ -260,13 +260,13 @@ export class Pan123Client {
     const data = (await res.json()) as Pan123LoginResp
     if (data.code !== 200) {
       throw new Error(
-        `123 网盘登录失败（${data.message || `code ${data.code}`}）。` +
-          `当前部署环境的出口 IP 被 123 判定为境外/陌生设备（如 Cloudflare Workers 数据中心 IP），` +
-          `账号密码登录会被风控拦截。可靠方案：` +
-          `① 在本机浏览器登录 https://www.123pan.com/（登录一次或修改密码可解除账号风险），` +
-          `打开开发者工具 → Application/Network → 复制请求头中的 Bearer 令牌，填入存储设置的 access_token 字段` +
-          `（令牌有效期内 API 请求不受 IP 风控影响）；` +
-          `② 或将该网盘部署到境内服务器（Node 容器模式）后使用账号密码。`,
+        `123 網盤登入失敗（${data.message || `code ${data.code}`}）。` +
+          `當前部署環境的出口 IP 被 123 判定為境外/陌生設備（如 Cloudflare Workers 資料中心 IP），` +
+          `賬號密碼登入會被風控攔截。可靠方案：` +
+          `① 在本機瀏覽器登入 https://www.123pan.com/（登入一次或修改密碼可解除賬號風險），` +
+          `打開開發者工具 → Application/Network → 複製請求頭中的 Bearer 令牌，填入儲存設置的 access_token 欄位` +
+          `（令牌有效期內 API 請求不受 IP 風控影響）；` +
+          `② 或將該網盤部署到境內伺服器（Node 容器模式）後使用賬號密碼。`,
       )
     }
     this.accessToken = data.data?.token || ""
@@ -310,8 +310,8 @@ export class Pan123Client {
     const code = data?.code
     if (code !== 0 && code !== 200) {
       // 401 → token expired, retry login once.
-      // skipLoginRetry=true（login 内部校验 token 时）直接抛错，
-      // 避免 login → userInfo → 401 → login 无限递归。
+      // skipLoginRetry=true（login 內部校驗 token 時）直接拋錯，
+      // 避免 login → userInfo → 401 → login 無限遞歸。
       if (code === 401 && !skipLoginRetry) {
         await this.login()
         data = await doReq()
@@ -344,11 +344,11 @@ export class Pan123Client {
   // ---- Files ----
 
   /**
-   * 分页获取文件列表。
-   * - findName/findIsDir：提前终止模式——在分页中查找目标项，命中立即返回（只含命中项），
-   *   避免为解析路径而拉取全部分页（减少 Cloudflare subrequest）。
-   * - budget：共享 subrequest 预算（used/limit）。超过 limit 时截断并告警，
-   *   防止单次 invocation 超过 Cloudflare Workers 的 50 次子请求上限。
+   * 分頁獲取文件列表。
+   * - findName/findIsDir：提前終止模式——在分頁中查找目標項，命中立即返回（只含命中項），
+   *   避免為解析路徑而拉取全部分頁（減少 Cloudflare subrequest）。
+   * - budget：共享 subrequest 預算（used/limit）。超過 limit 時截斷並告警，
+   *   防止單次 invocation 超過 Cloudflare Workers 的 50 次子請求上限。
    */
   public async getFiles(
     parentId: string,
@@ -364,11 +364,11 @@ export class Pan123Client {
     let nextToken = "0"
     const maxPages = opts?.maxPages ?? 45
     for (;;) {
-      // Cloudflare Workers subrequest 预算检查
+      // Cloudflare Workers subrequest 預算檢查
       if (opts?.budget) {
         if (opts.budget.used >= opts.budget.limit) {
           console.warn(
-            `[123Pan] 已达 Cloudflare subrequest 预算上限(${opts.budget.limit} 次)，结果已截断（目录文件过多或路径过深）`,
+            `[123Pan] 已達 Cloudflare subrequest 預算上限(${opts.budget.limit} 次)，結果已截斷（目錄文件過多或路徑過深）`,
           )
           break
         }
@@ -376,7 +376,7 @@ export class Pan123Client {
       }
       if (page > maxPages) {
         console.warn(
-          `[123Pan] 分页超过 ${maxPages} 页，结果可能不完整（目录文件过多）`,
+          `[123Pan] 分頁超過 ${maxPages} 頁，結果可能不完整（目錄文件過多）`,
         )
         break
       }
@@ -401,7 +401,7 @@ export class Pan123Client {
       const list = resp.data?.InfoList || []
       files.push(...list)
 
-      // 提前终止：目标项命中立即返回
+      // 提前終止：目標項命中立即返回
       if (opts?.findName) {
         const hit = list.find(
           (f) =>
@@ -506,13 +506,13 @@ export class Pan123Client {
     })
   }
 
-  // ---- 上传（S3 分片会话，无状态环境友好）----
+  // ---- 上傳（S3 分片會話，無狀態環境友好）----
 
   /**
-   * 获取指定分片的预签名 PUT URL（供分片会话上传逐片使用）。
-   * 注意：123pan 的 partNumberStart/partNumberEnd 是 [start, end) 半开区间，
-   * 因此取第 n 片要传 (n, n+1)。
-   * @param totalParts 整个文件的总分片数；为 1 时走单文件 auth 接口
+   * 獲取指定分片的預簽名 PUT URL（供分片會話上傳逐片使用）。
+   * 注意：123pan 的 partNumberStart/partNumberEnd 是 [start, end) 半開區間，
+   * 因此取第 n 片要傳 (n, n+1)。
+   * @param totalParts 整個文件的總分片數；為 1 時走單文件 auth 介面
    */
   public async getPartUploadUrl(
     up: Pick<
@@ -536,13 +536,13 @@ export class Pan123Client {
           )
     const url = data.presignedUrls[String(partNumber)]
     if (!url) {
-      throw new Error(`[123Pan] 未返回第 ${partNumber} 分片的上传 URL`)
+      throw new Error(`[123Pan] 未返回第 ${partNumber} 分片的上傳 URL`)
     }
     return url
   }
 
   /**
-   * 通知服务端上传完成（供分片会话上传收尾使用）。
+   * 通知服務端上傳完成（供分片會話上傳收尾使用）。
    */
   public async completeUpload(
     up: Pick<
@@ -556,8 +556,8 @@ export class Pan123Client {
   }
 
   /**
-   * 创建上传会话。返回 S3 分片上传所需的 Bucket/Key/UploadId/FileId/StorageNode。
-   * 若服务端命中秒传（Reuse）或未分配 Key，则无需实际上传。
+   * 創建上傳會話。返回 S3 分片上傳所需的 Bucket/Key/UploadId/FileId/StorageNode。
+   * 若服務端命中秒傳（Reuse）或未分配 Key，則無需實際上傳。
    */
   public async createUpload(
     fileName: string,
@@ -567,7 +567,7 @@ export class Pan123Client {
   ): Promise<Pan123UploadResp["data"]> {
     const body = {
       driveId: 0,
-      duplicate: 2, // 2=覆盖 1=重命名 0=默认
+      duplicate: 2, // 2=覆蓋 1=重命名 0=默認
       etag,
       fileName,
       parentFileId,
@@ -641,11 +641,11 @@ export class Pan123Client {
   }
 
   /**
-   * 完整上传流程（替代直接 put 的“无状态环境不支持”报错）：
-   * 1. 计算 MD5（用于秒传/去重；失败则留空，服务端仍会新建上传）
-   * 2. 创建上传会话
-   * 3. 按 16MB 分片，逐片 PUT 到预签名 URL（无需 AWS SDK，适合 Cloudflare Workers 等无状态环境）
-   * 4. 通知服务端完成上传
+   * 完整上傳流程（替代直接 put 的“無狀態環境不支持”報錯）：
+   * 1. 計算 MD5（用於秒傳/去重；失敗則留空，服務端仍會新建上傳）
+   * 2. 創建上傳會話
+   * 3. 按 16MB 分片，逐片 PUT 到預簽名 URL（無需 AWS SDK，適合 Cloudflare Workers 等無狀態環境）
+   * 4. 通知服務端完成上傳
    */
   public async uploadFile(
     parentId: string,
@@ -666,7 +666,7 @@ export class Pan123Client {
       content.length,
       etag,
     )
-    // 秒传命中或未分配 Key：文件已存在，无需实际上传
+    // 秒傳命中或未分配 Key：文件已存在，無需實際上傳
     if (upload.Reuse || upload.Key === "") {
       return
     }
@@ -679,9 +679,9 @@ export class Pan123Client {
     let lastChunkSize = content.length % CHUNK
     if (lastChunkSize === 0) lastChunkSize = CHUNK
 
-    // 获取各分片的预签名 PUT URL
-    // 注意：123pan S3 预签名接口的 partNumberStart/partNumberEnd 是 [start, end) 半开区间。
-    // 单片(end=2 覆盖第1片)；多片(end=chunkCount+1 覆盖 1..chunkCount 全部)。
+    // 獲取各分片的預簽名 PUT URL
+    // 注意：123pan S3 預簽名介面的 partNumberStart/partNumberEnd 是 [start, end) 半開區間。
+    // 單片(end=2 覆蓋第1片)；多片(end=chunkCount+1 覆蓋 1..chunkCount 全部)。
     let urls: Record<string, string>
     if (chunkCount === 1) {
       urls = (await this.getS3Auth(upload, 1, 2)).presignedUrls
@@ -690,25 +690,25 @@ export class Pan123Client {
         .presignedUrls
     }
 
-    // 逐片上传
+    // 逐片上傳
     for (let cur = 1; cur <= chunkCount; cur++) {
       const offset = (cur - 1) * CHUNK
       const curSize = cur === chunkCount ? lastChunkSize : CHUNK
       const url = urls[String(cur)]
       if (!url) {
-        throw new Error(`[123Pan] 缺少第 ${cur} 分片的上传 URL`)
+        throw new Error(`[123Pan] 缺少第 ${cur} 分片的上傳 URL`)
       }
       const chunk = content.subarray(offset, offset + curSize)
       const res = await fetch(url, { method: "PUT", body: chunk as any })
       if (res.status !== 200) {
         const text = await res.text().catch(() => "")
         throw new Error(
-          `[123Pan] 上传第 ${cur}/${chunkCount} 分片失败：HTTP ${res.status} ${text}`,
+          `[123Pan] 上傳第 ${cur}/${chunkCount} 分片失敗：HTTP ${res.status} ${text}`,
         )
       }
     }
 
-    // 完成上传
+    // 完成上傳
     await this.completeS3(upload, content.length, chunkCount > 1)
   }
 }

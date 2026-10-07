@@ -19,7 +19,7 @@ function fileToItem(f: CloudreveV3Object): FileItem {
   }
 }
 
-/** 规范化 uri（根为 "/"） */
+/** 規範化 uri（根為 "/"） */
 function normUri(p: string): string {
   if (!p || p === "/") return "/"
   return p.startsWith("/") ? p : "/" + p

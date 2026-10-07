@@ -9,7 +9,7 @@ export interface PikPakAddition {
   disable_media_link?: boolean
   order_by?: string
   order_direction?: string
-  /** 可选：覆盖内置 OAuth 客户端凭据（产品化时使用自有应用） */
+  /** 可選：覆蓋內置 OAuth 客戶端憑據（產品化時使用自有應用） */
   client_id?: string
   client_secret?: string
 }

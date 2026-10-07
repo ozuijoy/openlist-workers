@@ -61,7 +61,7 @@ export class DriverMediafire implements StorageDriver {
       }
     } catch {}
 
-    // Fallback: 目录
+    // Fallback: 目錄
     try {
       await this.resolveFolderId(physicalPath)
       return {
@@ -144,7 +144,7 @@ export class DriverMediafire implements StorageDriver {
     throw new Error("[MediaFire] Direct put not supported in stateless environment")
   }
 
-  /** 通过路径逐级解析文件夹 ID（根为 ""） */
+  /** 通過路徑逐級解析文件夾 ID（根為 ""） */
   private async resolveFolderId(physicalPath: string): Promise<string> {
     const clean = physicalPath.split("/").filter(Boolean).join("/")
     if (!clean) return ""
@@ -163,7 +163,7 @@ export class DriverMediafire implements StorageDriver {
     return currentId
   }
 
-  /** 解析文件/目录的 id 与类型 */
+  /** 解析文件/目錄的 id 與類型 */
   private async resolveEntry(physicalPath: string): Promise<{ id: string; isDir: boolean }> {
     const parts = physicalPath.split("/").filter(Boolean)
     const name = parts[parts.length - 1]

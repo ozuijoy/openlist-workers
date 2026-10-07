@@ -6,7 +6,7 @@ import {
 import { DriverLenovoNasShareAddition } from "./types"
 import { ClientLenovoNasShare } from "./util"
 
-/** 只读分享驱动 */
+/** 只讀分享驅動 */
 export class DriverLenovoNasShare implements StorageDriver {
   private client: ClientLenovoNasShare
 
@@ -64,7 +64,7 @@ export class DriverLenovoNasShare implements StorageDriver {
       }
     } catch {}
 
-    // Fallback: 目录
+    // Fallback: 目錄
     try {
       await this.client.list(physicalPath)
       return {

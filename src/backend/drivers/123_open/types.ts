@@ -1,4 +1,4 @@
-// 123_open (123云盘开放平台) - Bearer token 认证
+// 123_open (123雲盤開放平台) - Bearer token 認證
 // API reference: Go drivers/123_open
 
 export interface Driver123OpenAddition {
@@ -17,7 +17,7 @@ export interface File123 {
   create_at?: string
   update_at?: string
   fileId: number
-  type: number // 1=目录 2=文件
+  type: number // 1=目錄 2=文件
   etag?: string
   trashed?: number
 }

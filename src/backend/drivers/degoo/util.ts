@@ -1,4 +1,4 @@
-// Degoo GraphQL API 客户端
+// Degoo GraphQL API 客戶端
 import {
   DriverDegooAddition,
   DegooFileItem,
@@ -153,7 +153,7 @@ export class ClientDegoo {
     return data.data
   }
 
-  /** 解析设备/根目录 ID（root "0" 时） */
+  /** 解析設備/根目錄 ID（root "0" 時） */
   private async getDevices(): Promise<void> {
     const query = `query GetFileChildren5($Token: String! $ParentID: String $AllParentIDs: [String] $Limit: Int! $Order: Int! $NextToken: String ) { getFileChildren5(Token: $Token ParentID: $ParentID AllParentIDs: $AllParentIDs Limit: $Limit Order: $Order NextToken: $NextToken) { Items { ParentID } NextToken } }`
     const data = await this.apiCall("GetFileChildren5", query, {

@@ -1,4 +1,4 @@
-// MediaFire API 客户端
+// MediaFire API 客戶端
 import {
   DriverMediafireAddition,
   MediafireApiResp,
@@ -77,7 +77,7 @@ export class ClientMediafire {
     this.addition_session_token = token
   }
 
-  // 保存刷新后的 token 供上层持久化
+  // 保存刷新後的 token 供上層持久化
   addition_session_token = ""
 
   private checkResult(result?: string): void {

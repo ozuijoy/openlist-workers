@@ -1,9 +1,9 @@
 /**
- * 内存驱动（模块级 Map，不持久化）。
+ * 記憶體驅動（模塊級 Map，不持久化）。
  *
- * 作为 auto 检测失败时的最终回退，保证无任何存储绑定的环境下（本地开发、
- * 容器、CI）仍能正常读写配置（仅在单实例内存中生效，进程重启后丢失）。
- * 与旧版 json 后端的「无绑定 → 内存回退」行为一致。
+ * 作為 auto 檢測失敗時的最終回退，保證無任何儲存綁定的環境下（本地開發、
+ * 容器、CI）仍能正常讀寫配置（僅在單實例記憶體中生效，進程重啟後丟失）。
+ * 與舊版 json 後端的「無綁定 → 記憶體回退」行為一致。
  */
 import type { Driver } from "../types"
 
@@ -17,7 +17,7 @@ export const memoryDriver: Driver = {
   },
 
   async init(): Promise<void> {
-    // 无需初始化
+    // 無需初始化
   },
 
   async get(key: string): Promise<string | null> {

@@ -1,4 +1,4 @@
-// Strm driver — 将底层网盘的视频文件以 .strm 文件形式暴露（.strm 内容为可播放直链 URL）
+// Strm driver — 將底層網盤的視頻文件以 .strm 文件形式暴露（.strm 內容為可播放直鏈 URL）
 // 移植自 OpenList Go 版 drivers/strm。
 import {
   StorageDriver,
@@ -94,7 +94,7 @@ export class StrmDriver implements StorageDriver {
       .filter(Boolean)
     this.downloadSuffix = new Set(downloadTypes)
 
-    // 预解析底层 storage（动态 import 避免循环依赖）
+    // 預解析底層 storage（動態 import 避免循環依賴）
     const { resolvePath } = await import("../../internal/model/db")
     const { getDriver } = await import("../../internal/op/storage")
     for (const dsts of this.pathMap.values()) {
@@ -170,13 +170,13 @@ export class StrmDriver implements StorageDriver {
           size: new TextEncoder().encode(this.getLink(originalPath)).length,
           is_dir: false,
           modified: item.modified,
-          sign: originalPath, // 保存原始路径，供 get/createReadStream 还原
+          sign: originalPath, // 保存原始路徑，供 get/createReadStream 還原
           thumb: item.thumb || "",
           type: calcFileType(strmName, false),
           raw_url: "",
         })
       }
-      // 其他类型跳过
+      // 其他類型跳過
     }
     return result
   }
@@ -184,7 +184,7 @@ export class StrmDriver implements StorageDriver {
   async list(_v: string, physicalPath: string): Promise<FileItem[]> {
     const path = physicalPath || "/"
     if (path === "/" && !this.autoFlatten) {
-      // 根目录：返回所有映射名作为目录
+      // 根目錄：返回所有映射名作為目錄
       const items: FileItem[] = []
       for (const k of this.pathMap.keys()) {
         items.push({
@@ -230,7 +230,7 @@ export class StrmDriver implements StorageDriver {
   async get(_v: string, physicalPath: string): Promise<FileItem> {
     const path = physicalPath || "/"
     if (path.endsWith(".strm")) {
-      // 虚拟 .strm 文件：从父目录 list 查找原始路径
+      // 虛擬 .strm 文件：從父目錄 list 查找原始路徑
       const dir = dirname(path)
       const name = basename(path)
       const items = await this.list("", dir)
@@ -250,7 +250,7 @@ export class StrmDriver implements StorageDriver {
         const item = await remote.driver.get("", remotePath)
         if (item) return item
       } catch {
-        // 尝试下一个映射
+        // 嘗試下一個映射
       }
     }
     throw new Error(`[Strm] not found: ${path}`)
@@ -275,7 +275,7 @@ export class StrmDriver implements StorageDriver {
     throw new Error("[Strm] put is not supported")
   }
 
-  /** .strm 文件内容：可播放直链 URL */
+  /** .strm 文件內容：可播放直鏈 URL */
   async createReadStream(
     physicalPath: string,
   ): Promise<ReadableStream<Uint8Array>> {

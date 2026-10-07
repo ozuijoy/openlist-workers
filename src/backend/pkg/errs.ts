@@ -41,8 +41,8 @@ export const Errs = {
 }
 
 /**
- * 错误信息脱敏：对外返回错误时避免暴露内部实现细节（路径、堆栈、驱动内部）。
- * 只保留错误类型/API 层信息，敏感内容替换为通用描述。
+ * 錯誤信息脫敏：對外返回錯誤時避免暴露內部實現細節（路徑、堆棧、驅動內部）。
+ * 只保留錯誤類型/API 層信息，敏感內容替換為通用描述。
  */
 export function safeErrorMessage(
   e: any,
@@ -52,16 +52,16 @@ export function safeErrorMessage(
   const raw = typeof e === "string" ? e : e?.message || String(e)
   if (!raw) return fallback
   const s = String(raw)
-  // 截断超长信息（防止堆栈/大对象泄露）
+  // 截斷超長信息（防止堆棧/大對象洩露）
   if (s.length > 200) return fallback
-  // 屏蔽明显的绝对路径（Windows 与 POSIX）
+  // 屏蔽明顯的絕對路徑（Windows 與 POSIX）
   if (
     /[A-Za-z]:[\\/][^\\/\s]|[\\/][A-Za-z0-9_.-]+[\\/][A-Za-z0-9_.-]/.test(s) &&
     /\.(ts|js|mjs|cjs|json|toml|yml|yaml)/i.test(s)
   ) {
     return fallback
   }
-  // 屏蔽堆栈特征
+  // 屏蔽堆棧特徵
   if (/at .*\(|at [A-Za-z0-9_.-]+:[0-9]+:[0-9]+/.test(s)) {
     return fallback
   }

@@ -1,18 +1,18 @@
 /**
  * GET /kv-list?prefix=xxx
  *
- * 列出 KV 键。需通过鉴权（内部调用标识 或 管理员 JWT）。
+ * 列出 KV 鍵。需通過鑑權（內部調用標識 或 管理員 JWT）。
  *
- * EdgeOne KV list() 语义（依据官方 functions-kv 示例）：
+ * EdgeOne KV list() 語義（依據官方 functions-kv 示例）：
  *   page.keys     -> [{ key, ttl, meta }]
- *   page.complete -> true 表示已到末页
- *   下一页 cursor 需手动取本页最后一个 key
+ *   page.complete -> true 表示已到末頁
+ *   下一頁 cursor 需手動取本頁最後一個 key
  *
- * 分页加固：
- *   - 以本页最后一个 key 作为下一页 cursor（EdgeOne 约定）；
- *   - **重复页检测**：若本页首个 key 与上一页相同，说明 cursor 未生效
- *     （或平台语义变化），立即终止，避免返回大量重复项；
- *   - 结果去重，保证上游看到的键集合唯一。
+ * 分頁加固：
+ *   - 以本頁最後一個 key 作為下一頁 cursor（EdgeOne 約定）；
+ *   - **重複頁檢測**：若本頁首個 key 與上一頁相同，說明 cursor 未生效
+ *     （或平台語義變化），立即終止，避免返回大量重複項；
+ *   - 結果去重，保證上游看到的鍵集合唯一。
  */
 import { authorize, deny, json, kvMissing, resolveKv } from "../_kv-proxy.js"
 
@@ -33,7 +33,7 @@ export async function onRequest({ request, env }) {
     let guard = 0
     let prevFirstKey = null
 
-    // 安全阀：防止异常情况下无限循环
+    // 安全閥：防止異常情況下無限循環
     while (!complete && guard < 1000) {
       guard += 1
 
@@ -46,7 +46,7 @@ export async function onRequest({ request, env }) {
       }
 
       const firstKey = pageKeys[0]?.key || null
-      // 重复页检测：cursor 未推进（或平台语义变化）时立即终止
+      // 重複頁檢測：cursor 未推進（或平台語義變化）時立即終止
       if (firstKey !== null && firstKey === prevFirstKey) {
         console.warn(
           "[kv-list] repeated page detected; stopping pagination " +

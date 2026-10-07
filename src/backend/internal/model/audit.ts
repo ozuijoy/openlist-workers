@@ -1,9 +1,9 @@
 /**
- * 审计日志系统 (Audit Log System)
+ * 審計日誌系統 (Audit Log System)
  * 添加日期: 2026-09-05
  * 
- * 记录所有敏感操作，用于安全审计、合规要求和故障排查。
- * 采用内存 + KV 持久化的混合策略，适配 Cloudflare Workers 环境。
+ * 記錄所有敏感操作，用於安全審計、合規要求和故障排查。
+ * 採用記憶體 + KV 持久化的混合策略，適配 Cloudflare Workers 環境。
  */
 
 export interface AuditLog {
@@ -22,13 +22,13 @@ export interface AuditLog {
   duration_ms?: number
 }
 
-// 内存缓存（进程内，最多保留 1000 条）
+// 記憶體快取（進程內，最多保留 1000 條）
 let auditLogs: AuditLog[] = []
 const MAX_MEMORY_LOGS = 1000
 const AUDIT_LOG_KV_KEY = "openlist_audit_logs"
 
 /**
- * 记录审计日志
+ * 記錄審計日誌
  */
 export async function logAudit(
   entry: Omit<AuditLog, "id" | "timestamp">,
@@ -40,22 +40,22 @@ export async function logAudit(
     ...entry,
   }
 
-  // 添加到内存缓存
+  // 添加到記憶體快取
   auditLogs.push(log)
 
-  // 防止内存溢出，保留最近 N 条
+  // 防止記憶體溢出，保留最近 N 條
   if (auditLogs.length > MAX_MEMORY_LOGS) {
     auditLogs = auditLogs.slice(-MAX_MEMORY_LOGS)
   }
 
-  // 异步持久化到 KV（不阻塞主流程）
+  // 非同步持久化到 KV（不阻塞主流程）
   if (env) {
     persistAuditLogToKV(log, env).catch((err) => {
       console.warn("[Audit] Failed to persist log to KV:", err)
     })
   }
 
-  // 控制台输出（开发环境）
+  // 控制檯輸出（開發環境）
   if (isDevelopment(env)) {
     console.log(
       `[AUDIT] ${log.username} ${log.method} ${log.resource} - ${log.status} (${log.status_code})`,
@@ -64,7 +64,7 @@ export async function logAudit(
 }
 
 /**
- * 查询审计日志（内存缓存）
+ * 查詢審計日誌（記憶體快取）
  */
 export function queryAuditLogs(filters?: {
   username?: string
@@ -108,7 +108,7 @@ export function queryAuditLogs(filters?: {
 }
 
 /**
- * 从 KV 加载历史日志
+ * 從 KV 加載歷史日誌
  */
 export async function loadAuditLogsFromKV(env: any): Promise<AuditLog[]> {
   try {
@@ -144,7 +144,7 @@ export async function loadAuditLogsFromKV(env: any): Promise<AuditLog[]> {
 }
 
 /**
- * 持久化单条日志到 KV（追加模式）
+ * 持久化單條日誌到 KV（追加模式）
  */
 async function persistAuditLogToKV(log: AuditLog, env: any): Promise<void> {
   try {
@@ -154,7 +154,7 @@ async function persistAuditLogToKV(log: AuditLog, env: any): Promise<void> {
 
     const { binding, mode } = kvInfo
 
-    // 读取现有日志
+    // 讀取現有日誌
     let existingLogs: AuditLog[] = []
     try {
       let val: any = null
@@ -166,20 +166,20 @@ async function persistAuditLogToKV(log: AuditLog, env: any): Promise<void> {
       if (val && typeof val.text === "function") val = await val.text()
       if (val) existingLogs = JSON.parse(String(val))
     } catch {
-      // 首次写入或解析失败
+      // 首次寫入或解析失敗
     }
 
     if (!Array.isArray(existingLogs)) existingLogs = []
 
-    // 追加新日志
+    // 追加新日誌
     existingLogs.push(log)
 
-    // 保留最近 10000 条（防止无限增长）
+    // 保留最近 10000 條（防止無限增長）
     if (existingLogs.length > 10000) {
       existingLogs = existingLogs.slice(-10000)
     }
 
-    // 写回 KV
+    // 寫回 KV
     const payload = JSON.stringify(existingLogs)
     if (mode === "blob") {
       if (typeof binding.set === "function") {
@@ -195,13 +195,13 @@ async function persistAuditLogToKV(log: AuditLog, env: any): Promise<void> {
       }
     }
   } catch (err) {
-    // 持久化失败不影响业务流程
+    // 持久化失敗不影響業務流程
     console.warn("[Audit] Persist to KV failed:", err)
   }
 }
 
 /**
- * 生成日志 ID
+ * 生成日誌 ID
  */
 function generateLogId(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -213,7 +213,7 @@ function generateLogId(): string {
 }
 
 /**
- * 检测是否为开发环境
+ * 檢測是否為開發環境
  */
 function isDevelopment(env?: any): boolean {
   const e = env || (typeof process !== "undefined" ? process.env : {})
@@ -221,7 +221,7 @@ function isDevelopment(env?: any): boolean {
 }
 
 /**
- * 清理过期日志（保留最近 30 天）
+ * 清理過期日誌（保留最近 30 天）
  */
 export function cleanupExpiredLogs(retentionDays: number = 30): void {
   const cutoffDate = new Date()
@@ -232,7 +232,7 @@ export function cleanupExpiredLogs(retentionDays: number = 30): void {
 }
 
 /**
- * 获取审计日志统计
+ * 獲取審計日誌統計
  */
 export function getAuditStats(): {
   total: number
@@ -247,7 +247,7 @@ export function getAuditStats(): {
 
   const uniqueUsers = new Set(auditLogs.map((log) => log.username)).size
 
-  // 统计最常见的操作
+  // 統計最常見的操作
   const actionCounts = new Map<string, number>()
   auditLogs.forEach((log) => {
     const count = actionCounts.get(log.action) || 0

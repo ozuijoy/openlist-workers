@@ -30,12 +30,12 @@ const ApiFsDelete = API_BASE + "/open/ufile/delete"
 const ApiUserInfo = API_BASE + "/open/user/info"
 const ApiRefreshToken = API_AUTH + "/open/refreshToken"
 
-/** 401 开头或 99 的错误码 → token 失效，需要刷新（对应 SDK Is401Started） */
+/** 401 開頭或 99 的錯誤碼 → token 失效，需要刷新（對應 SDK Is401Started） */
 function isAuthError(code: number): boolean {
   return code === 99 || String(code).startsWith("401")
 }
 
-/** SDK Error Code 430004 = 对象不存在 */
+/** SDK Error Code 430004 = 對象不存在 */
 export const ERR_OBJECT_NOT_FOUND = 430004
 
 export class Pan115Client {
@@ -46,7 +46,7 @@ export class Pan115Client {
     access_token: string
     refresh_token: string
   }) => void
-  /** 简单限流：每秒最多 N 个请求（Go rate.Limiter 等价） */
+  /** 簡單限流：每秒最多 N 個請求（Go rate.Limiter 等價） */
   private rateLimitMs = 0
   private lastRequestAt = 0
 
@@ -75,7 +75,7 @@ export class Pan115Client {
     this.lastRequestAt = Date.now()
   }
 
-  /** fetch + 20s 超时 + 网络错误重试 3 次（瞬时故障恢复） */
+  /** fetch + 20s 超時 + 網路錯誤重試 3 次（瞬時故障恢復） */
   private async fetchWithRetry(
     url: string,
     init: RequestInit,
@@ -100,7 +100,7 @@ export class Pan115Client {
     throw lastErr
   }
 
-  /** 格式化网络错误（含 cause 诊断，如 ECONNREFUSED / ENOTFOUND） */
+  /** 格式化網路錯誤（含 cause 診斷，如 ECONNREFUSED / ENOTFOUND） */
   private static describeNetError(e: unknown): string {
     const err = e as any
     const causeCode = err?.cause?.code || err?.cause?.cause?.code
@@ -114,7 +114,7 @@ export class Pan115Client {
 
   public async refreshToken(): Promise<void> {
     if (!this.refreshTokenValue) {
-      throw new Error("115 网盘缺少 refresh_token（必填）")
+      throw new Error("115 網盤缺少 refresh_token（必填）")
     }
     const form = new URLSearchParams()
     form.set("refresh_token", this.refreshTokenValue)
@@ -133,7 +133,7 @@ export class Pan115Client {
       !data.data?.refresh_token
     ) {
       throw new Error(
-        `115 网盘 token 刷新失败（code ${data.code} ${data.message}）：请确认 refresh_token 有效。`,
+        `115 網盤 token 刷新失敗（code ${data.code} ${data.message}）：請確認 refresh_token 有效。`,
       )
     }
     this.accessToken = data.data.access_token
@@ -146,11 +146,11 @@ export class Pan115Client {
     })
   }
 
-  // ---- Core request (对应 SDK authRequest) ----
+  // ---- Core request (對應 SDK authRequest) ----
 
   /**
-   * 鉴权请求：Bearer access_token；响应 state=false 且 code 为 401 开头/99 时
-   * 自动刷新 token 并重试一次（防止无限递归）。
+   * 鑑權請求：Bearer access_token；響應 state=false 且 code 為 401 開頭/99 時
+   * 自動刷新 token 並重試一次（防止無限遞歸）。
    */
   public async request(
     url: string,
@@ -203,14 +203,14 @@ export class Pan115Client {
     try {
       ;({ body } = await doReq())
     } catch (e) {
-      // 网络层失败（fetch failed / ECONNREFUSED / 超时）→ 透传 cause 便于诊断
+      // 網路層失敗（fetch failed / ECONNREFUSED / 超時）→ 透傳 cause 便於診斷
       throw new Error(Pan115Client.describeNetError(e))
     }
     const state = body?.state
     if (state === false || state === undefined) {
       const code = Number(body?.code ?? 0)
       if (isAuthError(code) && !skipAuthRetry) {
-        // token 失效 → 刷新一次并重试（防递归：skipAuthRetry=true 时不再刷新）
+        // token 失效 → 刷新一次並重試（防遞歸：skipAuthRetry=true 時不再刷新）
         await this.refreshToken()
         const retry = await doReq()
         body = retry.body
@@ -219,17 +219,17 @@ export class Pan115Client {
           return body
         }
         throw new Error(
-          `115 网盘 API 错误（code ${body?.code} ${body?.message}）`,
+          `115 網盤 API 錯誤（code ${body?.code} ${body?.message}）`,
         )
       }
-      // 对象不存在错误（430004）——SDK ErrObjectNotFound
+      // 對象不存在錯誤（430004）——SDK ErrObjectNotFound
       if (code === ERR_OBJECT_NOT_FOUND) {
         const err: any = new Error("115 object not found")
         err.code = ERR_OBJECT_NOT_FOUND
         throw err
       }
       throw new Error(
-        `115 网盘 API 错误（code ${code} ${body?.message || ""}）`,
+        `115 網盤 API 錯誤（code ${code} ${body?.message || ""}）`,
       )
     }
     return body
@@ -319,7 +319,7 @@ export class Pan115Client {
     })
   }
 
-  /** 下载链接（DownURL），需要 UA（Go Link 传入请求 UA 或默认 UA） */
+  /** 下載鏈接（DownURL），需要 UA（Go Link 傳入請求 UA 或默認 UA） */
   public async downUrl(
     pickCode: string,
     ua: string,
@@ -335,7 +335,7 @@ export class Pan115Client {
     )?.data as Pan115DownUrlResp
   }
 
-  // ---- Upload（OSS 直传所需 token / init） ----
+  // ---- Upload（OSS 直傳所需 token / init） ----
 
   public async uploadGetToken(): Promise<Pan115UploadGetTokenResp> {
     return (await this.request(ApiFsUploadGetToken, "GET"))
@@ -346,8 +346,8 @@ export class Pan115Client {
     fileName: string
     fileSize: number
     target: string
-    fileId: string // sha1 大写
-    preId: string // 前128k sha1 大写
+    fileId: string // sha1 大寫
+    preId: string // 前128k sha1 大寫
     signKey?: string
     signVal?: string
   }): Promise<Pan115UploadInitResp> {

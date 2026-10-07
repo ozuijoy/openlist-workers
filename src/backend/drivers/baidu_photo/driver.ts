@@ -56,7 +56,7 @@ function albumFileToItem(f: BaiduPhotoAlbumFile): FileItem {
   }
 }
 
-/** 解析 sign 得到类型与字段 */
+/** 解析 sign 得到類型與欄位 */
 function parseSign(sign: string): {
   kind: "album" | "file" | "albumfile"
   fsid: number
@@ -120,9 +120,9 @@ export class DriverBaiduPhoto implements StorageDriver {
       return items
     }
 
-    // 相册内
+    // 相冊內
     const album = await this.findAlbum(clean)
-    if (!album) throw new Error(`[BaiduPhoto] 相册 '${clean}' 未找到`)
+    if (!album) throw new Error(`[BaiduPhoto] 相冊 '${clean}' 未找到`)
     const files = await this.client.getAllAlbumFile(album.album_id, album.tid)
     return files.map(albumFileToItem)
   }
@@ -133,7 +133,7 @@ export class DriverBaiduPhoto implements StorageDriver {
     const parentPath = parts.slice(0, -1).join("/")
 
     if (!parentPath) {
-      // root 层：相册或根文件
+      // root 層：相冊或根文件
       if (this.showType !== "root_only_file") {
         const albums = await this.client.getAllAlbum()
         const album = albums.find((a) => a.title === name)
@@ -154,7 +154,7 @@ export class DriverBaiduPhoto implements StorageDriver {
         }
       }
     } else {
-      // 相册内
+      // 相冊內
       const album = await this.findAlbum(parentPath)
       if (album) {
         const files = await this.client.getAllAlbumFile(
@@ -193,9 +193,9 @@ export class DriverBaiduPhoto implements StorageDriver {
 
   async mkdir(_virtualPath: string, physicalPath: string): Promise<void> {
     const clean = physicalPath.split("/").filter(Boolean).join("/")
-    if (clean) throw new Error("[BaiduPhoto] 相册不支持创建子目录")
+    if (clean) throw new Error("[BaiduPhoto] 相冊不支持創建子目錄")
     const name = "new_album"
-    // 简单处理：mkdir 在 root 创建相册（名字由上层传入时用 name，这里用路径最后一段）
+    // 簡單處理：mkdir 在 root 創建相冊（名字由上層傳入時用 name，這裡用路徑最後一段）
     const album = await this.client.createAlbum(name)
     this.albumCache.clear()
     void album
@@ -208,7 +208,7 @@ export class DriverBaiduPhoto implements StorageDriver {
   ): Promise<void> {
     const entry = await this.resolveEntry(physicalPath)
     if (entry.kind !== "album") {
-      throw new Error("[BaiduPhoto] 仅支持重命名相册")
+      throw new Error("[BaiduPhoto] 僅支持重命名相冊")
     }
     await this.client.setAlbumName(entry.albumId, entry.tid, newName)
     this.albumCache.clear()
@@ -246,7 +246,7 @@ export class DriverBaiduPhoto implements StorageDriver {
     const entry = await this.resolveEntry(srcPhysical)
     const dstClean = dstDir.split("/").filter(Boolean).join("/")
 
-    // 移动 = copy 到目标 + 删除源（仅相册文件支持）
+    // 移動 = copy 到目標 + 刪除源（僅相冊文件支持）
     if (entry.kind === "albumfile") {
       if (!dstClean) {
         // albumfile -> root
@@ -259,7 +259,7 @@ export class DriverBaiduPhoto implements StorageDriver {
       } else {
         // albumfile -> album
         const dstAlbum = await this.findAlbum(dstClean)
-        if (!dstAlbum) throw new Error(`[BaiduPhoto] 相册 '${dstClean}' 未找到`)
+        if (!dstAlbum) throw new Error(`[BaiduPhoto] 相冊 '${dstClean}' 未找到`)
         const newFsid = await this.client.copyAlbumFile(
           entry.fsid,
           entry.albumId,
@@ -277,7 +277,7 @@ export class DriverBaiduPhoto implements StorageDriver {
       )
       return
     }
-    throw new Error("[BaiduPhoto] 仅相册文件支持移动")
+    throw new Error("[BaiduPhoto] 僅相冊文件支持移動")
   }
 
   async copy(
@@ -293,7 +293,7 @@ export class DriverBaiduPhoto implements StorageDriver {
     if (entry.kind === "file" && dstClean) {
       // root file -> album
       const dstAlbum = await this.findAlbum(dstClean)
-      if (!dstAlbum) throw new Error(`[BaiduPhoto] 相册 '${dstClean}' 未找到`)
+      if (!dstAlbum) throw new Error(`[BaiduPhoto] 相冊 '${dstClean}' 未找到`)
       await this.client.addAlbumFile(
         dstAlbum.album_id,
         dstAlbum.tid,
@@ -310,12 +310,12 @@ export class DriverBaiduPhoto implements StorageDriver {
       )
       if (dstClean) {
         const dstAlbum = await this.findAlbum(dstClean)
-        if (!dstAlbum) throw new Error(`[BaiduPhoto] 相册 '${dstClean}' 未找到`)
+        if (!dstAlbum) throw new Error(`[BaiduPhoto] 相冊 '${dstClean}' 未找到`)
         await this.client.addAlbumFile(dstAlbum.album_id, dstAlbum.tid, newFsid)
       }
       return
     }
-    throw new Error("[BaiduPhoto] 不支持该复制操作")
+    throw new Error("[BaiduPhoto] 不支持該複製操作")
   }
 
   async put(
@@ -330,7 +330,7 @@ export class DriverBaiduPhoto implements StorageDriver {
     let album: BaiduPhotoAlbum | null = null
     if (parentPath) {
       album = await this.findAlbum(parentPath)
-      if (!album) throw new Error(`[BaiduPhoto] 相册 '${parentPath}' 未找到`)
+      if (!album) throw new Error(`[BaiduPhoto] 相冊 '${parentPath}' 未找到`)
     }
     await this.client.upload(album, name, new Uint8Array(content))
     this.albumCache.clear()
@@ -344,7 +344,7 @@ export class DriverBaiduPhoto implements StorageDriver {
     const parentPath = parts.slice(0, -1).join("/")
 
     if (!parentPath) {
-      // root 层
+      // root 層
       if (this.showType !== "root_only_file") {
         const albums = await this.client.getAllAlbum()
         const album = albums.find((a) => a.title === name)
@@ -373,7 +373,7 @@ export class DriverBaiduPhoto implements StorageDriver {
     throw new Error(`[BaiduPhoto] '${name}' not found`)
   }
 
-  /** 通过相册名查找相册（带缓存） */
+  /** 通過相冊名查找相冊（帶快取） */
   private async findAlbum(name: string): Promise<BaiduPhotoAlbum | null> {
     if (this.albumCache.has(name)) return this.albumCache.get(name)!
     const albums = await this.client.getAllAlbum()

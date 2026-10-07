@@ -25,9 +25,9 @@ test("netease raw RSA matches Node crypto", () => {
 
 test("weapi produces base64 params and 256-hex encSecKey", async () => {
   const res = await weapi({ limit: "10", offset: "0" })
-  // params 是两层 AES-CBC 的 base64
+  // params 是兩層 AES-CBC 的 base64
   assert.match(res.params, /^[A-Za-z0-9+/]+=*$/)
-  // encSecKey 是 raw RSA 结果 hex（128 字节 = 256 hex）
+  // encSecKey 是 raw RSA 結果 hex（128 字節 = 256 hex）
   assert.equal(res.encSecKey.length, 256)
   assert.match(res.encSecKey, /^[0-9a-f]+$/)
 })

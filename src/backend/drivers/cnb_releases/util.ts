@@ -1,4 +1,4 @@
-// CNB Releases API 客户端
+// CNB Releases API 客戶端
 import { DriverCnbReleasesAddition, CNBRelease, CNBAsset } from "./types"
 
 const API_BASE = "https://api.cnb.cool"
@@ -52,7 +52,7 @@ export class ClientCnbReleases {
     return (await resp.json().catch(() => ({}))) as T
   }
 
-  /** 根目录：所有 releases */
+  /** 根目錄：所有 releases */
   async listReleases(): Promise<CNBRelease[]> {
     return this.request<CNBRelease[]>("GET", `/${this.repo}/-/releases`)
   }

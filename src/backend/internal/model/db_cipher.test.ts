@@ -18,22 +18,22 @@ import { memoryDriver } from "./store/driver/memory"
 import { mapFormat } from "./store/format/map"
 
 /**
- * DB_CIPHER 回归测试。
+ * DB_CIPHER 迴歸測試。
  *
- * 锁定三条核心不变量：
- *   1. **默认不加密**（DB_CIPHER 缺省 = none）：敏感字段明文落盘；
- *   2. **解密由密文前缀驱动**，与当前配置无关：换算法 / 关加密都不会让既有密文
- *      无法读取（否则升级会把「登录密码」变成谁也解不开的乱码）；
- *   3. **DB_CIPHER=none 不影响 JWT 共享密钥**：密钥的生成与持久化照旧。
+ * 鎖定三條核心不變量：
+ *   1. **默認不加密**（DB_CIPHER 缺省 = none）：敏感欄位明文落盤；
+ *   2. **解密由密文前綴驅動**，與當前配置無關：換算法 / 關加密都不會讓既有密文
+ *      無法讀取（否則升級會把「登入密碼」變成誰也解不開的亂碼）；
+ *   3. **DB_CIPHER=none 不影響 JWT 共享密鑰**：密鑰的生成與持久化照舊。
  */
 
 const SECRET = "test-shared-secret-0123456789abcdef"
 
 /**
- * 全部真实算法（none 之外）。
+ * 全部真實算法（none 之外）。
  *
- * 注意：`aes-256-gcm-pbkdf2` 每次派生要跑 10 万次 PBKDF2（约 27 ms/字段），
- * 因此涉及它的用例会明显更慢 —— 这是历史 envelope 的固有代价。
+ * 注意：`aes-256-gcm-pbkdf2` 每次派生要跑 10 萬次 PBKDF2（約 27 ms/欄位），
+ * 因此涉及它的用例會明顯更慢 —— 這是歷史 envelope 的固有代價。
  */
 const SECRET_CIPHERS = [
   "aes-256-gcm",
@@ -89,13 +89,13 @@ function sampleDb() {
 const rawUser = (raw: any) => raw.users.find((u: any) => u.username === "admin")
 const rawSetting = (raw: any, key: string) =>
   raw.settings.find((s: any) => s.key === key)
-/** 读取**存储中的原始内容**（未经 unseal），用于断言落盘形态 */
+/** 讀取**儲存中的原始內容**（未經 unseal），用於斷言落盤形態 */
 const rawStored = (env: any) => mapFormat.load(memoryDriver, env)
 
 // ─── 配置解析 ────────────────────────────────────────────────────────────────
 
-test("readCipher：默认 none，别名可用，非法值回退 none", () => {
-  assert.equal(readCipher({}), "none", "缺省必须为 none（默认不加密）")
+test("readCipher：默認 none，別名可用，非法值回退 none", () => {
+  assert.equal(readCipher({}), "none", "缺省必須為 none（默認不加密）")
   assert.equal(readCipher({ DB_CIPHER: "" }), "none")
   assert.equal(readCipher({ DB_CIPHER: "  none  " }), "none")
   assert.equal(readCipher({ DB_CIPHER: "off" }), "none")
@@ -115,7 +115,7 @@ test("readCipher：默认 none，别名可用，非法值回退 none", () => {
   assert.equal(readCipher({ DB_CIPHER: "tripledes" }), "3des-cbc-hmac")
   assert.equal(readCipher({ DB_CIPHER: "v6" }), "3des-cbc-hmac")
 
-  // 拼错不得静默启用某个算法
+  // 拼錯不得靜默啟用某個算法
   assert.equal(readCipher({ DB_CIPHER: "rot13" }), "none")
   assert.equal(resolveDbCipher("rot13").known, false)
   assert.equal(resolveDbCipher("aes-256-gcm").known, true)
@@ -125,7 +125,7 @@ test("readCipher：默认 none，别名可用，非法值回退 none", () => {
   }
 })
 
-test("密文前缀与算法一一对应（v1..v6）", () => {
+test("密文前綴與算法一一對應（v1..v6）", () => {
   assert.equal(cipherPrefix("none"), "")
   assert.equal(cipherPrefix("aes-256-gcm-pbkdf2"), "enc:v1:")
   assert.equal(cipherPrefix("aes-256-gcm"), "enc:v2:")
@@ -135,7 +135,7 @@ test("密文前缀与算法一一对应（v1..v6）", () => {
   assert.equal(cipherPrefix("3des-cbc-hmac"), "enc:v6:")
 
   assert.equal(detectCipherPrefix("hash-abc"), null)
-  assert.equal(detectCipherPrefix("enc:v9:abc"), null, "未知版本不得被识别")
+  assert.equal(detectCipherPrefix("enc:v9:abc"), null, "未知版本不得被識別")
   assert.equal(detectCipherPrefix("enc:v1:aa:bb:cc")?.cipher, "aes-256-gcm-pbkdf2")
   assert.equal(detectCipherPrefix("enc:v2:aa:bb")?.cipher, "aes-256-gcm")
   assert.equal(detectCipherPrefix("enc:v3:aa:bb:cc")?.cipher, "aes-256-cbc-hmac")
@@ -146,14 +146,14 @@ test("密文前缀与算法一一对应（v1..v6）", () => {
   assert.equal(isSealedCiphertext("plain"), false)
 })
 
-// ─── 算法层 ──────────────────────────────────────────────────────────────────
+// ─── 算法層 ──────────────────────────────────────────────────────────────────
 
-test("各算法加密→解密往返一致（含空串与多字节）", async () => {
+test("各算法加密→解密往返一致（含空串與多字節）", async () => {
   const samples = [
     "",
     "a",
     "hash-abc",
-    "中文 / emoji 😀 / 换行\n换行",
+    "中文 / emoji 😀 / 換行\n換行",
     "x".repeat(5000),
   ]
   for (const cipher of SECRET_CIPHERS) {
@@ -161,16 +161,16 @@ test("各算法加密→解密往返一致（含空串与多字节）", async ()
     for (const plain of samples) {
       const body = await fc.encrypt(plain)
       const sealed = cipherPrefix(cipher) + body
-      assert.notEqual(body, plain, `${cipher} 必须产生密文`)
+      assert.notEqual(body, plain, `${cipher} 必須產生密文`)
       assert.equal(detectCipherPrefix(sealed)?.cipher, cipher)
       assert.equal(await fc.decrypt(sealed), plain)
     }
   }
 })
 
-test("解密由前缀驱动：任意写入算法都能解开全部版本的密文", async () => {
-  // v1/v2 手工产生（对应历史实现与 #69），v3~v6 分别用各自的写入器产生，
-  // 然后用**写 v3 的**解密器把它们全部解开（证明解密与当前配置无关）。
+test("解密由前綴驅動：任意寫入算法都能解開全部版本的密文", async () => {
+  // v1/v2 手工產生（對應歷史實現與 #69），v3~v6 分別用各自的寫入器產生，
+  // 然後用**寫 v3 的**解密器把它們全部解開（證明解密與當前配置無關）。
   const v1 = "enc:v1:" + (await encrypt("v1-secret", SECRET))
   const v2 =
     "enc:v2:" +
@@ -196,36 +196,36 @@ test("解密由前缀驱动：任意写入算法都能解开全部版本的密�
   for (const [sealed, plain] of sealedList) {
     assert.equal(await reader.decrypt(sealed), plain)
   }
-  // 明文原样返回
+  // 明文原樣返回
   assert.equal(await reader.decrypt("plain-value"), "plain-value")
 
-  // #69 写入的 v2 密文必须与「写 v2 的实现」互相兼容（同一密钥、同一 HKDF 参数）
+  // #69 寫入的 v2 密文必須與「寫 v2 的實現」互相相容（同一密鑰、同一 HKDF 參數）
   const v2fc = await createFieldCipher("aes-256-gcm", SECRET)
   const v2Fresh = await v2fc.encrypt("v2-fresh")
   assert.equal(
     await v2fc.decrypt("enc:v2:" + v2Fresh),
     "v2-fresh",
-    "v2 写入/读取必须与 #69 的 envelope 自洽",
+    "v2 寫入/讀取必須與 #69 的 envelope 自洽",
   )
 })
 
-test("密钥不匹配时必须解密失败，而不是返回乱码", async () => {
+test("密鑰不匹配時必須解密失敗，而不是返回亂碼", async () => {
   const wrong = "another-secret-0123456789abcdefgh"
   for (const cipher of SECRET_CIPHERS) {
     const fc = await createFieldCipher(cipher, SECRET)
     const sealed = cipherPrefix(cipher) + (await fc.encrypt("secret-value"))
-    // 同密钥正常
+    // 同密鑰正常
     assert.equal(await fc.decrypt(sealed), "secret-value")
-    // 换密钥必须抛错（AES-GCM 认证失败 / CBC-HMAC 验签失败）
+    // 換密鑰必須拋錯（AES-GCM 認證失敗 / CBC-HMAC 驗籤失敗）
     const wrongFc = await createFieldCipher(cipher, wrong)
     await assert.rejects(
       () => wrongFc.decrypt(sealed),
-      `换密钥后 ${cipher} 必须解密失败`,
+      `換密鑰後 ${cipher} 必須解密失敗`,
     )
   }
 })
 
-test("v3 为 Encrypt-then-MAC：篡改密文必须被完整性校验拦下", async () => {
+test("v3 為 Encrypt-then-MAC：篡改密文必須被完整性校驗攔下", async () => {
   const fc = await createFieldCipher("aes-256-cbc-hmac", SECRET)
   const prefix = cipherPrefix("aes-256-cbc-hmac")
   const parts = (await fc.encrypt("secret-value")).split(":")
@@ -234,12 +234,12 @@ test("v3 为 Encrypt-then-MAC：篡改密文必须被完整性校验拦下", asy
   await assert.rejects(() => fc.decrypt(tampered))
 })
 
-// ─── 持久化边界 ──────────────────────────────────────────────────────────────
+// ─── 持久化邊界 ──────────────────────────────────────────────────────────────
 
-test("DB_CIPHER 缺省：敏感字段明文落盘（默认不加密）", async () => {
+test("DB_CIPHER 缺省：敏感欄位明文落盤（默認不加密）", async () => {
   const db = await import("./db")
   db.__resetDbCacheForTest()
-  const env = envFor() // 不设置 DB_CIPHER
+  const env = envFor() // 不設置 DB_CIPHER
 
   assert.equal(await db.saveDb(sampleDb(), env, { force: true }), true)
 
@@ -250,13 +250,13 @@ test("DB_CIPHER 缺省：敏感字段明文落盘（默认不加密）", async (
   assert.equal(raw.storages[0].addition, JSON.stringify({ token: "drive-token" }))
   assert.equal(isSealedCiphertext(rawUser(raw).password), false)
 
-  // 读回同样为明文
+  // 讀回同樣為明文
   db.__resetDbCacheForTest()
   const loaded: any = await db.getDb(env)
   assert.equal(rawUser(loaded).password, "hash-abc")
 })
 
-test("DB_CIPHER 非 none：敏感字段按所选算法落盘，读回自动解密", async () => {
+test("DB_CIPHER 非 none：敏感欄位按所選算法落盤，讀回自動解密", async () => {
   for (const cipher of SECRET_CIPHERS) {
     const db = await import("./db")
     db.__resetDbCacheForTest()
@@ -271,16 +271,16 @@ test("DB_CIPHER 非 none：敏感字段按所选算法落盘，读回自动解�
       rawSetting(raw, "token").value,
       raw.storages[0].addition,
     ]) {
-      assert.equal(detectCipherPrefix(sealed)?.cipher, cipher, `${cipher} 应落盘为密文`)
+      assert.equal(detectCipherPrefix(sealed)?.cipher, cipher, `${cipher} 應落盤為密文`)
     }
     assert.notEqual(rawUser(raw).password, "hash-abc")
-    // 非敏感设置不应被加密（避免无谓开销）
+    // 非敏感設置不應被加密（避免無謂開銷）
     assert.equal(rawSetting(raw, "site_title").value, "OpenList")
 
-    // 冷启动重新加载（绕过内存快照）→ 必须自动解密
+    // 冷啟動重新加載（繞過記憶體快照）→ 必須自動解密
     db.__resetDbCacheForTest()
     const loaded: any = await db.getDb(env)
-    assert.equal(rawUser(loaded).password, "hash-abc", `${cipher} 读回必须是明文`)
+    assert.equal(rawUser(loaded).password, "hash-abc", `${cipher} 讀回必須是明文`)
     assert.equal(rawUser(loaded).otp_secret, "OTP-SECRET")
     assert.equal(rawSetting(loaded, "token").value, "tok-123")
     assert.equal(
@@ -290,10 +290,10 @@ test("DB_CIPHER 非 none：敏感字段按所选算法落盘，读回自动解�
   }
 })
 
-test("旧部署迁移：DB_CIPHER=none 仍能读加密数据，并在下次保存转为明文", async () => {
+test("舊部署遷移：DB_CIPHER=none 仍能讀加密資料，並在下次保存轉為明文", async () => {
   const db = await import("./db")
 
-  // 1) 模拟 #69 的既有部署：DB_CIPHER 未配置时期望写入 v2 密文
+  // 1) 模擬 #69 的既有部署：DB_CIPHER 未配置時期望寫入 v2 密文
   const legacyEnv = envFor("aes-256-gcm")
   db.__resetDbCacheForTest()
   assert.equal(await db.saveDb(sampleDb(), legacyEnv, { force: true }), true)
@@ -304,25 +304,25 @@ test("旧部署迁移：DB_CIPHER=none 仍能读加密数据，并在下次保�
     "aes-256-gcm",
   )
 
-  // 2) 升级后默认 DB_CIPHER=none：同一份存储必须仍可解密（否则登录直接坏掉）
+  // 2) 升級後默認 DB_CIPHER=none：同一份儲存必須仍可解密（否則登入直接壞掉）
   const plainEnv = envFor()
   db.__resetDbCacheForTest()
   const loaded: any = await db.getDb(plainEnv)
-  assert.equal(rawUser(loaded).password, "hash-abc", "关掉加密后旧密文必须仍能解开")
+  assert.equal(rawUser(loaded).password, "hash-abc", "關掉加密後舊密文必須仍能解開")
   assert.equal(rawUser(loaded).otp_secret, "OTP-SECRET")
 
-  // 3) 下一次保存 → 自动转为明文（逐字段迁移，无需手动步骤）
+  // 3) 下一次保存 → 自動轉為明文（逐欄位遷移，無需手動步驟）
   assert.equal(await db.saveDb(loaded, plainEnv), true)
   const raw: any = await rawStored(plainEnv)
   assert.equal(rawUser(raw).password, "hash-abc")
   assert.equal(isSealedCiphertext(rawUser(raw).password), false)
 })
 
-test("旧部署迁移：PBKDF2（enc:v1:）密文在 none 下同样可读", async () => {
+test("舊部署遷移：PBKDF2（enc:v1:）密文在 none 下同樣可讀", async () => {
   const db = await import("./db")
   const env = envFor()
 
-  // 直接向存储写入一份「历史 v1 加密」的库（模拟 pre-#69 的部署数据）
+  // 直接向儲存寫入一份「歷史 v1 加密」的庫（模擬 pre-#69 的部署資料）
   const legacy = sampleDb()
   legacy.users[0].password = "enc:v1:" + (await encrypt("hash-abc", SECRET))
   legacy.users[0].otp_secret = "enc:v1:" + (await encrypt("OTP-SECRET", SECRET))
@@ -336,7 +336,7 @@ test("旧部署迁移：PBKDF2（enc:v1:）密文在 none 下同样可读", asyn
   assert.equal(rawSetting(loaded, "token").value, "tok-123")
 })
 
-test("更换算法：旧密文按前缀解密，新写入使用新算法", async () => {
+test("更換算法：舊密文按前綴解密，新寫入使用新算法", async () => {
   const db = await import("./db")
 
   const v2Env = envFor("aes-256-gcm")
@@ -346,7 +346,7 @@ test("更换算法：旧密文按前缀解密，新写入使用新算法", async
   const v3Env = envFor("aes-256-cbc-hmac")
   db.__resetDbCacheForTest()
   const loaded: any = await db.getDb(v3Env)
-  assert.equal(rawUser(loaded).password, "hash-abc", "旧 v2 密文必须能被 v3 配置读取")
+  assert.equal(rawUser(loaded).password, "hash-abc", "舊 v2 密文必須能被 v3 配置讀取")
 
   assert.equal(await db.saveDb(loaded, v3Env), true)
   const raw: any = await rawStored(v3Env)
@@ -360,7 +360,7 @@ test("更换算法：旧密文按前缀解密，新写入使用新算法", async
   )
 })
 
-test("DB_CIPHER=none 不影响共享密钥的生成与持久化（JWT 仍需密钥）", async () => {
+test("DB_CIPHER=none 不影響共享密鑰的生成與持久化（JWT 仍需密鑰）", async () => {
   const db = await import("./db")
   const env = {
     DB_DRIVER: "memory",
@@ -370,14 +370,14 @@ test("DB_CIPHER=none 不影响共享密钥的生成与持久化（JWT 仍需密�
   db.__resetDbCacheForTest()
 
   const key = await db.ensureEncryptionSecret(env)
-  assert.equal(typeof key, "string", "无 JWT_SECRET 时必须自动生成共享密钥")
+  assert.equal(typeof key, "string", "無 JWT_SECRET 時必須自動生成共享密鑰")
   assert.ok((key as string).length >= 16)
-  assert.equal(await db.isEncryptionReady(env), true, "生成后任意实例都能读到密钥")
+  assert.equal(await db.isEncryptionReady(env), true, "生成後任意實例都能讀到密鑰")
 })
 
-// ─── 性能相关不变量（对功能无影响，但必须长期成立）──────────────────────────
+// ─── 性能相關不變量（對功能無影響，但必須長期成立）──────────────────────────
 
-test("saveDb 采用写时复制：不修改调用方传入的内存对象", async () => {
+test("saveDb 採用寫時複製：不修改調用方傳入的記憶體對象", async () => {
   const db = await import("./db")
   db.__resetDbCacheForTest()
   const env = envFor("chacha20-poly1305")
@@ -385,8 +385,8 @@ test("saveDb 采用写时复制：不修改调用方传入的内存对象", asyn
 
   assert.equal(await db.saveDb(data, env, { force: true }), true)
 
-  // 内存中的对象必须保持明文（历史实现是深拷贝，新实现是写时复制，
-  // 两者都**不得**把明文替换成密文 —— 否则调用方持有的引用会被污染）。
+  // 記憶體中的對象必須保持明文（歷史實現是深拷貝，新實現是寫時複製，
+  // 兩者都**不得**把明文替換成密文 —— 否則調用方持有的引用會被汙染）。
   assert.equal(rawUser(data).password, "hash-abc")
   assert.equal(rawUser(data).otp_secret, "OTP-SECRET")
   assert.equal(
@@ -396,7 +396,7 @@ test("saveDb 采用写时复制：不修改调用方传入的内存对象", asyn
   assert.equal(rawSetting(data, "token").value, "tok-123")
   assert.equal(rawSetting(data, "site_title").value, "OpenList")
 
-  // 落盘内容则是密文
+  // 落盤內容則是密文
   const raw: any = await rawStored(env)
   assert.equal(
     detectCipherPrefix(rawUser(raw).password)?.cipher,
@@ -404,7 +404,7 @@ test("saveDb 采用写时复制：不修改调用方传入的内存对象", asyn
   )
 })
 
-test("未变化字段跳过重新加密：密文保持不变，且只重新加密改动过的字段", async () => {
+test("未變化欄位跳過重新加密：密文保持不變，且只重新加密改動過的欄位", async () => {
   const db = await import("./db")
   db.__resetDbCacheForTest()
   const env = envFor("aes-256-gcm")
@@ -412,19 +412,19 @@ test("未变化字段跳过重新加密：密文保持不变，且只重新加�
   assert.equal(await db.saveDb(sampleDb(), env, { force: true }), true)
   const first: any = await rawStored(env)
 
-  // 内容完全相同再存一次 → 复用上次的密文（逐字节一致）
+  // 內容完全相同再存一次 → 複用上次的密文（逐字節一致）
   assert.equal(await db.saveDb(sampleDb(), env), true)
   const second: any = await rawStored(env)
   assert.equal(
     rawUser(second).password,
     rawUser(first).password,
-    "未变化的字段不应重新加密",
+    "未變化的欄位不應重新加密",
   )
   assert.equal(rawUser(second).otp_secret, rawUser(first).otp_secret)
   assert.equal(second.storages[0].addition, first.storages[0].addition)
   assert.equal(rawSetting(second, "token").value, rawSetting(first, "token").value)
 
-  // 只改一个字段 → 只有它重新加密，其余字段的密文原样保留
+  // 只改一個欄位 → 只有它重新加密，其餘欄位的密文原樣保留
   const changed = sampleDb()
   changed.users[0].password = "hash-xyz"
   assert.equal(await db.saveDb(changed, env), true)
@@ -439,7 +439,7 @@ test("未变化字段跳过重新加密：密文保持不变，且只重新加�
   assert.equal(rawUser(loaded).password, "hash-xyz")
 })
 
-test("load → save 复用：读回后原样保存不会重复加密（3DES 同样）", async () => {
+test("load → save 複用：讀回後原樣保存不會重複加密（3DES 同樣）", async () => {
   const db = await import("./db")
   db.__resetDbCacheForTest()
   const env = envFor("3des-cbc-hmac")
@@ -447,12 +447,12 @@ test("load → save 复用：读回后原样保存不会重复加密（3DES 同�
   assert.equal(await db.saveDb(sampleDb(), env, { force: true }), true)
   const first: any = await rawStored(env)
 
-  // 强制一次真实加载（清缓存 → 读存储 → 解密，并在解密时记账）
+  // 強制一次真實加載（清快取 → 讀儲存 → 解密，並在解密時記賬）
   db.__resetDbCacheForTest()
   const loaded: any = await db.getDb(env)
   assert.equal(rawUser(loaded).password, "hash-abc")
 
-  // 未做任何修改就保存 → 复用加载时记下的密文
+  // 未做任何修改就保存 → 複用加載時記下的密文
   assert.equal(await db.saveDb(loaded, env), true)
   const second: any = await rawStored(env)
   assert.equal(rawUser(second).password, rawUser(first).password)
