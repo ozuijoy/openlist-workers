@@ -96,11 +96,11 @@ export interface ProxyDecision {
  * 未登記的驅動一律視為「不強制代理、不默認代理」→ 默認 302_redirect。
  *
  * --- 與 Go 的差異 ---
- * 1. `PreferProxy` 在 Go 裡只用於**表單默認值**；本文件讓它在運行時也生效（僅當儲存
+ * 1. `PreferProxy` 在 Go 裡僅用於**表單默認值**；本文件讓它在運行時也生效（僅當儲存
  *    的 `web_proxy` 未配置時兜底），否則 TS 存量資料（web_proxy 為 null）會把默認
  *    應當代理的驅動判成直鏈。
- * 2. Go 的透明代理會轉發**全部**客戶端請求頭（只按 proxy_ignore_headers 過濾）；
- *    本 TS 實現只轉發少量必要的頭（客戶端 Range + 兜底 User-Agent + 驅動聲明的頭），
+ * 2. Go 的透明代理會轉發**全部**客戶端請求頭（僅按 proxy_ignore_headers 過濾）；
+ *    本 TS 實現僅轉發少量必要的頭（客戶端 Range + 兜底 User-Agent + 驅動聲明的頭），
  *    以免把客戶端 Cookie / Authorization 洩露給第三方上游。proxy_ignore_headers
  *    仍然作用於這些會轉發的頭（見 server/proxy_request.ts 的 buildUpstreamHeaders）。
  * 3. Go 的多執行緒 RangeReader（Config.Concurrency/PartSize 與
@@ -142,7 +142,7 @@ const DRIVER_PREFER_PROXY = new Set<string>([
  * 供 admin.ts 決定是否展示 proxy_range 表單項。
  *
  * 注意：透傳客戶端 Range 是**默認行為**（對齊 Go 透明代理總是轉發客戶端頭），
- * 該開關只在這幾個驅動上作為「可顯式關閉」的入口，Go 裡 139Yun 實例默認
+ * 該開關僅在這幾個驅動上作為「可顯式關閉」的入口，Go 裡 139Yun 實例默認
  * `d.ProxyRange = true` 的差異因此不再需要單獨表達。
  */
 export const PROXY_RANGE_DRIVERS = new Set([
@@ -214,7 +214,7 @@ export function driverMustProxy(driver: string): boolean {
  *
  * Go drivers/bunny_storage/driver.go 的 Config()：
  *   if d.StorageZoneName != "" && d.CDNBaseURL == "" { cfg.OnlyProxy = true; cfg.PreferProxy = true }
- * 即「配了儲存區但沒綁 CDN 域名」時只有 Storage API 可讀（需 AccessKey 頭），
+ * 即「配了儲存區但沒綁 CDN 域名」時僅有 Storage API 可讀（需 AccessKey 頭），
  * 瀏覽器直連會 401，必須由服務端代理。綁定了 CDN 則直鏈可用。
  */
 function bunnyStorageNeedsProxy(storage: any): boolean {
@@ -263,7 +263,7 @@ export function getDownProxyUrl(storage: any): string {
   // 1) 頂層欄位（正常路徑）
   for (const key of ["down_proxy_url", "downProxyUrl"]) {
     const val = storage[key]
-    // 對齊 Go GenerateDownProxyURL：多行只取第一行
+    // 對齊 Go GenerateDownProxyURL：多行僅取第一行
     //（strings.Split(storage.DownProxyURL, "\n")[0]），否則會把換行帶進 URL。
     if (typeof val === "string" && val.trim()) return val.split("\n")[0].trim()
   }
@@ -300,7 +300,7 @@ export function getDisableProxySign(storage: any): boolean {
  * 儲存級 web_proxy 的**生效值**。
  *
  * Go 的行為：`web_proxy` 是儲存欄位，其**默認值**由驅動能力決定
- * （`op/driver.go`：PreferProxy 驅動的表單默認 true），運行時只看該欄位
+ * （`op/driver.go`：PreferProxy 驅動的表單默認 true），運行時僅看該欄位
  * （`common.ShouldProxy`：`MustProxy() || WebProxy`）。
  *
  * TS 的存量資料裡 `web_proxy` 常為 null（早期表單未寫入），直接按 false 處理會
@@ -325,7 +325,7 @@ export function effectiveWebProxy(storage: any, driver: string): boolean {
  *   5. 儲存級 webdav_policy 已配置                          → 按配置值
  *   6. 兜底                                                 → 302_redirect
  *
- * 與 Go 的差異：Go 的 `ShouldProxy` 不看 `webdav_policy`（`302_redirect` 只作用於
+ * 與 Go 的差異：Go 的 `ShouldProxy` 不看 `webdav_policy`（`302_redirect` 僅作用於
  * WebDAV 協議端點，`use_proxy_url` 由 `canProxy` 處理）；TS 在此統一按策略值決策，
  * 因此「webdav_policy=native_proxy 且 web_proxy=false」在 TS 會代理、在 Go 會直鏈。
  *
@@ -353,7 +353,7 @@ export function resolveProxyDecision(
   }
 
   // Go ShouldProxy 的第三條：proxy_types 命中的擴展名（如 m3u8、url）必須由服務端
-  // 代理——這類文件內部含相對引用，只有經本服務轉發才能正確解析。
+  // 代理——這類文件內部含相對引用，僅有經本服務轉發才能正確解析。
   if (matchesExtList(extensionOf(opts.filename), opts.proxyTypes)) {
     return { mode: "native_proxy", needsProxy: true, source: "proxy_types" }
   }
@@ -387,8 +387,8 @@ function matchesExtList(ext: string, list: unknown): boolean {
  *     文件，即使儲存沒開 web_proxy 也應當允許；
  *   - 額外接受 `webdav_policy=use_proxy_url`（Go canProxy 顯式包含 WebdavProxyURL）。
  *
- * 注意：Go 只對 /p（以及歸檔的 /ap）做此限制，/d、/sd 不限制（它們走 ShouldProxy），
- * 因此調用方只能把這個判斷用在 /p 端點上。
+ * 注意：Go 僅對 /p（以及歸檔的 /ap）做此限制，/d、/sd 不限制（它們走 ShouldProxy），
+ * 因此調用方僅能把這個判斷用在 /p 端點上。
  */
 export function canUseProxyEndpoint(input: {
   storage: any

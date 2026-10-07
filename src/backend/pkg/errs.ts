@@ -42,7 +42,7 @@ export const Errs = {
 
 /**
  * 錯誤信息脫敏：對外返回錯誤時避免暴露內部實現細節（路徑、堆棧、驅動內部）。
- * 只保留錯誤類型/API 層信息，敏感內容替換為通用描述。
+ * 僅保留錯誤類型/API 層信息，敏感內容替換為通用描述。
  */
 export function safeErrorMessage(
   e: any,

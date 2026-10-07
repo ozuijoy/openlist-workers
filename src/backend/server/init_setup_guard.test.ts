@@ -11,7 +11,7 @@ import { setupRouter } from "./router"
  *      否則會出現「讀不到 → 不許初始化 → 永遠讀不到」的死鎖；
  *   2. 「讀取持久化後端失敗」**必須拒絕**初始化，避免把兜底空殼寫回儲存、
  *      覆蓋真實配置（資料庫被清空）；
- *   3. 配置了 ADMIN_PASS 時，安裝頁只輪詢 /init_status 也應能完成初始化
+ *   3. 配置了 ADMIN_PASS 時，安裝頁僅輪詢 /init_status 也應能完成初始化
  *      （否則表現為「配了 ADMIN_PASS 仍反覆跳 /@init」）。
  */
 
@@ -147,7 +147,7 @@ test("init_status：未配置 ADMIN_PASS 時不得寫入佔位庫", async () => 
 
   // 注：initialized 的取值不做斷言 —— isolate 級記憶體裡可能已有別的 env 建立
   // 過的可信快照（loadDb 會保留它以避免誤判為「未初始化」），這是刻意行為。
-  // 本用例只鎖定「未配置 ADMIN_PASS 時不產生任何寫入」這一不變量。
+  // 本用例僅鎖定「未配置 ADMIN_PASS 時不產生任何寫入」這一不變量。
   assert.equal(
     env.KV.__store.size,
     0,

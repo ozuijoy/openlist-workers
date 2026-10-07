@@ -4,13 +4,13 @@ import { Hono } from "hono"
 import { assetsRouter } from "./assets"
 
 /**
- * 靜態資源路由的迴歸：CDN 重定向**只能**匹配固定目錄前綴。
+ * 靜態資源路由的迴歸：CDN 重定向**僅能**匹配固定目錄前綴。
  *
  * 背景（實機復現）：進入文件預覽頁後刷新，地址形如 `<域名>/儲存2/xxx.exe`，
  * 會被原先的貪婪路由 `/:folder/:filepath*` 攔下，未配置 ASSET_URLS 時直接
  * 返回 404 `Static resource not found`，前端來不及走到 SPA 兜底。
  *
- * Go 的對應實現（server/static/static.go）只對
+ * Go 的對應實現（server/static/static.go）僅對
  * `assets / images / streamer / static` 四個目錄做 CDN 重定向，其餘一律
  * 交給 `noRoute`（返回 index.html）。
  */

@@ -43,7 +43,7 @@ function withMock<T>(calls: Call[], fn: () => Promise<T>): Promise<T> {
 }
 
 function makeDriver() {
-  // 測試不調用 init()，client 的 accessToken 為空；只要 mock 返回 2xx 就不會
+  // 測試不調用 init()，client 的 accessToken 為空；僅要 mock 返回 2xx 就不會
   // 觸發 401 → refreshToken() 聯網。
   return new YandexDriver({
     refresh_token: "r",

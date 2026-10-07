@@ -190,7 +190,7 @@ export class Pan115Driver implements StorageDriver {
         return info.file_id
       }
     } catch (e: any) {
-      // folder/get_info 只支持目錄路徑：參數錯誤(990002)/不存在(430004) → 回退逐層
+      // folder/get_info 僅支持目錄路徑：參數錯誤(990002)/不存在(430004) → 回退逐層
       if (e?.code !== ERR_OBJECT_NOT_FOUND && e?.code !== 990002) throw e
     }
     // 逐層解析
@@ -254,7 +254,7 @@ export class Pan115Driver implements StorageDriver {
 
     const parentId = await this.resolveFolderId(parentPath)
     // 分頁列出父目錄找文件（列表介面返回完整 pick_code；
-    // folder/get_info 只支持目錄路徑，對文件路徑不可用）
+    // folder/get_info 僅支持目錄路徑，對文件路徑不可用）
     let offset = 0
     for (;;) {
       if (!this.reserve()) throw new Error("subrequest budget exceeded")

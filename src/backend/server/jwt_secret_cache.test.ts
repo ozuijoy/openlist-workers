@@ -6,8 +6,8 @@ import { getJwtSecret, resetJwtSecretCache } from "./middlewares"
 /**
  * getJwtSecret() 快取迴歸測試
  *
- * 背景 1（性能）：getJwtSecret 的「持久化密鑰」分支曾經只 `return kvSecret`
- * 而不寫快取，導致該函數**自身**沒有快取：只要底層讀取沒有被其它層記憶化，
+ * 背景 1（性能）：getJwtSecret 的「持久化密鑰」分支曾經僅 `return kvSecret`
+ * 而不寫快取，導致該函數**自身**沒有快取：僅要底層讀取沒有被其它層記憶化，
  * 每次調用都會重新回源。而它一次請求內會被
  * getUserFromContext / csrfProtection / checkAdminAuth 調用 2-4 次。
  *

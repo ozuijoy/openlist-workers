@@ -181,7 +181,7 @@ export function isSafeUrl(
     if (!host) return false
 
     // 白名單：管理員在儲存配置裡主動填寫的 endpoint host（可能是內網/私有地址）
-    // 視為受信。SSRF 防護只針對用戶/第三方可控的 URL，不應攔截管理員自己的
+    // 視為受信。SSRF 防護僅針對用戶/第三方可控的 URL，不應攔截管理員自己的
     // 內網儲存（自建 MinIO / 內網 S3 / 內網 WebDAV 等）。僅做精確 host 匹配，
     // 不放過子域名，避免被「受信域名下的任意子域」繞過。
     if (allowHosts) {
@@ -269,7 +269,7 @@ export function isSafeUrl(
     // 注意：整數/十六進制 IP 檢測必須錨定到「完整的 label」，不能做子串匹配。
     // 例如騰訊雲 COS 的 hostname 形如 {bucket}-{10位AppID}.cos.{region}.myqcloud.com，
     // 其中 AppID 就是連續的 10 位數字；若用 /\d{10}/ 子串匹配會誤判為整數 IP，
-    // 導致正常公網下載被 SSRF 攔截。這裡只攔截「某個 label 整體是整數/十六進制 IP」。
+    // 導致正常公網下載被 SSRF 攔截。這裡僅攔截「某個 label 整體是整數/十六進制 IP」。
     const dnsRebindPatterns = [
       /(^|\.)\d{1,3}-\d{1,3}-\d{1,3}-\d{1,3}(\.|$)/, // 127-0-0-1.example.com
       /(^|\.)0x[0-9a-f]{6,8}(\.|$)/i, // 0x7f000001.example.com (十六進制IP label)
@@ -312,7 +312,7 @@ export function assertSafeUrl(
  * 內網 S3、內網 WebDAV），此時驅動生成的 raw_url host 就是內網地址，會命中 SSRF
  * 攔截。因此把這些 host 加入白名單，使管理員自己的內網儲存能正常下載。
  *
- * 實現：只掃描「欄位名含 url/host/address/endpoint/server/domain/site/base 等
+ * 實現：僅掃描「欄位名含 url/host/address/endpoint/server/domain/site/base 等
  * 關鍵詞」的欄位（避免把 username 之類的普通字符串誤當 host），且值必須能解析成
  * http(s) URL 或裸 host[:port]，提取其 hostname。
  */

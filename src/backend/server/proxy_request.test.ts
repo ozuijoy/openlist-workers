@@ -68,7 +68,7 @@ test("Range 透傳不改變簽名：簽名綁定 URL，與請求頭無關", () =
     rangeHeader: "bytes=100-200",
     proxyRange: false,
   })
-  // 請求頭中不包含任何簽名相關內容，簽名只存在於 URL 上
+  // 請求頭中不包含任何簽名相關內容，簽名僅存在於 URL 上
   assert.deepEqual(
     Object.keys(withRange).filter((k) => /sign/i.test(k)),
     [],
@@ -83,7 +83,7 @@ test("Range 透傳不改變簽名：簽名綁定 URL，與請求頭無關", () =
   )
 })
 
-test("412 兜底重試時丟失 Range，但簽名 URL 可複用（只需換請求頭）", () => {
+test("412 兜底重試時丟失 Range，但簽名 URL 可複用（僅需換請求頭）", () => {
   const headers = buildUpstreamHeaders({
     rangeHeader: "bytes=0-99",
     proxyRange: true,
@@ -125,7 +125,7 @@ test("upstreamBodySize: Content-Length 優先，Content-Range 兜底", () => {
     upstreamBodySize(upstream(200, { "content-length": "12345" }).headers),
     12345,
   )
-  // 只有 Content-Range 時取分段長度（206 分片）
+  // 僅有 Content-Range 時取分段長度（206 分片）
   assert.equal(
     upstreamBodySize(
       upstream(206, { "content-range": "bytes 0-1048575/524288000" }).headers,
@@ -144,7 +144,7 @@ test("upstreamBodySize: Content-Length 優先，Content-Range 兜底", () => {
 test("Range + 簽名 + 上限交互：412 重試後按完整文件大小判定（無需重籤）", () => {
   const signedUrl = "https://cdn.example.com/f.mp4?sign=1700000000.abcdef"
   const headers = buildUpstreamHeaders({
-    rangeHeader: "bytes=0-1048575", // 只想取 1 MiB
+    rangeHeader: "bytes=0-1048575", // 僅想取 1 MiB
     proxyRange: true,
   })
   assert.equal(headers["Range"], "bytes=0-1048575")
@@ -402,7 +402,7 @@ test("exceedsProxyPayloadLimit: 邊界值（等於上限不算超限）", () => 
 })
 
 test("exceedsProxyPayloadLimit: Range 分片按分片大小判斷", () => {
-  // 500 MiB 的文件只取 1 MiB 分片 → 不超限，視頻拖動進度不受影響
+  // 500 MiB 的文件僅取 1 MiB 分片 → 不超限，視頻拖動進度不受影響
   assert.equal(
     exceedsProxyPayloadLimit(500 * MiB, "bytes=0-1048575", EDGE_LIMIT),
     false,
@@ -470,14 +470,14 @@ test("isAuthBoundDownload: 強制代理驅動與私有頭判定", () => {
   assert.equal(isAuthBoundDownload("WeiYun", undefined), true)
   // 預授權直鏈（OneDrive 的 @microsoft.graph.downloadUrl 無需私有頭）
   assert.equal(isAuthBoundDownload("Onedrive", undefined), false)
-  // Go 裡只有 PreferProxy 的驅動不算強制代理，但直鏈帶 Cookie 時仍不可降級
+  // Go 裡僅有 PreferProxy 的驅動不算強制代理，但直鏈帶 Cookie 時仍不可降級
   assert.equal(isAuthBoundDownload("baidunetdisk", undefined), false)
   assert.equal(isAuthBoundDownload("baidunetdisk", { Cookie: "ndus=1" }), true)
   assert.equal(
     isAuthBoundDownload("webdav", { Authorization: "Basic xxx" }),
     true,
   )
-  // 只有 UA / Referer 不算私有頭（如 115open 的 UA、S3 的 Referer）
+  // 僅有 UA / Referer 不算私有頭（如 115open 的 UA、S3 的 Referer）
   assert.equal(
     isAuthBoundDownload("s3", {
       "User-Agent": "openlist",

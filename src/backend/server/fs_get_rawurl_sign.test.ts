@@ -20,10 +20,10 @@ import { verifyDownloadSign } from "../pkg/sign"
  * /p 端點，但**從來沒帶 ?sign=**；而前端把 raw_url 直接當下載地址用
  *   - 預覽頁的下載按鈕：<a href={objStore.raw_url}>（previews/download.tsx）
  *   - 圖片/視頻預覽：<img src={objStore.raw_url}> / <video src={...}>
- * 不會再自己拼簽名（只有文件列表裡的 /d、/p 鏈接才會用 fs/list 返回的 sign）。
+ * 不會再自己拼簽名（僅有文件列表裡的 /d、/p 鏈接才會用 fs/list 返回的 sign）。
  *
  * 於是 sign_all / 儲存級 enable_sign / 密碼 meta 覆蓋時：
- *   - .exe 這類「預覽頁只是元信息 + 下載按鈕」的文件，頁面能正常打開，
+ *   - .exe 這類「預覽頁僅是元信息 + 下載按鈕」的文件，頁面能正常打開，
  *     一點下載就 401 —— 正是 issue 描述的現象；
  * 而 Go 版 server/handles/fsread.go FsGet 會顯式補上：
  *   if isEncrypt(meta, reqPath) || setting.GetBool(conf.SignAll) {

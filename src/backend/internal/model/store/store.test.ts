@@ -276,7 +276,7 @@ test("sql format: MySQL dialect uses ON DUPLICATE KEY UPDATE (no INSERT OR REPLA
 })
 
 /**
- * 構造一個最小可用的 D1 綁定樁（只實現 kv 表相關的 prepare 語義）。
+ * 構造一個最小可用的 D1 綁定樁（僅實現 kv 表相關的 prepare 語義）。
  *
  * 用於迴歸驗證：密鑰讀寫必須能走 d1 驅動，而不是隻在 KV 綁定存在時才成功。
  */
@@ -328,7 +328,7 @@ function createMockD1Binding() {
 }
 
 test("secret persistence: write/read works with explicit DB_DRIVER=d1", async () => {
-  // 迴歸：此前 readPersistedSecret/writePersistedSecret 只走 getKvBinding，
+  // 迴歸：此前 readPersistedSecret/writePersistedSecret 僅走 getKvBinding，
   // 而 getKvBinding 不識別 D1，導致 DB_DRIVER=d1 時密鑰既讀不到也寫不進，
   // 每次冷啟動都會生成新的隨機 JWT_SECRET，使多實例簽發/驗籤密鑰不一致，
   // 表現為下載與播放報 "sign verify failed"（401）。
@@ -366,8 +366,8 @@ test("secret persistence: degrades gracefully when no backend is available", asy
   )
 })
 
-test("getKvBinding: 同一 env 只解析一次（含 mode=none），重複調用返回同一快取對象", async () => {
-  // 迴歸：此前只有「成功」的綁定會被快取，`mode=none` 直接 return，於是每次
+test("getKvBinding: 同一 env 僅解析一次（含 mode=none），重複調用返回同一快取對象", async () => {
+  // 迴歸：此前僅有「成功」的綁定會被快取，`mode=none` 直接 return，於是每次
   // 調用都會重新探測 env.KV / globalThis.KV、重試 Blob SDK 初始化，並重新打印
   // 一次告警。登入失敗計數、註銷黑名單、審計日誌讀寫都在這條路徑上
   // （serverless 日誌被同一行刷屏的來源之一）。

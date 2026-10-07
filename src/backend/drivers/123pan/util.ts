@@ -345,7 +345,7 @@ export class Pan123Client {
 
   /**
    * 分頁獲取文件列表。
-   * - findName/findIsDir：提前終止模式——在分頁中查找目標項，命中立即返回（只含命中項），
+   * - findName/findIsDir：提前終止模式——在分頁中查找目標項，命中立即返回（僅含命中項），
    *   避免為解析路徑而拉取全部分頁（減少 Cloudflare subrequest）。
    * - budget：共享 subrequest 預算（used/limit）。超過 limit 時截斷並告警，
    *   防止單次 invocation 超過 Cloudflare Workers 的 50 次子請求上限。

@@ -25,7 +25,7 @@
  * 從不讀寫頂層的 `db.sshkeys`；而 Go 後端把公鑰存於獨立的
  * `x_ssh_public_keys` 表。若把 sshkeys 納入往返，`sqlFormat.save()` 會執行
  * `DELETE FROM x_ssh_public_keys` 再寫入空數組，**清空 Go 寫入的 SSH 公鑰**。
- * 因此這裡刻意排除，只保留其 DDL（見 TABLES），與 Go 共享同一物理庫時
+ * 因此這裡刻意排除，僅保留其 DDL（見 TABLES），與 Go 共享同一物理庫時
  * 既不破壞也不接管該表。
  */
 export const TABLE_NAMES = [
@@ -43,7 +43,7 @@ export type TableName = (typeof TABLE_NAMES)[number]
  * 需要建表（DDL）的全部表，含不參與往返的 sshkeys。
  *
  * 與 TABLE_NAMES 分離：建表仍覆蓋 sshkeys，便於與 Go 後端共享物理庫時
- * 表結構一致；但讀寫（load/save/batch）只針對 TABLE_NAMES。
+ * 表結構一致；但讀寫（load/save/batch）僅針對 TABLE_NAMES。
  */
 export const DDL_TABLE_NAMES = [...TABLE_NAMES, "sshkeys"] as const
 export type DdlTableName = (typeof DDL_TABLE_NAMES)[number]

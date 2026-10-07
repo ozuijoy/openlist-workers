@@ -22,7 +22,7 @@ import {
  *   3. 後台表單欄位（admin.ts 的 buildProxyFields）
  */
 
-test("MustProxy：只包含 Go 標了 OnlyProxy / NoLinkURL 的驅動", () => {
+test("MustProxy：僅包含 Go 標了 OnlyProxy / NoLinkURL 的驅動", () => {
   const must = [
     "WeiYun",
     "SFTP",
@@ -44,7 +44,7 @@ test("MustProxy：只包含 Go 標了 OnlyProxy / NoLinkURL 的驅動", () => {
     assert.equal(driverMustProxy(driver), true, `${driver} 應為 MustProxy`)
   }
 
-  // Go 裡只有 PreferProxy 或完全沒有代理標記的驅動，不能當成 MustProxy
+  // Go 裡僅有 PreferProxy 或完全沒有代理標記的驅動，不能當成 MustProxy
   const notMust = [
     "123Pan",
     "BaiduNetdisk",
@@ -82,7 +82,7 @@ test("PreferProxy：與 Go 的 DefaultProxy() 一致", () => {
 test("effectiveWebProxy：未配置時回退到驅動默認值，顯式值優先", () => {
   // PreferProxy 驅動：表單默認勾選（等價 Go op/driver.go 的默認 true）
   assert.equal(effectiveWebProxy({}, "webdav"), true)
-  // 管理員顯式取消勾選時必須尊重（Go 的 ShouldProxy 只看該欄位）
+  // 管理員顯式取消勾選時必須尊重（Go 的 ShouldProxy 僅看該欄位）
   assert.equal(effectiveWebProxy({ web_proxy: false }, "webdav"), false)
   assert.equal(effectiveWebProxy({ web_proxy: "false" }, "webdav"), false)
   // 非 PreferProxy 驅動：默認不代理

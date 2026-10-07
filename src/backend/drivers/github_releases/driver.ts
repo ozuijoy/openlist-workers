@@ -6,7 +6,7 @@ import {
 import { DriverGithubReleasesAddition } from "./types"
 import { ClientGithubReleases } from "./util"
 
-/** 只讀發佈源驅動：不支持寫入操作 */
+/** 僅讀發佈源驅動：不支持寫入操作 */
 export class DriverGithubReleases implements StorageDriver {
   private client: ClientGithubReleases
 

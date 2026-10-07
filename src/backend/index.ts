@@ -28,11 +28,11 @@ function isStaticOrShell(pathname: string, accept: string, method: string): bool
  * 診斷類介面：必須豁免儲存配置錯誤攔截。
  *
  * 這類介面存在的意義就是「報告哪裡出了問題」。若在儲存出錯時把它們也
- * 一併 503 掉，調用方只會看到一個空洞的失敗，拿不到任何可操作信息
- * （前端表現為「只顯示儲存不可用，其餘欄位全部空白」）。
+ * 一併 503 掉，調用方僅會看到一個空洞的失敗，拿不到任何可操作信息
+ * （前端表現為「僅顯示儲存不可用，其餘欄位全部空白」）。
  *
  * 注意：豁免的是「攔截」，不是「鑑權」。這些介面本身仍是免鑑權的公開
- * 診斷端點，且只返回脫敏後的狀態，不洩露密鑰或 DSN。
+ * 診斷端點，且僅返回脫敏後的狀態，不洩露密鑰或 DSN。
  */
 const DIAGNOSTIC_PATHS = [
   // 環境自檢：返回 config/storage/jwt/ready/issues 全量診斷
@@ -53,7 +53,7 @@ function isDiagnosticPath(pathname: string): boolean {
  * KV 代理傳輸端點（EdgeOne Edge Function 側由 functions/kv-* 提供）。
  *
  * 這些路徑是「驅動探測/讀寫」的傳輸層，不是業務請求，本 Worker 也不提供它們
- * （只有 EdgeOne Edge Function / CF Pages Functions 才有）。必須兩種情況都避開：
+ * （僅有 EdgeOne Edge Function / CF Pages Functions 才有）。必須兩種情況都避開：
  *
  *   1. **不走儲存配置攔截**：kv 驅動的可用性判定就是向 `{origin}/kv-list` 發一次
  *      探測，而攔截邏輯會解析驅動 —— 若這些請求落進攔截，就會「探測請求 → 解析
@@ -75,7 +75,7 @@ app.use("*", async (c, next) => {
   // 模塊級 globalEnvCtx 為 null，會導致 getDb()/saveDb() 退回記憶體模式，
   // 網盤賬號密碼與 access_token 無法從 KV 持久化讀取）
   //
-  // EdgeOne 場景：KV 只能由 Edge Function 訪問，Node 雲函數需經 HTTP 代理
+  // EdgeOne 場景：KV 僅能由 Edge Function 訪問，Node 雲函數需經 HTTP 代理
   // 調用 /kv-* 。而 Node 的 fetch 不接受相對 URL，因此這裡把當前請求的
   // origin 注入 env，供 kv 驅動拼出絕對地址（同一部署內自調用）。
   const env = (c.env || {}) as any
@@ -101,8 +101,8 @@ app.use("*", async (c, next) => {
     isKvProxyPath(pathname)
   if (!exempt) {
     // 用 Detail 版本：除完整原因外還帶分類碼與一句話修復建議，前端據此
-    // 展示「哪裡錯了 + 該改成什麼」。只給一段長文本時，用戶（和日誌讀者）
-    // 能看到的只是「驅動不可用」，不知道該把 DB_DRIVER 改成什麼。
+    // 展示「哪裡錯了 + 該改成什麼」。僅給一段長文本時，用戶（和日誌讀者）
+    // 能看到的僅是「驅動不可用」，不知道該把 DB_DRIVER 改成什麼。
     const detail = await getStoreConfigErrorDetail(env)
     if (detail.message) {
       const ui = uiStorageError(detail)
@@ -133,7 +133,7 @@ app.use("*", async (c, next) => {
 // 在 Serverless 環境中，所有邏輯都是無狀態的且由請求觸發。
 // 這裡不應該初始化任何常駐的後台任務 (如 Cron 或 執行緒池)。
 
-// KV 代理傳輸端點：本部署不提供（只有 EdgeOne Edge Function / CF Pages
+// KV 代理傳輸端點：本部署不提供（僅有 EdgeOne Edge Function / CF Pages
 // Functions 的 functions/kv-* 提供）。顯式回 410，避免這些請求落進 SPA 兜底
 // 被當成「HTTP 200」而讓 kv 驅動誤判為可用（詳見 isKvProxyPath 註釋）。
 for (const path of KV_PROXY_PATHS) {
@@ -188,7 +188,7 @@ app.all("*", async (c) => {
     if (res.status >= 200 && res.status < 300) {
       // 修復「部署新版本後生產環境仍是舊界面」：index.html 若不設快取頭，
       // 會被 Cloudflare 邊緣/瀏覽器長期快取，導致舊 HTML 引用舊 hash 的 JS/CSS。
-      // 只對 HTML 入口 no-cache（JS/CSS 帶 hash 可安全長期快取）。
+      // 僅對 HTML 入口 no-cache（JS/CSS 帶 hash 可安全長期快取）。
       if (url.pathname === "/" || url.pathname === "/index.html") {
         const headers = new Headers(res.headers)
         headers.set("Cache-Control", "no-cache, must-revalidate")
@@ -227,13 +227,13 @@ app.all("*", async (c) => {
     headers.set("Content-Type", "text/html; charset=utf-8")
     // HTML 入口必須 no-cache，否則新版本部署後舊 HTML 仍引用舊 hash 的 JS/CSS
     headers.set("Cache-Control", "no-cache, must-revalidate")
-    // 只有「已配置 CDN + 2xx + GET/HEAD」才改寫 HTML，其餘情況一律
+    // 僅有「已配置 CDN + 2xx + GET/HEAD」才改寫 HTML，其餘情況一律
     // 「狀態碼 + headers + body 流」原樣透傳：
     //   - 未配置 ASSET_URLS：零開銷直通，不把 body 讀成字符串再重建響應
     //     （否則每次深鏈刷新都白付一次緩衝，並丟掉流式透傳）；
     //   - 非 2xx（如 /index.html 的 307、兜底子請求的 404）：
     //     改寫會把狀態碼抹平成一個 200 + HTML 空殼，掩蓋真實錯誤；
-    //   - 非 GET/HEAD：HTML 改寫只對頁面導航有意義。
+    //   - 非 GET/HEAD：HTML 改寫僅對頁面導航有意義。
     const rewritable =
       isCdnConfigured(env) &&
       rootRes.status >= 200 &&

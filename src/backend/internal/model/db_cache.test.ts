@@ -63,7 +63,7 @@ const SAMPLE = {
   plugins: [],
 }
 
-test("getDb: 重複無參調用只觸發一次後端 load（快取命中）", async () => {
+test("getDb: 重複無參調用僅觸發一次後端 load（快取命中）", async () => {
   __resetDbCacheForTest()
   const { backend, stats } = createCountingBackend(SAMPLE)
   __setStoreBackendLoaderForTest(async () => backend)
@@ -75,7 +75,7 @@ test("getDb: 重複無參調用只觸發一次後端 load（快取命中）", as
   const b = await getDb()
   const c = await getDb()
 
-  assert.equal(stats.load, 1, "連續無參 getDb() 應命中快取，只 load 一次")
+  assert.equal(stats.load, 1, "連續無參 getDb() 應命中快取，僅 load 一次")
   assert.equal(a, b)
   assert.equal(b, c)
 
@@ -119,7 +119,7 @@ test("getDb: saveDb 後無參讀取可觀察到最新寫入（寫後讀一致）
   const next = { ...SAMPLE, settings: [{ key: "site_title", value: "Changed" }] }
   await saveDb(next)
   // 注意：saveDb 內部可能同時寫入加密密鑰等輔助資料，因此不斷言 save 恰好為 1，
-  // 只要求確實發生過持久化寫入。
+  // 僅要求確實發生過持久化寫入。
   assert.ok(stats.save >= 1, "saveDb 應觸發後端持久化")
 
   // 注意：這裡不等待 TTL 過期，驗證的是 saveDb 主動刷新快取。

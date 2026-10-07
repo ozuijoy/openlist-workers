@@ -10,18 +10,18 @@ import { getStoreStatus } from "../internal/model/store/backend"
  *
  * 背景：部署文件給出三條「必須滿足」的約束，但檢查邏輯此前有兩處與之不符：
  *
- *   1. blob 只支持 map（blob 是「整存整取的單文件」儲存，攤平成多條鍵的 key
+ *   1. blob 僅支持 map（blob 是「整存整取的單文件」儲存，攤平成多條鍵的 key
  *      格式在 blob 上寫不出、也 list 不出真實結構）。
- *      舊實現只做「能力探測」（有沒有 get/put/delete/list），因此 blob + key
+ *      舊實現僅做「能力探測」（有沒有 get/put/delete/list），因此 blob + key
  *      被誤判為合法組合，要等到真正讀寫才炸。
  *
  *   2. JWT_SECRET「必須手動配置」其實不準確 —— 支持自動生成並持久化。
  *      但舊實現存在**自死鎖**：`ready = storageAvailable && jwtReady`，
- *      而自動生成只在提交初始化時執行，嚮導卻被 ready 擋住進不到那一步；
+ *      而自動生成僅在提交初始化時執行，嚮導卻被 ready 擋住進不到那一步；
  *      且 JWT 側讀的是 openlist_jwt_secret、自動生成寫的是
  *      openlist_encryption_secret，兩個槽位名不同 → 「自動生成」永遠不可見。
  *
- *   3. 合法的「驅動 × 格式」矩陣應只有：
+ *   3. 合法的「驅動 × 格式」矩陣應僅有：
  *        blob + map
  *        kv / cfkv + map / key
  *        d1 / do / mysql + map / key / sql
@@ -74,7 +74,7 @@ function fakeBlob() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 約束 1：blob 只支持 map
+// 約束 1：blob 僅支持 map
 // ─────────────────────────────────────────────────────────────────────────────
 
 test("blob + map：合法組合（ESA_BLOB 已綁定時不應報組合錯誤）", async () => {
@@ -104,14 +104,14 @@ test("blob + key：必須判為 INVALID_COMBINATION（blob 是單文件儲存，
   assert.equal(
     status.configErrorCode,
     "INVALID_COMBINATION",
-    "blob 只支持 map；key 會把對象攤平成多條鍵，而 blob 只能整存整取",
+    "blob 僅支持 map；key 會把對象攤平成多條鍵，而 blob 僅能整存整取",
   )
   assert.match(String(status.configError), /DB_FORMAT="key"/)
   // 支持列表必須精確到該驅動，而不是籠統的「map | key」
   assert.match(
     String(status.configError),
     /supports: map/,
-    "錯誤裡必須指出 blob 只支持 map",
+    "錯誤裡必須指出 blob 僅支持 map",
   )
 
   const res = await buildApp().request(
@@ -129,7 +129,7 @@ test("blob + key：必須判為 INVALID_COMBINATION（blob 是單文件儲存，
   // 約束 4：必須帶一句話修復建議（此前該分支 suggestion 為 null）
   assert.ok(
     issue.suggestion && String(issue.suggestion).length > 0,
-    "無效組合必須給出「改成什麼」的建議，否則用戶只知道錯、不知道怎麼辦",
+    "無效組合必須給出「改成什麼」的建議，否則用戶僅知道錯、不知道怎麼辦",
   )
   assert.match(String(issue.suggestion), /DB_FORMAT=map/)
 })
@@ -150,7 +150,7 @@ test("blob + sql：必須判為 INVALID_COMBINATION", async () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 test("合法矩陣：僅文件列出的組合被接受，其餘皆 INVALID_COMBINATION", async () => {
-  // 每個驅動都在 env 裡把所需 binding/憑據全部提供，確保「拒絕」只可能來自
+  // 每個驅動都在 env 裡把所需 binding/憑據全部提供，確保「拒絕」僅可能來自
   // 組合校驗本身，而不是驅動不可用（DRIVER_UNAVAILABLE）等其它原因。
   const baseEnv: any = {
     JWT_SECRET: JWT,
@@ -218,8 +218,8 @@ test("未配置 JWT_SECRET：ready 仍應為 true（儲存可用即可開始安�
   assert.equal(
     data.ready,
     true,
-    "ready 只表示「儲存就緒、可以開始安裝」。若把 jwtReady 也算進去，會形成" +
-      "自死鎖：自動生成密鑰只在提交初始化時執行，而嚮導被 ready 擋住進不到那一步",
+    "ready 僅表示「儲存就緒、可以開始安裝」。若把 jwtReady 也算進去，會形成" +
+      "自死鎖：自動生成密鑰僅在提交初始化時執行，而嚮導被 ready 擋住進不到那一步",
   )
   assert.equal(data.jwt.ready, false, "密鑰確實尚未就緒，UI 仍需提示")
 

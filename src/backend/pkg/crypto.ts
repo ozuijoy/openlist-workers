@@ -367,7 +367,7 @@ export async function aesCbcEncryptBase64(
 // 設計要點：
 //
 // 1. **算法由環境變量選擇，歷史密文由前綴識別**。寫入時按所選算法加版本前綴
-//    （`enc:v1:` ~ `enc:v6:`），讀取時只看前綴、完全不依賴當前配置，
+//    （`enc:v1:` ~ `enc:v6:`），讀取時僅看前綴、完全不依賴當前配置，
 //    因此「換算法」「關掉加密」都不會讓既有密文變成亂碼 —— 舊密文會在本次讀取時
 //    按舊算法解開，並在下一次寫入時按新算法（或明文）重新落盤。
 //
@@ -391,10 +391,10 @@ export async function aesCbcEncryptBase64(
 //
 // 4. v3 採用「長度前綴」包裹明文：WebCrypto 的 AES-CBC 在部分運行時（Node 的
 //    OpenSSL 後端）會自動做/去 PKCS#7 padding，而 CF Workers/瀏覽器不會。
-//    把真實長度寫進密文頭部（4 字節大端），解密後只取該長度即可，從而在任何
+//    把真實長度寫進密文頭部（4 字節大端），解密後僅取該長度即可，從而在任何
 //    運行時都得到一致結果（多餘 padding 與額外整塊 padding 都會被忽略）。
 //
-// 5. **密鑰派生結果在進程內快取**（見 cachedDerive）：同一 (算法, 密鑰) 只派生
+// 5. **密鑰派生結果在進程內快取**（見 cachedDerive）：同一 (算法, 密鑰) 僅派生
 //    一次，後續讀/寫直接複用 —— #69 的「每次操作派生一次」在此進一步降為
 //    「每個 isolate 派生一次」。這是純 memoization，不改變任何密文內容。
 
@@ -424,7 +424,7 @@ export const DB_CIPHER_VALUES: DbCipher[] = [
 /**
  * 不推薦用於真實資料的算法（僅相容/測試用途）。
  *
- * 選用它們時會打印**一次性告警**：DES 有效密鑰只有 56-bit（可暴力破解）、
+ * 選用它們時會打印**一次性告警**：DES 有效密鑰僅有 56-bit（可暴力破解）、
  * 3DES 已被 NIST SP 800-131A 棄用（64-bit 分組 + Sweet32）。實現完整性保護
  * （Encrypt-then-MAC）不代表密鑰強度足夠。
  */
@@ -530,7 +530,7 @@ export function cipherPrefix(cipher: DbCipher): string {
 }
 
 /**
- * 識別密文前綴。**只看前綴，不看當前配置** —— 這是「換算法/關加密不丟資料」的關鍵。
+ * 識別密文前綴。**僅看前綴，不看當前配置** —— 這是「換算法/關加密不丟資料」的關鍵。
  *
  * @returns 命中的算法與前綴（調用方用 `prefix.length` 切出密文主體）；明文返回 null
  */
@@ -583,13 +583,13 @@ function utf8Bytes(text: string): Uint8Array {
 // ── 密鑰派生快取（性能：每次讀/寫不再重複派生）────────────────────────────
 //
 // #69 已經把「逐欄位派生」降為「每次 save/load 派生一次」；這裡再進一步：
-// 同一 (算法, 密鑰) 在**進程/isolate 內只派生一次**，後續所有讀寫直接複用。
+// 同一 (算法, 密鑰) 在**進程/isolate 內僅派生一次**，後續所有讀寫直接複用。
 //
 // 為什麼安全：`cachedDerive` 是純 memoization —— 輸入相同則輸出必然相同，
 // 不改變任何密文/明文，也不改變密鑰來源與優先級；快取鍵包含密鑰本身，
 // 因此密鑰輪換（或 env 變更）會自動 miss 並生成新條目。
 //
-// 容量：只保留最近 KEY_CACHE_LIMIT 條（正常情況下 1~2 條），密鑰輪換時
+// 容量：僅保留最近 KEY_CACHE_LIMIT 條（正常情況下 1~2 條），密鑰輪換時
 // 舊的派生結果被淘汰，記憶體不會無限增長。
 
 const KEY_CACHE_LIMIT = 8
@@ -825,7 +825,7 @@ export interface FieldCipher {
    * 「算法 + 密鑰」指紋（不含密鑰本身，16 位 hex）。
    *
    * 用途：db.ts 的「未變化欄位跳過重新加密」快取靠它判斷快取條目是否仍然有效 ——
-   * 只要算法或密鑰變了，指紋就變，快取必然失效，絕不會把舊密鑰/舊算法的密文
+   * 僅要算法或密鑰變了，指紋就變，快取必然失效，絕不會把舊密鑰/舊算法的密文
    * 當成新配置下的結果寫回去。
    */
   fingerprint: string
@@ -839,7 +839,7 @@ export async function createFieldCipher(
   cipher: DbCipher,
   secret: string,
 ): Promise<FieldCipher> {
-  // 弱算法（DES/3DES）只提示一次：它們是相容手段，不是安全選擇。
+  // 弱算法（DES/3DES）僅提示一次：它們是相容手段，不是安全選擇。
   if (cipher !== "none" && WEAK_DB_CIPHERS.includes(cipher) && !weakCipherWarned) {
     weakCipherWarned = true
     console.warn(
@@ -859,7 +859,7 @@ export async function createFieldCipher(
           return bytesToHex(digest).slice(0, 16)
         })
 
-  // 各算法的密鑰材料：**派生結果在進程內快取**，同一次/後續讀寫都只派生一次。
+  // 各算法的密鑰材料：**派生結果在進程內快取**，同一次/後續讀寫都僅派生一次。
   const getV2Key = () =>
     cachedDerive("v2", secret, () => deriveConfigEncryptionKey(secret))
   const getV3Keys = () =>

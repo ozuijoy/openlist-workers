@@ -121,7 +121,7 @@ test("Webdav move() 請求源與 Destination 頭分別為源/目標項自身路�
   )
 })
 
-test("Webdav root_folder_path 前綴只拼一次（remove 與 move）", async () => {
+test("Webdav root_folder_path 前綴僅拼一次（remove 與 move）", async () => {
   const removeCalls: Call[] = []
 
   await withMock(removeCalls, () =>

@@ -213,7 +213,7 @@ test("/raw/* is a public download endpoint when no sign is required (parity with
     method: "GET",
   })
 
-  // 對齊 Go server/router.go：/d/*path 與 /p/*path 只掛了
+  // 對齊 Go server/router.go：/d/*path 與 /p/*path 僅掛了
   // PathParse + Down(sign.Verify) + downloadLimiter，沒有 Auth 中間件。
   // 因此在「無需簽名」的默認配置下，匿名請求不應被 401 攔截；
   // 由於測試庫中沒有該儲存，預期是路徑解析失敗（4xx/5xx，非 401）。

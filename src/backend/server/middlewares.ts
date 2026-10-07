@@ -83,7 +83,7 @@ export async function getJwtSecret(c?: Context | any): Promise<string> {
   const env =
     c?.env || (typeof process !== "undefined" ? (process as any).env : {}) || {}
 
-  // ── 長度策略：只要求「非空」，32 字符為**推薦值**（不強制）──
+  // ── 長度策略：僅要求「非空」，32 字符為**推薦值**（不強制）──
   //
   // 這裡曾有三個互不相同的閾值：env 走 `>=16`、快取走 `>=32`、持久化走
   // `>=32`。後果是 **自動生成/持久化的密鑰會被讀取路徑判為無效**：
@@ -103,7 +103,7 @@ export async function getJwtSecret(c?: Context | any): Promise<string> {
 
   // 2. 持久化密鑰（跨實例/重啟穩定），按 env 快取
   // 性能修復：命中後直接返回快取，避免每次調用都回源儲存。
-  // 修復前此分支只 `return kvSecret` 而不寫快取，導致
+  // 修復前此分支僅 `return kvSecret` 而不寫快取，導致
   // getUserFromContext / csrfProtection / checkAdminAuth 等每請求 2-4 次調用
   // 都會各自觸發一次後端讀取（KV/D1 後端下這是最貴的操作之一）。
   //
@@ -117,7 +117,7 @@ export async function getJwtSecret(c?: Context | any): Promise<string> {
   // 2a. 複用 setup 自動生成的共享密鑰（openlist_encryption_secret）。
   //
   // 為什麼必須放在這裡：`ensureEncryptionSecret()` 在 setup 階段把自動生成的
-  // 密鑰寫進 **openlist_encryption_secret**，而本函數歷史實現只找
+  // 密鑰寫進 **openlist_encryption_secret**，而本函數歷史實現僅找
   // **openlist_jwt_secret** —— 兩個槽位名不同。於是「自動生成」的那把密鑰
   // 對 JWT 側**完全不可見**：本函數會再生成一把存到另一個槽位，
   // 造成同一部署裡兩把密鑰各自漂移（多實例驗籤失敗、冷啟動即換鑰）。
@@ -152,7 +152,7 @@ export async function getJwtSecret(c?: Context | any): Promise<string> {
 
   // 4. 生成隨機密鑰並嘗試持久化（開發 + 生產相容）
   //
-  // 以**當前 env** 的快取值判斷是否需要生成：同一 env 的重複/併發調用只生成
+  // 以**當前 env** 的快取值判斷是否需要生成：同一 env 的重複/併發調用僅生成
   // 一次（這裡先同步 remember 再 await 持久化，避免併發各生成一把密鑰，導致
   // 同一時刻簽發的 token 互相驗不過）。
   if (!readCachedJwtSecret(env)) {
@@ -297,7 +297,7 @@ function timingSafeEqual(a: string, b: string): boolean {
 }
 
 /**
- * 定時調度鑑權通道：EdgeOne Schedules 只能攜帶 path/method/payload，
+ * 定時調度鑑權通道：EdgeOne Schedules 僅能攜帶 path/method/payload，
  * 無法附加 Authorization 頭。複用 JWT_SECRET 作為調度密鑰，
  * 允許請求通過 query（?cron_secret=）、JSON body { cron_secret }
  * 或 X-Cron-Secret 頭攜帶匹配值觸發受保護的任務介面。

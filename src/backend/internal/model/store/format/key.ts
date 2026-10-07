@@ -11,11 +11,11 @@
  *
  * 避免大 JSON，適合頻繁讀寫單條記錄的場景。
  *
- * 鍵名約束：EdgeOne KV 只接受字母、數字和下劃線，因此分隔符用 `_`
+ * 鍵名約束：EdgeOne KV 僅接受字母、數字和下劃線，因此分隔符用 `_`
  * 而不是 `:`，且 id 中的非法字符（如 UUID 的 `-`）需轉義。
  *
  * 轉義方案無需反向解析：所有讀寫都是"構造鍵名"，實體的主鍵值一律
- * 來自記錄 JSON 本身，key 只用作儲存地址。
+ * 來自記錄 JSON 本身，key 僅用作儲存地址。
  */
 import type { FormatAdapter, Driver } from "../types"
 import { TABLE_NAMES, TABLE_KEY, type TableName } from "../schema"

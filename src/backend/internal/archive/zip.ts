@@ -25,7 +25,7 @@ export interface ZipArchive {
   entries: ZipEntry[]
 }
 
-/** 解析 ZIP 的中央目錄，返回條目列表（不包含目錄條目，只返回文件） */
+/** 解析 ZIP 的中央目錄，返回條目列表（不包含目錄條目，僅返回文件） */
 export function parseZip(buffer: ArrayBuffer): ZipArchive {
   const view = new DataView(buffer)
   const length = buffer.byteLength

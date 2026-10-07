@@ -7,9 +7,9 @@ import { saveDb } from "../internal/model/db"
 /**
  * `/p` 公開代理端點的准入判定 —— 對齊 Go server/handles/down.go 的 canProxy()：
  * 未開啟代理、且擴展名也不在 proxy_types / text_types 裡時返回
- * 403 `proxy not allowed`（Go 只對 /p 與歸檔 /ap 做該檢查，/d、/sd 不做）。
+ * 403 `proxy not allowed`（Go 僅對 /p 與歸檔 /ap 做該檢查，/d、/sd 不做）。
  *
- * 這裡只覆蓋**拒絕**路徑：拒絕發生在取上游下載鏈接之前，因此不會訪問網路。
+ * 這裡僅覆蓋**拒絕**路徑：拒絕發生在取上游下載鏈接之前，因此不會訪問網路。
  * 「允許」路徑（web_proxy / MustProxy / text_types / proxy_types / use_proxy_url）
  * 由 internal/driver/proxy.test.ts 的 canUseProxyEndpoint 單測覆蓋。
  */
@@ -68,7 +68,7 @@ test("/p：無擴展名的路徑同樣被拒絕", async () => {
 })
 
 test("/p：關閉代理但屬於 text_types 的文本文件仍然放行（不再 403）", async () => {
-  // 放行後進入下游邏輯（取鏈接），此處只斷言「沒有被准入檢查攔下」；
+  // 放行後進入下游邏輯（取鏈接），此處僅斷言「沒有被准入檢查攔下」；
   // 使用不會產生網路請求的路徑：目錄式結尾會讓後續邏輯直接返回 4xx。
   const env: any = {}
   await saveDb(dbWith({ driver: "NotADriver" }), env)

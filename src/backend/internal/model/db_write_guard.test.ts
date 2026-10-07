@@ -106,7 +106,7 @@ test("寫前守衛：讀取失敗後，即使記憶體中有舊快照也不允�
     metas: [],
     plugins: [],
   }
-  // 即使顯式 force 繞過守衛，也應只有調用方明確知情時才可能發生；
+  // 即使顯式 force 繞過守衛，也應僅有調用方明確知情時才可能發生；
   // 這裡斷言默認行為一定是拒絕。
   assert.equal(
     await db.saveDb(emptyShell, env),

@@ -1,4 +1,4 @@
-// quark_uc_tv (夸克/UC TV 版網盤，只讀) - 簽名認證
+// quark_uc_tv (夸克/UC TV 版網盤，僅讀) - 簽名認證
 // API reference: Go drivers/quark_uc_tv
 
 export interface DriverQuarkUcTvAddition {

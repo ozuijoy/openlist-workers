@@ -355,14 +355,14 @@ export async function getOrInitUsers(envCtx: any) {
       // 自愈：資料庫中完全沒有用戶時補回 admin/guest 佔位用戶。
       //
       // 注意：這裡構建出的庫在「尚無密碼、也無其它實體」時會被 saveDb 的寫前守衛
-      // 判定為空殼。只有在當前庫可信（曾成功讀取過真實配置）時才允許強制落盤，
+      // 判定為空殼。僅有在當前庫可信（曾成功讀取過真實配置）時才允許強制落盤，
       // 否則寧可拒絕寫入，也不要讓「讀取失敗後的空庫」被誤當成已完成初始化。
       db.users = [admin, guest]
     } else {
       // 未初始化：僅創建 guest，admin 由 Web 安裝嚮導（POST /api/public/init/setup）創建
       db.users = [guest]
     }
-    // 只有配置了 ADMIN_PASS（或已存在真實管理員）時，這份庫才不是空殼，
+    // 僅有配置了 ADMIN_PASS（或已存在真實管理員）時，這份庫才不是空殼，
     // 才應該落盤。未配置時應等待 init/setup 完成初始化，而不是搶先寫入一個
     // 未初始化的佔位庫（會被 saveDb 的寫前守衛攔截）。
     const persisted = await saveDb(db, envCtx)

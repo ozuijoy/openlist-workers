@@ -2,7 +2,7 @@
 // OpenList-TSWorker · Cloudflare Workers 配置
 // 文件：https://developers.cloudflare.com/workers/wrangler/configuration/
 //
-// ⚠️ 本文件只聲明 KV 一個儲存綁定（見文件末 kv_namespaces），D1 / DO 等
+// ⚠️ 本文件僅聲明 KV 一個儲存綁定（見文件末 kv_namespaces），D1 / DO 等
 //    其它儲存請按需在控制檯添加。
 //
 // 為什麼聲明 KV 且【省略 id 欄位】（不能寫 "id": ""）：
@@ -30,12 +30,12 @@
   "workers_dev": false,
   "preview_urls": false,
 
-  // ⚠️ run_worker_first 只放行 HTML 入口，不能改成 true（全量放行）：
+  // ⚠️ run_worker_first 僅放行 HTML 入口，不能改成 true（全量放行）：
   //   默認「資源優先」時 / 與 /index.html 由靜態層直接返回，Worker 根本不會執行，
   //   ASSET_URLS 的 CDN 注入（fetch CDN index.html → 注入 window.OPENLIST_CONFIG.cdn）
   //   永遠不生效，前端仍從源站加載全部靜態資源。
   //   僅放行 HTML 入口後，帶 hash 的 JS/CSS/圖片仍由靜態層直出、零 Worker 調用，
-  //   只有頁面導航請求才多付一次 Worker 調用。
+  //   僅有頁面導航請求才多付一次 Worker 調用。
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
@@ -125,7 +125,7 @@
 
     // ── EdgeOne Node 雲函數 KV 代理（DB_DRIVER=kv 時可選）──────────────────
     //
-    // EdgeOne 的 KV 綁定只注入 Edge Functions，不會注入 Node 雲函數。
+    // EdgeOne 的 KV 綁定僅注入 Edge Functions，不會注入 Node 雲函數。
     // 運行在 EdgeOne Node 雲函數時，必須經同部署的 Edge Functions 代理訪問 KV。
     // 此處填部署 origin，如 https://your-project.edgeone.app
     // 留空則自動使用當前請求 origin（同一部署自調用）；跨域或本地調試才需顯式設置。

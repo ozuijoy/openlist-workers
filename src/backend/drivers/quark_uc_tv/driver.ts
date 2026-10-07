@@ -8,7 +8,7 @@ import { ClientQuarkUcTv } from "./util"
 
 const DEFAULT_ROOT = "0"
 
-/** 只讀驅動：僅 list + get（下載） */
+/** 僅讀驅動：僅 list + get（下載） */
 export class DriverQuarkUcTv implements StorageDriver {
   private client: ClientQuarkUcTv
   private pathCache = new Map<string, string>()

@@ -11,7 +11,7 @@ import { buildDdl, KV_SCHEMA_SQLITE } from "../schema"
 /**
  * 判斷對象是否具備 D1 綁定介面形態。
  *
- * 必須校驗：環境變量 `DB` 可能只是「綁定名」字符串，而非綁定對象，
+ * 必須校驗：環境變量 `DB` 可能僅是「綁定名」字符串，而非綁定對象，
  * 直接使用會得到 "db.prepare is not a function"。
  */
 function isD1Like(b: any): boolean {

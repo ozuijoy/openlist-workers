@@ -240,7 +240,7 @@ test("injectCdnIntoHtml: CDN URL 中的引號 / 反斜槓被轉義", () => {
   assert.doesNotMatch(out, /cdn: undefined/)
   const literal = out.match(/cdn:\s*('(?:[^'\\]|\\.)*')/)?.[1]
   assert.ok(literal, `注入結果中應存在 cdn 字面量，實際：${out}`)
-  // 只考察字面量本身的語義：按 JS 轉義規則還原後必須等於原始 URL
+  // 僅考察字面量本身的語義：按 JS 轉義規則還原後必須等於原始 URL
   const decoded = literal.slice(1, -1).replace(/\\(.)/g, "$1")
   assert.equal(decoded, cdn, "字面量必須還原成原始 URL")
 })
@@ -265,7 +265,7 @@ test("getIndexHtmlWithCdn: 非 http(s) scheme 直接回退本地 HTML", async ()
 })
 
 test("getIndexHtmlWithCdn: CDN 上有本地哈希資產時用本地 HTML（不拉 CDN 的 index.html）", async () => {
-  // npmmirror 等禁止訪問 .html 的 CDN 只能靠這條路徑（等價 Go Release 版行為）
+  // npmmirror 等禁止訪問 .html 的 CDN 僅能靠這條路徑（等價 Go Release 版行為）
   const log: string[] = []
   const out = await withFetch(
     () =>

@@ -6,7 +6,7 @@ import {
 import { DriverLenovoNasShareAddition } from "./types"
 import { ClientLenovoNasShare } from "./util"
 
-/** 只讀分享驅動 */
+/** 僅讀分享驅動 */
 export class DriverLenovoNasShare implements StorageDriver {
   private client: ClientLenovoNasShare
 

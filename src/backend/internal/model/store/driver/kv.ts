@@ -32,7 +32,7 @@ function isWebKvLike(b: any): boolean {
 /**
  * 獲取 KV binding（僅返回符合 Web KV API 的綁定）。
  *
- * 注意：不能寫成 `env || globalThis` —— 只要 env 是真值就不會回退到
+ * 注意：不能寫成 `env || globalThis` —— 僅要 env 是真值就不會回退到
  * globalThis，而 EdgeOne Edge Functions 會把綁定名注入為全局標識符。
  * 因此這裡兩處都要檢查，且都要通過介面形態校驗。
  */
@@ -49,7 +49,7 @@ function getKvBinding(env?: any): any | null {
  *
  * Edge Function 側用**完整密鑰**校驗 X-Internal-Call。
  *
- * 只從環境變量讀取，原因：
+ * 僅從環境變量讀取，原因：
  *  1. 若走 KV 回退讀取密鑰，則需要先訪問 KV 才能拿密鑰、拿密鑰才能訪問 KV，
  *     形成循環依賴；
  *  2. 打包產物中不能依賴源碼相對路徑的動態 import。
@@ -59,7 +59,7 @@ function getKvBinding(env?: any): any | null {
 function getProxySecret(env?: EnvContext): string | null {
   try {
     const s = env?.JWT_SECRET
-    // 只要求「非空」，不再強制 >=16：
+    // 僅要求「非空」，不再強制 >=16：
     //   - 強制長度會把用戶合法設置的短密鑰判成「未配置」，進而報一個
     //     看起來無關的 NO_STORAGE / PROXY_CONFIG 錯誤，誤導排查方向；
     //   - 密鑰強度是**運維建議**（推薦 32+ / openssl rand -hex 32），
@@ -75,11 +75,11 @@ function getProxySecret(env?: EnvContext): string | null {
  * 當前環境是否有充分依據啟用 EdgeOne KV HTTP 代理探測。
  *
  * `__requestOrigin` 不能作為平台依據：index.ts 會給所有平台和自託管請求注入它。
- * 舊實現只要同時看到 origin 與 JWT_SECRET，就會在 DB_DRIVER=auto 時請求當前站點
+ * 舊實現僅要同時看到 origin 與 JWT_SECRET，就會在 DB_DRIVER=auto 時請求當前站點
  * 的 /kv-list；沒有該代理的站點若恰好把未知路徑回退成 HTML 200，便會被誤判為
  * KV 可用，隨後把 HTML 當 JSON 讀取，並讓 /env_check 錯報 ready=true。
  *
- * 只有以下情況才允許無 binding 的代理模式：
+ * 僅有以下情況才允許無 binding 的代理模式：
  *  1. 用戶顯式指定 DB_DRIVER=kv；
  *  2. 用戶顯式提供 EO_KV_URLS；
  *  3. EdgeOne Node 雲函數的可靠 SCF 運行時標記存在。
@@ -191,7 +191,7 @@ function getProxyBaseUrl(env?: EnvContext): string {
  * 判定：HTTP 200 表示代理與 KV 均可用；401 表示代理可達但鑑權失敗，
  * 屬於「代理部署存在但密鑰不對」。
  *
- * 注意兩個調用方對 401 的取捨不同，故這裡只返回原始探測結果，
+ * 注意兩個調用方對 401 的取捨不同，故這裡僅返回原始探測結果，
  * 由 probeToAvailability() / probeToHealth() 分別映射（見其註釋）：
  *   - isAvailable() 把 401 視為可用（代理已部署，驅動可被選中）
  *   - health() 把 401 視為不可用（鑑權失敗，持久化不可依賴）
@@ -230,9 +230,9 @@ async function probeProxy(
 /**
  * 把「原始探測結果」映射為**可用性**（`isAvailable` 的語義）。
  *
- * 401 視為可用：代理已部署，只是密鑰不匹配 —— 此時應讓 kv 被選中，
+ * 401 視為可用：代理已部署，僅是密鑰不匹配 —— 此時應讓 kv 被選中，
  * 再由 `health()` 報出不健康。若這裡判為不可用，`auto` 會悄悄換用別的後端，
- * 而用戶明明配了 KV 代理，只會更困惑。
+ * 而用戶明明配了 KV 代理，僅會更困惑。
  */
 function probeToAvailability(probe: { ok: boolean; status: number }): boolean {
   return probe.ok || probe.status === 401
@@ -331,7 +331,7 @@ export const kvDriver: Driver = {
         try {
           value = await kv.get(key, { type: "text" })
         } catch (e) {
-          // 若第一種簽名已成功執行（未拋簽名錯誤），說明第二種只是"空結果"的回退，
+          // 若第一種簽名已成功執行（未拋簽名錯誤），說明第二種僅是"空結果"的回退，
           // 此時真實錯誤同樣要拋出，不得吞掉。
           if (!isSignatureError(e)) throw e
           value = null
@@ -362,7 +362,7 @@ export const kvDriver: Driver = {
       }
 
       const data = (await response.json()) as { value?: string | null }
-      // 歸一化為 string | null：Edge Function 在錯誤分支只返回 { error }，
+      // 歸一化為 string | null：Edge Function 在錯誤分支僅返回 { error }，
       // 此時 data.value 為 undefined，不能直接透傳（調用方按 === null 判斷會漏掉）。
       if (data?.value === undefined || data?.value === null) return null
       return typeof data.value === "string" ? data.value : String(data.value)

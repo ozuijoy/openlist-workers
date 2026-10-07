@@ -1,4 +1,4 @@
-// 夸克/UC TV 版網盤 API 客戶端（只讀）
+// 夸克/UC TV 版網盤 API 客戶端（僅讀）
 import { md5, sha256 } from "../../pkg/crypto"
 import {
   DriverQuarkUcTvAddition,

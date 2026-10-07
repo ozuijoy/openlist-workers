@@ -115,7 +115,7 @@ async function safeProxyFetch(
 /**
  * 平台上限導致的 413 文案。
  *
- * 說明「為什麼代理不了」與「有哪些替代路徑」，避免用戶只看到平台自帶的
+ * 說明「為什麼代理不了」與「有哪些替代路徑」，避免用戶僅看到平台自帶的
  * CLOUD_FUNCTION_PAYLOAD_TOO_LARGE 錯誤頁（那裡沒有任何可操作信息）。
  * 措辭不寫死平台：限制可能來自 EdgeOne 的自動判定，也可能來自管理員配置的
  * RAW_PROXY_MAX_BYTES（例如 Vercel / 阿里雲 ESA 上的同類限制）。
@@ -127,7 +127,7 @@ function payloadLimitMessage(c: any, label: string, size: number): string {
     `文件過大，當前部署平台無法代理下載（${size} 字節 > 上限 ${limit} 字節 ≈ ${mib(limit)} MiB）。` +
     `當前運行環境對函數單次請求/響應 body 有硬上限（EdgeOne 雲函數為 6 MiB，錯誤碼 ` +
     `CLOUD_FUNCTION_PAYLOAD_TOO_LARGE / HTTP 413），` +
-    `${label} 無法提供可直連的下載鏈接（或直鏈必須攜帶私有鑑權頭），只能經服務端轉發，` +
+    `${label} 無法提供可直連的下載鏈接（或直鏈必須攜帶私有鑑權頭），僅能經服務端轉發，` +
     `因此無法繞過該上限。` +
     `建議：改用返回公開直鏈的儲存、或在自託管環境（Docker / Node）部署；` +
     `確需放開限制可設置 RAW_PROXY_MAX_BYTES=0（或按平台實際上限調整該值）。`
@@ -244,7 +244,7 @@ async function proxyUpstream(
     authBound,
   })
   if (secondCheck !== "proxy") {
-    // 只拿到了響應頭，先把上游 body 取消，避免繼續下載整份文件
+    // 僅拿到了響應頭，先把上游 body 取消，避免繼續下載整份文件
     try {
       await upstreamRes.body?.cancel()
     } catch {}
@@ -323,12 +323,12 @@ async function proxyUpstream(
  * 即**總是**把編碼後的真實路徑拼在模板之後、並在未禁用時補上 `?sign=`：
  *   - 模板裡沒有 `$path` 概念（全倉庫搜不到該佔位符）；TS 額外支持 `$path`
  *     替換，屬於向後相容的超集，無 `$path` 的模板行為與 Go 完全一致。
- *   - 補籤只看 `disable_proxy_sign`，**不限定同源**：down_proxy_url 的典型
+ *   - 補籤僅看 `disable_proxy_sign`，**不限定同源**：down_proxy_url 的典型
  *     用法正是指向另一個域名（CDN / 前置代理 / 同實例的另一域名），此前
- *     只在"與請求同 host"時才補籤，會讓這類配置重定向到一個必然 401 的地址。
+ *     僅在"與請求同 host"時才補籤，會讓這類配置重定向到一個必然 401 的地址。
  *
  * 注意：模板不攜帶本服務實例的密鑰，因此 worker 場景下無法預先把簽名寫進模板，
- * 只能在運行時補籤。
+ * 僅能在運行時補籤。
  */
 async function buildDownProxyUrl(
   c: any,
@@ -456,7 +456,7 @@ rawRouter.get("/*", async (c) => {
         .replace(/[^a-z0-9]/g, "")
 
       // 全局代理相關設置（對齊 Go：proxy_types / text_types / proxy_ignore_headers）。
-      // 讀失敗時按空列表處理：proxy_types/text_types 為空只會讓擴展名規則不生效，
+      // 讀失敗時按空列表處理：proxy_types/text_types 為空僅會讓擴展名規則不生效，
       // 不會誤攔既有請求。
       const settings: Record<string, any> = await getSettings().catch(
         () => ({}) as Record<string, any>,
@@ -472,7 +472,7 @@ rawRouter.get("/*", async (c) => {
 
       // /p 是公開代理端點，對齊 Go handles.Proxy() 的 canProxy() 檢查：
       // 未開啟代理、且擴展名也不在 proxy_types / text_types 裡 → 403 proxy not allowed。
-      // （Go 只對 /p 與歸檔 /ap 做此限制，/d、/sd 不做，故這裡僅判 /p 端點。）
+      // （Go 僅對 /p 與歸檔 /ap 做此限制，/d、/sd 不做，故這裡僅判 /p 端點。）
       if (
         isProxyEndpoint &&
         !canUseProxyEndpoint({

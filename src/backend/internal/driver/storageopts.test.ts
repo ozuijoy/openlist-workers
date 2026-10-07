@@ -165,7 +165,7 @@ test("matchGlob: 單星不得跨目錄，雙星可以", () => {
 })
 
 test("matchGlob: 僅由星號組成的段才跨級，混雜字符的段不跨級", () => {
-  // `**b` 是段內通配（對齊 doublestar：只有整段為 ** 時才跨目錄）
+  // `**b` 是段內通配（對齊 doublestar：僅有整段為 ** 時才跨目錄）
   assert.equal(matchGlob("/a/**b", "/a/x/y/b"), false)
   assert.equal(matchGlob("/a/**b", "/a/xyb"), true)
   assert.equal(matchGlob("/a/*b", "/a/xyb"), true)

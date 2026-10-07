@@ -66,7 +66,7 @@ function fixAndCleanPath(p: string): string {
 
 /**
  * meta 是否覆蓋該路徑（對齊 Go server/common.MetaCoversPath）。
- * applyToSubFolder 為 false 時只匹配自身，為 true 時向上匹配所有祖先。
+ * applyToSubFolder 為 false 時僅匹配自身，為 true 時向上匹配所有祖先。
  */
 export function metaCoversPath(
   metaPath: string,
@@ -151,7 +151,7 @@ export async function isEncryptPath(
  *
  * Go 的 /d、/p 是「公開下載端點」，鏈路為
  *   PathParse → Down(sign.Verify) → downloadLimiter → handles.Down/Proxy
- * 全程沒有 Auth 中間件。是否放行只取決於本函數：
+ * 全程沒有 Auth 中間件。是否放行僅取決於本函數：
  *   - sign_all 開啟              → 需要簽名
  *   - （TS 擴展）link_expiration → 需要簽名
  *   - meta 設了密碼且覆蓋該路徑  → 需要簽名

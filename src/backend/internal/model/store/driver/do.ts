@@ -21,7 +21,7 @@ import type { Driver } from "../types"
 /**
  * 判斷對象是否具備 Durable Object 命名空間介面形態。
  *
- * 必須校驗：環境變量可能只是「綁定名」字符串，而非綁定對象，
+ * 必須校驗：環境變量可能僅是「綁定名」字符串，而非綁定對象，
  * 直接使用會得到 "binding.idFromName is not a function"。
  */
 function isDoNamespaceLike(b: any): boolean {

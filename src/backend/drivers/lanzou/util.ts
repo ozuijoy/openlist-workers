@@ -143,7 +143,7 @@ export class LanzouClient {
   /**
    * 探測分享頁真實域名。
    * 藍奏雲每個賬號的分享頁域名都不同（如 https://自定義部分.lanzn.com），
-   * 配置的 shareUrl 只是兜底。向兜底域名請求一次分享頁，從頁面 HTML 的
+   * 配置的 shareUrl 僅是兜底。向兜底域名請求一次分享頁，從頁面 HTML 的
    * iframe/src 或 JS 變量裡提取真實分享域名；失敗時回退到配置域名。
    */
   async probeShareDomain(shareId: string): Promise<string> {

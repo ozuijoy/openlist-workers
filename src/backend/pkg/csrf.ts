@@ -30,7 +30,7 @@ export interface CSRFOptions {
   }
   // 豁免路徑（不需要 CSRF 保護）
   ignorePaths?: string[]
-  // 豁免方法（默認只保護 POST/PUT/DELETE/PATCH）
+  // 豁免方法（默認僅保護 POST/PUT/DELETE/PATCH）
   ignoreMethods?: string[]
 }
 

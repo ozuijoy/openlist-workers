@@ -70,7 +70,7 @@ export function generateTOTPToken(secret: string): string {
  */
 export function isValidTOTPSecret(secret: string): boolean {
   try {
-    // Base32 密鑰應該只包含 A-Z 和 2-7
+    // Base32 密鑰應該僅包含 A-Z 和 2-7
     const base32Regex = /^[A-Z2-7]+=*$/
     return base32Regex.test(secret) && secret.length >= 16
   } catch {

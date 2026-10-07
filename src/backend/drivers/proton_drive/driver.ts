@@ -358,7 +358,7 @@ export class ProtonDriveDriver implements StorageDriver {
 
     const start = options?.start ?? 0
     // 當解密後大小未知時（decryptedSize <= 0），使用一個足夠大的上界，
-    // 避免無 Range 的完整下載只流式傳輸第一個字節。
+    // 避免無 Range 的完整下載僅流式傳輸第一個字節。
     const end =
       options?.end ?? (decryptedSize > 0 ? decryptedSize - 1 : Number.MAX_SAFE_INTEGER)
 

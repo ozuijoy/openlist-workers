@@ -604,7 +604,7 @@ const DISABLE_INDEX_FIELD = {
  * proxy_range（對齊 Go op/driver.go）：僅對聲明瞭 ProxyRangeOption 的驅動開放。
  *
  * 默認 true：透傳客戶端 Range 是默認行為（Go 的透明代理本就轉發客戶端請求頭，
- * 見 internal/net/serve.go 的 ProcessHeader），該欄位只在需要顯式關閉時使用。
+ * 見 internal/net/serve.go 的 ProcessHeader），該欄位僅在需要顯式關閉時使用。
  */
 function buildProxyRangeField() {
   return {
@@ -1102,7 +1102,7 @@ const driverConfigs: Record<string, any> = {
   "123Pan": {
     name: "123Pan",
     default_mount_path: "/123",
-    // 對齊 Go drivers/123/meta.go：只有 PreferProxy（無 OnlyProxy）
+    // 對齊 Go drivers/123/meta.go：僅有 PreferProxy（無 OnlyProxy）
     common: [
       ...BASE_FIELDS,
       CUSTOM_CACHE_POLICIES_FIELD,
@@ -1188,7 +1188,7 @@ const driverConfigs: Record<string, any> = {
   BaiduNetdisk: {
     name: "BaiduNetdisk",
     default_mount_path: "/baidu",
-    // 對齊 Go drivers/baidu_netdisk/meta.go：只有 PreferProxy（無 OnlyProxy）
+    // 對齊 Go drivers/baidu_netdisk/meta.go：僅有 PreferProxy（無 OnlyProxy）
     common: [
       ...BASE_FIELDS,
       CUSTOM_CACHE_POLICIES_FIELD,
@@ -4463,7 +4463,7 @@ adminRouter.post("/setting/reset_token", async (c) => {
   // 變更後舊的下載鏈接簽名立即失效——與 Go ResetToken 行為一致。
   //
   // 注意：JWT 密鑰來自 env.JWT_SECRET / 持久化的 openlist_jwt_secret，與這裡的
-  // `token` 設置無關，所以清 JWT 快取**不會**讓已簽發的 JWT 失效；這裡調用只是
+  // `token` 設置無關，所以清 JWT 快取**不會**讓已簽發的 JWT 失效；這裡調用僅是
   // 讓進程內快取與最新的 env/持久化值保持一致。
   const { resetJwtSecretCache } = await import("./middlewares")
   resetJwtSecretCache()

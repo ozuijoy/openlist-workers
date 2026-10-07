@@ -850,7 +850,7 @@ let globalEnvCtx: any = null
  * 資料可信度狀態（防止「讀失敗 → 回退空庫 → 落盤覆蓋」）。
  *
  * - `dbTrusted`: 當前 memoryDb 是否來自一次成功的持久化讀取（或已成功寫入）。
- *   為 false 時表示 memoryDb 只是空殼兜底/默認值，絕不能寫回儲存。
+ *   為 false 時表示 memoryDb 僅是空殼兜底/默認值，絕不能寫回儲存。
  * - `dbLastLoadError`: 最近一次讀取失敗的原因，用於給出可診斷的攔截日誌。
  * - `dbWriteBlocked`: 是否曾攔截過「疑似空資料寫回」，供診斷與迴歸測試使用。
  */
@@ -901,7 +901,7 @@ export function isDbShell(data: any): boolean {
 
   // 注意：不能以「是否存在用戶」判斷是否為真實庫。
   // defaultDb 自帶 admin/guest 兩個佔位用戶（密碼為空），所以空殼裡也有用戶。
-  // 只有當存在「設置了密碼的用戶」時，才說明這是一份被初始化過的真實庫。
+  // 僅有當存在「設置了密碼的用戶」時，才說明這是一份被初始化過的真實庫。
   const users = Array.isArray(data.users) ? data.users : []
   const hasInitializedUser = users.some(
     (u: any) => String(u?.password || "").trim() !== "",
@@ -910,7 +910,7 @@ export function isDbShell(data: any): boolean {
     return false
   }
 
-  // 沒有任何實體時，只有當設置也全部停留在默認值時，才視作空殼。
+  // 沒有任何實體時，僅有當設置也全部停留在默認值時，才視作空殼。
   const settings = Array.isArray(data.settings) ? data.settings : []
   const defaults = Array.isArray(defaultDb.settings) ? defaultDb.settings : []
   const defaultMap = new Map(defaults.map((s: any) => [String(s.key), s.value]))
@@ -1115,7 +1115,7 @@ let storeBackendLoader: (env: any) => Promise<any> = (env) =>
  *
  * 注意：必須把「寫前守衛」的狀態（dbTrusted / dbLastLoadError / dbWriteBlocked）
  * 一併復位。它們同樣是模塊級狀態，且 db_write_guard.test.ts 直接斷言其取值；
- * 只清快取會讓「reset 後回到初始態」的假設不成立，用例結果將取決於執行順序。
+ * 僅清快取會讓「reset 後回到初始態」的假設不成立，用例結果將取決於執行順序。
  */
 export const __resetDbCacheForTest = () => {
   // WeakMap 無法整體清空，但無參調用的快取鍵就是 globalEnvCtx 自身
@@ -1194,13 +1194,13 @@ const loadDb = async (envCtx?: any) => {
   // 解析器可被測試注入（__setStoreBackendLoaderForTest），故用 let + 可空：
   // 解析動作必須在 try 內 —— 配置類錯誤（驅動缺失、驅動 × 格式非法）要與
   // 讀取錯誤走同一條降級路徑，否則它會以「未捕獲異常」的形式拋出，
-  // 讓 /init/setup 只給前端一個沒有原因的裸 500。
+  // 讓 /init/setup 僅給前端一個沒有原因的裸 500。
   let backend: Awaited<ReturnType<typeof storeBackendLoader>> | null = null
   try {
     backend = await storeBackendLoader(activeEnv)
     const persisted = await backend.load(activeEnv)
     if (persisted) {
-      // 只在資料裡確實存在密文時才構造解密器（才需要解析密鑰）：
+      // 僅在資料裡確實存在密文時才構造解密器（才需要解析密鑰）：
       //   - DB_CIPHER=none（默認）且歷史資料全為明文 → 完全不需要密鑰，
       //     省掉一次持久化讀取，也不會誤報「缺少加密密鑰」；
       //   - 存在 enc:vN: 密文（舊部署 / 曾開啟加密）→ 仍按前綴解密，
@@ -1260,8 +1260,8 @@ const loadDb = async (envCtx?: any) => {
     dbTrusted = false
   }
 
-  // 只有在此前已經成功讀取過（同一 isolate 內的可信快照）時，才允許繼續使用記憶體庫。
-  // 若從未成功讀取過，則返回的只是「不可信空殼」，saveDb 會在落盤前將其攔截。
+  // 僅有在此前已經成功讀取過（同一 isolate 內的可信快照）時，才允許繼續使用記憶體庫。
+  // 若從未成功讀取過，則返回的僅是「不可信空殼」，saveDb 會在落盤前將其攔截。
   if (memoryDb && dbTrusted) {
     ensureDefaultSettings(memoryDb)
     ensureDefaultStorages(memoryDb)
@@ -1292,7 +1292,7 @@ export const getDb = async (envCtx?: any) => {
   //
   // 歷史缺陷：無參時曾直接 `return loadDb(envCtx)`，繞過下面兩個快取，
   // 導致每次無參 getDb() 都觸發一次完整的後端讀取 + 解密，KV 與 D1 同時被
-  // 放大數十倍而變慢。只有當連 globalEnvCtx 都沒有（進程剛啟動、純記憶體調試）
+  // 放大數十倍而變慢。僅有當連 globalEnvCtx 都沒有（進程剛啟動、純記憶體調試）
   // 時才無法快取，此時退化為直讀——不影響資料正確性，僅是性能兜底。
   const cacheKey = envCtx || resolveNoArgKey()
   if (!cacheKey) return loadDb(envCtx)
@@ -1360,7 +1360,7 @@ const SENSITIVE_SETTING_KEYS = new Set([
 let encryptionKeyWarned = false
 /** 一次性告警：資料中存在密文但拿不到密鑰（避免每次加載都刷屏） */
 let unsealKeyWarned = false
-/** 一次性告警：配置了 DB_CIPHER 卻沒有密鑰，只能明文落盤 */
+/** 一次性告警：配置了 DB_CIPHER 卻沒有密鑰，僅能明文落盤 */
 let sealKeyMissingWarned = false
 /** 一次性提示：舊部署的密文在 DB_CIPHER=none 下會被自動遷移為明文 */
 let plaintextMigrationLogged = false
@@ -1384,14 +1384,14 @@ export const ENCRYPTION_SECRET_KV_KEY = "openlist_encryption_secret"
  *
  * 長度不足 16 視為未配置，避免弱密鑰。
  *
- * 該來源具有**最高優先級且恆定不變**：只要它存在，seal 與 unseal
+ * 該來源具有**最高優先級且恆定不變**：僅要它存在，seal 與 unseal
  * 都必須使用它，從而保證加解密對稱。
  */
 function readEnvEncryptionKey(env: any): string | null {
   const raw =
     env?.JWT_SECRET ||
     (typeof process !== "undefined" ? process.env?.JWT_SECRET : "")
-  // 只要求「非空」：長度是運維建議（推薦 32+），不是硬門檻。
+  // 僅要求「非空」：長度是運維建議（推薦 32+），不是硬門檻。
   // 強制長度會帶來一個很壞的副作用 —— 用戶明明配了 JWT_SECRET，卻因為
   // 不足 16/32 字符被判為「未配置」，於是自動生成邏輯又生成一把新密鑰，
   // 造成「環境變量密鑰」與「持久化密鑰」並存、加解密分裂。
@@ -1423,14 +1423,14 @@ let cachedEncryptionKey: string | null = null
 let cachedFromEnv = false
 
 /**
- * 獲取欄位加密密鑰（只讀，絕不生成）。
+ * 獲取欄位加密密鑰（僅讀，絕不生成）。
  *
  * 優先級：
  *   1. env.JWT_SECRET
  *   2. 持久化密鑰 openlist_encryption_secret（由 setup 階段寫入）
  *
  * 關鍵約束（保證加解密對稱）：
- *   - 生成只發生在 setup，見 ensureEncryptionSecret()。此處絕不生成，
+ *   - 生成僅發生在 setup，見 ensureEncryptionSecret()。此處絕不生成，
  *     否則一次瞬時讀取失敗就會換鑰，導致既有密文永久無法解密。
  *   - 環境變量一旦配置，就始終優先於持久化密鑰，且不會被其覆蓋，
  *     這樣運維顯式指定的密鑰總是生效。
@@ -1484,7 +1484,7 @@ async function getEncryptionKey(envCtx?: any): Promise<string | null> {
  *
  * 為什麼需要繞過快取：setup 完成後，同一實例的快取裡必然有密鑰；但
  * 用戶實際登入請求很可能落在**另一個實例**（其快取為空，需重新讀 KV）。
- * 只有真實來源（env 或 KV 持久化）可讀，才代表**任意實例**都能解密。
+ * 僅有真實來源（env 或 KV 持久化）可讀，才代表**任意實例**都能解密。
  *
  * @returns true 表示任意實例都能取得密鑰
  */
@@ -1508,11 +1508,11 @@ export async function isEncryptionReady(envCtx?: any): Promise<boolean> {
 
 /**
  * 初始化階段確保**共享密鑰**存在（JWT 簽名 + DB_CIPHER 啟用時的欄位加密）。
- * 只在 setup 中調用。
+ * 僅在 setup 中調用。
  *
  * 為什麼 DB_CIPHER=none 時同樣要生成：這把密鑰同時充當 JWT 令牌的簽名密鑰
  * （middlewares.ts 的 getJwtSecret 會複用本槽位）。多實例 / 冷啟動必須共用同一把，
- * 否則令牌會隨機失效。`none` 只表示「不加密資料庫欄位」，與密鑰是否存在無關。
+ * 否則令牌會隨機失效。`none` 僅表示「不加密資料庫欄位」，與密鑰是否存在無關。
  *
  * 行為（與 getEncryptionKey 使用完全相同的優先級，避免加解密分裂）：
  *   1. 環境變量已配置 → 直接採用，不寫持久化（尊重運維配置）
@@ -1534,7 +1534,7 @@ export async function isEncryptionReady(envCtx?: any): Promise<boolean> {
  *
  * 因此這裡在寫入後**主動回讀確認**，讀不到則按指數退避重試，直到
  * 密鑰真正可讀（或超出重試上限，明確報錯而非靜默返回）。
- * 這樣 setup 只有在密鑰**確實可被後續請求讀到**時才報告成功。
+ * 這樣 setup 僅有在密鑰**確實可被後續請求讀到**時才報告成功。
  *
  * 併發安全：用進程內單飛（inflight 合併）消除同一實例內的重複生成。
  *
@@ -1554,7 +1554,7 @@ function sleep(ms: number): Promise<void> {
 export async function ensureEncryptionSecret(
   envCtx?: any,
 ): Promise<string | null> {
-  // 進程內單飛：併發 setup 只生成一次
+  // 進程內單飛：併發 setup 僅生成一次
   if (ensureSecretInflight) return ensureSecretInflight
 
   ensureSecretInflight = (async () => {
@@ -1662,9 +1662,9 @@ export async function ensureEncryptionSecret(
  * 1. **三重校驗**後才複用：`明文相同` + `算法/密鑰指紋相同` + `密文算法 == 當前寫入算法`。
  *    任一不滿足都走正常加密路徑 —— 因此「換算法」「關加密」「輪換密鑰」「改值」
  *    的行為與不做該優化時**完全一致**（含自動遷移）。
- * 2. 複用只發生在**同一明文、同一密鑰、同一算法**下，不會造成 nonce/IV 與
+ * 2. 複用僅發生在**同一明文、同一密鑰、同一算法**下，不會造成 nonce/IV 與
  *    不同明文複用（這是 AEAD 唯一需要避免的禁忌）。
- * 3. 快取只在進程內、鍵為欄位身份（`users:1:password`），容量有上限；
+ * 3. 快取僅在進程內、鍵為欄位身份（`users:1:password`），容量有上限；
  *    對同一欄位寫入不同值時條目會被覆蓋，不會讀到過期值。
  */
 interface SealedCacheEntry {
@@ -1712,7 +1712,7 @@ function recallSealed(
  *
  * - 未啟用加密（fieldCipher 為 null）或未取到密鑰：原樣返回明文。
  * - 已有任意版本前綴：視為已加密（冪等），避免重複加密 —— 雙重加密會在下次讀取
- *   時只解開一層、仍然呈現密文，表現為「密碼看起來還是亂碼」的詭異故障。
+ *   時僅解開一層、仍然呈現密文，表現為「密碼看起來還是亂碼」的詭異故障。
  * - 明文未變且算法/密鑰未變：複用上次的密文，跳過密碼學運算（見 sealedCache）。
  */
 async function sealValue(
@@ -1771,7 +1771,7 @@ async function unsealValue(
   const hit = detectCipherPrefix(value)
   try {
     const plain = await fieldCipher.decrypt(value)
-    // 只有「密文算法 == 當前寫入算法」時才記賬：否則一旦複用就等於阻止了
+    // 僅有「密文算法 == 當前寫入算法」時才記賬：否則一旦複用就等於阻止了
     // 「讀到 v1 → 保存為 v2」這類自動遷移（那是必須發生的）。
     if (hit && hit.cipher === fieldCipher.cipher) {
       rememberSealed(
@@ -1826,7 +1826,7 @@ function hasSealedValues(data: any): boolean {
 /**
  * 依據 `DB_CIPHER` 與共享密鑰構造欄位加解密器（一次 save / load 複用一個實例）。
  *
- * @param opts.needDecrypt 讀取路徑專用：即使當前 `DB_CIPHER=none`，只要資料裡存在
+ * @param opts.needDecrypt 讀取路徑專用：即使當前 `DB_CIPHER=none`，僅要資料裡存在
  *        歷史密文（`enc:vN:`）就仍然需要密鑰去解開它 —— 這正是「關掉加密後舊資料
  *        依舊可讀、並在下次保存時自動轉為明文」所依賴的分支。
  *        此時返回的對象寫入算法是 `none`（seal 側本就不會調用它）。
@@ -1854,7 +1854,7 @@ async function sealDb(
   //
   // 歷史實現每次落盤前都 `JSON.parse(JSON.stringify(data))`：把**整個配置**
   // （含大量與敏感欄位無關的資料）序列化再反序列化一遍，大配置下是純開銷。
-  // 這裡只在「某個欄位確實被修改」時才複製它所屬的數組/實體；同時用展開運算符
+  // 這裡僅在「某個欄位確實被修改」時才複製它所屬的數組/實體；同時用展開運算符
   // 保持鍵順序，落盤結果與深拷貝版本逐字節一致。
   //
   // 密鑰派生由 fieldCipher 內部完成並快取（見 crypto.ts 的 cachedDerive），
@@ -1939,7 +1939,7 @@ async function sealDb(
 /**
  * 解密併發上限。
  *
- * v2/v3 密文只需一次快速密鑰派生；舊 v1 密文仍需 PBKDF2（10 萬次迭代），並在
+ * v2/v3 密文僅需一次快速密鑰派生；舊 v1 密文仍需 PBKDF2（10 萬次迭代），並在
  * 下次保存時自動遷移。限制併發可避免舊資料欄位很多時產生 CPU/記憶體峰值。
  */
 const UNSEAL_CONCURRENCY = 16
@@ -1960,7 +1960,7 @@ async function unsealDb(
   // UNSEAL_CONCURRENCY 分批 await：既拿到並行帶來的牆鍾收益，又避免欄位極多
   // （如數千用戶）時一次性併發過多造成 CPU/記憶體峰值。
   //
-  // 密鑰派生（v2 的 HKDF）由 fieldCipher 內部快取，本次加載只發生一次。
+  // 密鑰派生（v2 的 HKDF）由 fieldCipher 內部快取，本次加載僅發生一次。
   const tasks: Array<() => Promise<void>> = []
 
   // 1. 解密儲存配置（算法由密文前綴決定，與當前 DB_CIPHER 無關）
@@ -2045,7 +2045,7 @@ export const saveDb = async (
   //
   // 核心不變量（務必長期保持）：
   //   **默認拒絕寫入空殼。** 空殼 = 沒有任何儲存/分享/元資料/插件，沒有設置
-  //   密碼的用戶，且所有設置都還是默認值。無論當前是否「可信」，只要 payload
+  //   密碼的用戶，且所有設置都還是默認值。無論當前是否「可信」，僅要 payload
   //   是空殼，就必須顯式 force 才允許落盤。
   //
   // 這樣即使某條調用鏈在讀取失敗後拿到默認庫，也無法把它寫回儲存。
@@ -2075,7 +2075,7 @@ export const saveDb = async (
   const cacheKey = envCtx || resolveNoArgKey()
   if (cacheKey) dbCache.set(cacheKey, { ts: Date.now(), db: data })
 
-  // `activeEnv` 已在本函數開頭解析（寫前守衛也依賴它），這裡只需通過可注入的
+  // `activeEnv` 已在本函數開頭解析（寫前守衛也依賴它），這裡僅需通過可注入的
   // storeBackendLoader 取後端，便於測試統計 load/save 次數。
   const backend = await storeBackendLoader(activeEnv)
   const configured = backend.isConfigured
@@ -2099,7 +2099,7 @@ export const saveDb = async (
     )
     const fieldCipher = cipher === "none" ? null : await resolveFieldCipher(activeEnv)
     if (cipher !== "none" && !fieldCipher && !sealKeyMissingWarned) {
-      // 只在首次告警：密鑰缺失會持續到密鑰可用為止，逐次寫入都打印只會刷屏。
+      // 僅在首次告警：密鑰缺失會持續到密鑰可用為止，逐次寫入都打印僅會刷屏。
       sealKeyMissingWarned = true
       console.error(
         `[DB] DB_CIPHER=${cipher} but no encryption key is available; ` +

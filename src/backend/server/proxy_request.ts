@@ -22,7 +22,7 @@ export interface BuildUpstreamHeadersInput {
   /**
    * 全局設置 proxy_ignore_headers（對齊 Go conf.ProxyIgnoreHeaders，默認
    * authorization,referer）。命中列表的**客戶端派生頭**不轉發給上游
-   * （本模塊會轉發的客戶端頭只有 Range 與兜底 User-Agent）；
+   * （本模塊會轉發的客戶端頭僅有 Range 與兜底 User-Agent）；
    * 驅動自己聲明的頭（rawUrlHeaders）不受影響——Go 的 ProcessHeader 同樣是
    * 先過濾客戶端頭、再套用驅動 override。
    */
@@ -173,7 +173,7 @@ const readEnvValue = (c: any, key: string): string => {
  *
  * 判據對齊 internal/model/store/backend.ts 的 isServerlessRuntime()：
  *   1. EdgeOne Node 雲函數跑在騰訊 SCF 上，平台會注入 `TENCENTCLOUD_SCF_FUNCTIONNAME`
- *      —— 這是該形態**唯一可靠**的平台特徵（舊版只查 EDGEONE/EO_REGION，而這兩個
+ *      —— 這是該形態**唯一可靠**的平台特徵（舊版僅查 EDGEONE/EO_REGION，而這兩個
  *      變量並沒有證據表明會被雲函數注入，會導致本守衛在 EdgeOne 上永不生效）；
  *   2. 綁定了 Blob 命名空間或運行在邊緣函數時，有 `EDGEONE_BLOB` / 全局 `EdgeOne`。
  *
@@ -182,7 +182,7 @@ const readEnvValue = (c: any, key: string): string => {
  * 反而讓 CF 上的大文件代理被無故降級為 302。
  *
  * 同理，Cloudflare Workers 與阿里雲 ESA 不套用 6 MiB：CF 的函數 body 上限遠高於此，
- * 本限制是 EdgeOne 雲函數特有的，因此這裡只認 EdgeOne 自身的特徵。
+ * 本限制是 EdgeOne 雲函數特有的，因此這裡僅認 EdgeOne 自身的特徵。
  */
 function isEdgeOneRuntime(c: any): boolean {
   const g: any = typeof globalThis !== "undefined" ? globalThis : {}
@@ -213,7 +213,7 @@ export function getProxyPayloadLimit(c: any): number {
 /**
  * 本次代理是否會讓響應體超過平台上限。
  *
- * Range 只回傳一個分片時按分片大小判斷（視頻拖動進度、斷點續傳不受影響）；
+ * Range 僅回傳一個分片時按分片大小判斷（視頻拖動進度、斷點續傳不受影響）；
  * 大小未知時一律放行，交給平台兜底。
  */
 export function exceedsProxyPayloadLimit(
@@ -234,10 +234,10 @@ export function exceedsProxyPayloadLimit(
 }
 
 /**
- * 私有請求頭（瀏覽器無法自帶）：只有這些頭才讓 302 直鏈失去可行性。
+ * 私有請求頭（瀏覽器無法自帶）：僅有這些頭才讓 302 直鏈失去可行性。
  *
- * 倉庫內 33 處 `raw_url_headers` 實際只用到 Authorization / Cookie /
- * User-Agent / Referer / Origin，其中只有前兩者是瀏覽器無法提供的鑑權信息
+ * 倉庫內 33 處 `raw_url_headers` 實際僅用到 Authorization / Cookie /
+ * User-Agent / Referer / Origin，其中僅有前兩者是瀏覽器無法提供的鑑權信息
  * （如 WebDAV、微雲、Google Drive、Teldrive）。驅動若引入新的鑑權頭，
  * 應按 Go 的 meta.go 把該驅動登記為 MustProxy（見 internal/driver/proxy.ts），
  * 而不是在這裡堆一個「猜頭名」的規則。

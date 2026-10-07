@@ -3,7 +3,7 @@
  * / custom_cache_policies。
  *
  * 這些欄位在 Go 版由 internal/model/storage.go 與 internal/op/driver.go 定義並
- * 在下載鏈路中實際生效；在 TSWorker 中此前只有資料庫列與表單項、沒有讀取方，
+ * 在下載鏈路中實際生效；在 TSWorker 中此前僅有資料庫列與表單項、沒有讀取方，
  * 本模塊把它們統一解析出來，供下載/列表鏈路使用。
  *
  * Go 對應位置：
@@ -64,8 +64,8 @@ function asInt(value: any): number | null {
  *   - false：丟棄 Range，由本服務返回完整文件（用於明確拒絕 Range 的上游）
  *
  * 為什麼默認 true：Go 的透明代理會把客戶端請求頭原樣轉發給上游
- * （internal/net/serve.go 的 ProcessHeader 只按 proxy_ignore_headers 過濾），
- * 也就是說 **Go 默認就透傳 Range**，`proxy_range` 在 Go 裡只是額外啟用驅動的
+ * （internal/net/serve.go 的 ProcessHeader 僅按 proxy_ignore_headers 過濾），
+ * 也就是說 **Go 默認就透傳 Range**，`proxy_range` 在 Go 裡僅是額外啟用驅動的
  * RangeReader/多執行緒路徑。TS 若默認 false，會讓代理模式下的 seek / 斷點續傳
  * 靜默退化。上游拒絕或靜默忽略 Range 時，由 server/proxy_request.ts 的
  * shouldRetryWithoutRange() 去掉 Range 重試兜底。
@@ -203,7 +203,7 @@ export function matchGlob(pattern: string, target: string): boolean {
   if (target.length > MAX_GLOB_TARGET_LENGTH) return false
 
   // 按 / 切分為路徑段後逐段匹配。
-  // 這樣處理能自然區分「單星只在本段內通配」與「雙星可跨任意多段」，
+  // 這樣處理能自然區分「單星僅在本段內通配」與「雙星可跨任意多段」，
   // 避免在字符級實現裡糾纏回溯點的組合問題。
   const pSegs = pattern.split("/")
   const tSegs = target.split("/")
@@ -214,7 +214,7 @@ export function matchGlob(pattern: string, target: string): boolean {
   // dp[i][j] 表示 pSegs[i:] 能否匹配 tSegs[j:]
   // 採用一維滾動數組，自後向前填表，複雜度 O(n·m)、無遞歸。
   let next = new Array<boolean>(tLen + 1).fill(false)
-  // 空模式只能匹配空目標
+  // 空模式僅能匹配空目標
   next[tLen] = true
 
   for (let i = pLen - 1; i >= 0; i--) {
@@ -230,7 +230,7 @@ export function matchGlob(pattern: string, target: string): boolean {
         cur[j] = next[j] || cur[j + 1]
       }
     } else {
-      // 普通段（可能含單星/問號）只匹配一段
+      // 普通段（可能含單星/問號）僅匹配一段
       for (let j = tLen - 1; j >= 0; j--) {
         cur[j] = matchSegment(seg, tSegs[j]) && next[j + 1]
       }

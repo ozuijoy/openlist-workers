@@ -89,7 +89,7 @@ test("isDbShell: 非對象輸入視為空殼（防禦性）", () => {
 })
 
 test("isDbShell: 已修改過設置（非默認值）的庫不算空殼", () => {
-  // 用戶只改過設置、尚未添加任何掛載時，也不應被誤判為空殼而阻斷保存。
+  // 用戶僅改過設置、尚未添加任何掛載時，也不應被誤判為空殼而阻斷保存。
   const settingsOnly = {
     settings: [{ key: "site_title", value: "用戶自定義站點標題" }],
     users: [],

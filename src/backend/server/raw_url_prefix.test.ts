@@ -15,9 +15,9 @@ import { rawRouter } from "./raw"
  *     `403 proxy not allowed`；
  *   - `/d` 不受該門禁限制（Go 的 `/d` 走 `ShouldProxy`）。
  *
- * 因此 raw_url 恆為 `/api/p` 時，凡是沒有開啟代理的儲存，只要從預覽頁點「下載」
+ * 因此 raw_url 恆為 `/api/p` 時，凡是沒有開啟代理的儲存，僅要從預覽頁點「下載」
  * （或讓 `img/video` 去取 raw_url）就會 403；而文件列表右鍵下載走 `/d`，所以看起來
- * 「只有預覽頁下載壞掉」。
+ * 「僅有預覽頁下載壞掉」。
  */
 
 const storageRow = (driver: string, extra: Record<string, any> = {}) => ({

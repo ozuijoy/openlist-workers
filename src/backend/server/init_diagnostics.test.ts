@@ -86,7 +86,7 @@ test("無效組合：env_check 必須給出 STORAGE_INVALID_COMBINATION 與具�
   assert.match(String(status.configError), /Invalid storage combination/)
   assert.match(String(status.configError), /DB_FORMAT="sql"/)
   assert.match(String(status.configError), /supports: map \| key/)
-  // 只報錯、不自愈：不得偷偷換成別的驅動或格式
+  // 僅報錯、不自愈：不得偷偷換成別的驅動或格式
   assert.equal(status.driver, "none", "非法組合不得被自動解析成其它驅動")
   assert.equal(status.format, "none", "非法組合不得被自動改成別的格式")
 
@@ -150,7 +150,7 @@ test("驅動不可用：錯誤必須寫明該驅動需要什麼（d1 示例）",
   assert.match(
     String(status.configError),
     /^DB_DRIVER is set to "d1", but that driver is not available in this runtime\.$/m,
-    "首行必須是一句完整的短原因：界面只展示這一行",
+    "首行必須是一句完整的短原因：界面僅展示這一行",
   )
 
   const data = (await (
@@ -162,7 +162,7 @@ test("驅動不可用：錯誤必須寫明該驅動需要什麼（d1 示例）",
     `DB_DRIVER is set to "d1", but that driver is not available in this runtime.`,
     "summary 是給界面的一行短句",
   )
-  // 介面只透傳前 3 行，因此這 3 行必須是「原因 + 不回退 + 怎麼做」
+  // 介面僅透傳前 3 行，因此這 3 行必須是「原因 + 不回退 + 怎麼做」
   assert.match(
     String(data.storage.error_message),
     /No fallback is performed for an explicitly configured driver/,
@@ -193,8 +193,8 @@ test("驅動不可用：錯誤裡必須給出「auto 會選誰」的可操作答
 })
 
 test("驅動不可用：截斷展示的文案裡也必須保留「改成什麼」+ 結構化建議", async () => {
-  // 前端只拿到截斷後的 error_message / issue.message（見 server/storage-error.ts
-  // 的 reasonLines：配置類錯誤只透傳前 3 行）。若「Auto-detection would pick」
+  // 前端僅拿到截斷後的 error_message / issue.message（見 server/storage-error.ts
+  // 的 reasonLines：配置類錯誤僅透傳前 3 行）。若「Auto-detection would pick」
   // 被排在 message 末尾，用戶看到的仍是一段被砍斷的說明 —— 這正是「提示不友好」
   // 的根因，因此這裡同時鎖定順序與建議欄位。
   const env: any = {
@@ -227,7 +227,7 @@ test("驅動不可用：截斷展示的文案裡也必須保留「改成什麼�
     "建議必須是單行短句，否則又變成一段長文",
   )
 
-  // 安裝嚮導只有 init_status 可用（其餘介面被 503 攔截），它也要帶上建議
+  // 安裝嚮導僅有 init_status 可用（其餘介面被 503 攔截），它也要帶上建議
   const st = (await (
     await buildApp().request("/api/public/init_status", { method: "GET" }, env)
   ).json()).data
@@ -297,7 +297,7 @@ test("顯式配置的驅動不可用：絕不回退（即使 auto 能選到別�
   assert.equal(issue.level, "error")
   assert.match(String(issue.suggestion), /DB_DRIVER=blob/)
 
-  // 3) 安裝嚮導（只有 init_status 可用）同樣拿得到建議
+  // 3) 安裝嚮導（僅有 init_status 可用）同樣拿得到建議
   const st = (await (
     await buildApp().request("/api/public/init_status", { method: "GET" }, env)
   ).json()).data
@@ -306,8 +306,8 @@ test("顯式配置的驅動不可用：絕不回退（即使 auto 能選到別�
   assert.match(String(st.storage_suggestion), /DB_DRIVER=blob/)
 })
 
-test("CF 場景：DB_DRIVER=kv 但只綁了 D1 —— 不回退，但明確告訴用戶改成 d1", async () => {
-  // 用戶實際報的場景（只配 DB_DRIVER/DB_FORMAT/JWT_SECRET，D1 是綁好的）：
+test("CF 場景：DB_DRIVER=kv 但僅綁了 D1 —— 不回退，但明確告訴用戶改成 d1", async () => {
+  // 用戶實際報的場景（僅配 DB_DRIVER/DB_FORMAT/JWT_SECRET，D1 是綁好的）：
   // 結論是「報錯 + 指路」，不是「偷偷改用 D1」。用戶改一個變量即可恢復，
   // 而資料始終落在他指定的後端上。
   const fakeD1 = {

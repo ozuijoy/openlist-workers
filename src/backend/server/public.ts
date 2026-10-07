@@ -33,7 +33,7 @@ const DOC_DRIVER = `${DOC_BASE}/ecosystem/official_worker/guide`
 
 /**
  * 解析值歸一：解析失敗時內部會用 "none"/空串佔位，界面上顯示「do → none」
- * 只會造成困惑，因此統一歸一為 null（前端只顯示配置值）。
+ * 僅會造成困惑，因此統一歸一為 null（前端僅顯示配置值）。
  */
 function resolvedOrNull(value: any): string | null {
   const s = String(value ?? "").trim()
@@ -48,13 +48,13 @@ function resolvedOrNull(value: any): string | null {
  * 舊文案是「Bind a storage backend (D1 / KV / Blob) **or set DB_DRIVER=auto**」。
  * 後半句在**絕大多數真實場景下是循環建議**：用戶看到這條 issue 時，`DB_DRIVER`
  * 往往**本來就是 auto**（CF / EdgeOne 部署的默認形態）。讓他「去設置 auto」等於
- * 讓他改一個已經正確的值，改完照舊報錯，只會加深「這軟件壞了」的印象。
+ * 讓他改一個已經正確的值，改完照舊報錯，僅會加深「這軟件壞了」的印象。
  *
  * 準確的表述是：auto **已經把所有候選驅動探測過一遍且都不可用**，因此缺的是
- * **平台側的綁定**，不是配置值。這裡只說這件事。
+ * **平台側的綁定**，不是配置值。這裡僅說這件事。
  *
  * 若驅動解析器給出了更精確的 hint（如 `noStorageHint` 的逐平台文案），調用方
- * 會優先使用它，本函數只是兜底。
+ * 會優先使用它，本函數僅是兜底。
  */
 function bindBackendSuggestion(): string {
   return (
@@ -68,7 +68,7 @@ function bindBackendSuggestion(): string {
  * 初始化前的環境自檢。
  *
  * 該介面**無需鑑權**（初始化頁在未登入時就需要它），且**不洩露任何敏感值**：
- * 只報告「配置了什麼」「是否就緒」「哪裡不對」，絕不回顯密鑰或 DSN 原文。
+ * 僅報告「配置了什麼」「是否就緒」「哪裡不對」，絕不回顯密鑰或 DSN 原文。
  *
  * 返回：
  *   - config：DB_FORMAT / DB_DRIVER / DB_CIPHER 的配置值與實際解析值
@@ -81,7 +81,7 @@ publicRouter.get("/env_check", async (c) => {
   const env = c.env as any
   const driverCfg = readDriver(env)
   const formatCfg = readFormat(env)
-  // 欄位加密算法（none = 不加密，默認）。只報告配置，不回顯任何密鑰。
+  // 欄位加密算法（none = 不加密，默認）。僅報告配置，不回顯任何密鑰。
   const cipherCfg = readCipher(env)
   const serverless = isServerlessRuntime(env)
 
@@ -125,11 +125,11 @@ publicRouter.get("/env_check", async (c) => {
     /**
      * 給界面的一行短原因（**應為完整的一句話**）。
      *
-     * 界面只展示這一行 + suggestion，開發者排查用的長篇說明放在 message 裡，
+     * 界面僅展示這一行 + suggestion，開發者排查用的長篇說明放在 message 裡，
      * 避免出現「半句話 + 省略號」這種讀不懂的提示。
      */
     summary: string
-    /** 完整說明（多行、已脫敏）：只給日誌/工具用，界面不展示 */
+    /** 完整說明（多行、已脫敏）：僅給日誌/工具用，界面不展示 */
     message: string
     docUrl: string
     /** 一句話修復建議（「改什麼」） */
@@ -160,7 +160,7 @@ publicRouter.get("/env_check", async (c) => {
 
   if (hasConfigError && storageDetail.code === "NO_STORAGE") {
     // 一個可選後端都沒有：這類錯誤本身就是「沒有可用的儲存」，用一條通用提示
-    // 說清即可，不必再疊一條內容相同的配置錯誤（兩條 issue 說同一件事只會讓
+    // 說清即可，不必再疊一條內容相同的配置錯誤（兩條 issue 說同一件事僅會讓
     // 用戶以為出了兩個問題）。
     issues.push({
       code: "STORAGE_UNAVAILABLE",
@@ -171,7 +171,7 @@ publicRouter.get("/env_check", async (c) => {
       suggestion: storageDetail.suggestion || bindBackendSuggestion(),
     })
   } else if (hasConfigError) {
-    // 配置錯誤：界面只給「一行短原因 + 一行怎麼改」；完整排查說明留在 message /
+    // 配置錯誤：界面僅給「一行短原因 + 一行怎麼改」；完整排查說明留在 message /
     // storage.error_message 裡，由日誌與工具消費。
     const isInvalidCombination = storageDetail.code === "INVALID_COMBINATION"
     const reason = redact(
@@ -230,7 +230,7 @@ publicRouter.get("/env_check", async (c) => {
       message: unreachable,
       docUrl: DOC_DRIVER,
       // 注意：這裡**不**再建議「set DB_DRIVER=auto」。
-      // 能走到這裡說明驅動已成功解析（binding/憑據都齊），只是自檢不通
+      // 能走到這裡說明驅動已成功解析（binding/憑據都齊），僅是自檢不通
       // （如 KV 代理 401）。此時改回 auto 沒有任何幫助 —— auto 會解析出同一個
       // 驅動、撞上同一個錯誤，屬於把用戶支去繞圈。真正要做的是修憑據/綁定。
       suggestion:
@@ -243,8 +243,8 @@ publicRouter.get("/env_check", async (c) => {
     issues.push({
       code: "JWT_SECRET_MISSING",
       // 一律 warning：儲存可用時 setup 會自動生成並持久化密鑰，缺它不是
-      // 「裝不了」，只是「少了一層顯式配置的確定性」。不再升級為 error，
-      // 否則會出現「報錯說缺密鑰 → 但生成密鑰只能靠安裝 → 安裝又被報錯攔住」。
+      // 「裝不了」，僅是「少了一層顯式配置的確定性」。不再升級為 error，
+      // 否則會出現「報錯說缺密鑰 → 但生成密鑰僅能靠安裝 → 安裝又被報錯攔住」。
       level: "warning",
       // 密鑰支持**自動生成 + 持久化**（見 ensureEncryptionSecret），所以文案
       // 不說「必須手動配置」，而是同時給出「也可留空讓 setup 自動生成」這條路，
@@ -262,12 +262,12 @@ publicRouter.get("/env_check", async (c) => {
     })
   }
 
-  // ── 綜合就緒：只取決於「儲存可用」──
+  // ── 綜合就緒：僅取決於「儲存可用」──
   //
   // 這裡曾寫成 `storageAvailable && jwtReady`，會造成**自死鎖**：
   //   1. 未配置 JWT_SECRET 時 jwtReady=false → ready=false；
   //   2. 前端 `canProceed()` 依賴 ready，於是初始化嚮導卡在第 1 步；
-  //   3. 而密鑰的自動生成 `ensureEncryptionSecret()` 恰恰只在**提交初始化
+  //   3. 而密鑰的自動生成 `ensureEncryptionSecret()` 恰恰僅在**提交初始化
   //      （/public/init）時**才會執行（見下方 init 路由）。
   //   4. 結果：嚮導永遠進不到能觸發自動生成的那一步 → 「自動生成 JWT 未生效」。
   //
@@ -318,7 +318,7 @@ publicRouter.get("/env_check", async (c) => {
         /**
          * 完整原因（已脫敏、按分類限行）。
          *
-         * 只給日誌與工具用：界面展示它會出現「半句話 + 省略號」。
+         * 僅給日誌與工具用：界面展示它會出現「半句話 + 省略號」。
          */
         error_message:
           storageDetail.message !== null
@@ -551,7 +551,7 @@ function adminPassConfigured(env: any): boolean {
 // 系統是否已初始化：存在已設置密碼的管理員賬號即為已初始化。
 //
 // 「可持久化儲存可用」是「已初始化」的前提，而不是並列的另一個檢查：
-// 初始化結果必須能被持久化才算真正完成。若儲存不可用，getDb() 只能退回
+// 初始化結果必須能被持久化才算真正完成。若儲存不可用，getDb() 僅能退回
 // 記憶體，此刻即便讀到了管理員賬號，也無法證明它會被保存下來 —— 重啟即丟。
 // 因此這裡把儲存不可用直接判為 initialized=false，讓前端停留在初始化嚮導
 // （那是唯一能提示用戶去修配置的地方），而不是歡快地跳去登入頁。
@@ -562,12 +562,12 @@ function adminPassConfigured(env: any): boolean {
 publicRouter.get("/init_status", async (c) => {
   const storageReady = await isPersistentStorageAvailable(c.env)
 
-  // 儲存不可用時不再嘗試讀庫：此時 getDb() 只會返回記憶體副本，
+  // 儲存不可用時不再嘗試讀庫：此時 getDb() 僅會返回記憶體副本，
   // 據此得出的 initialized=true 是假象。
   let initialized = false
   if (storageReady) {
-    // ADMIN_PASS 自動初始化：安裝頁只輪詢本介面，從不調用登入介面。
-    // 若只把 getOrInitUsers() 掛在登入路徑上，配置了 ADMIN_PASS 的新部署會
+    // ADMIN_PASS 自動初始化：安裝頁僅輪詢本介面，從不調用登入介面。
+    // 若僅把 getOrInitUsers() 掛在登入路徑上，配置了 ADMIN_PASS 的新部署會
     // 永遠停在「未初始化 → 跳 /@init → 永遠不初始化」的死循環裡。
     //
     // 僅當運維顯式配置了 ADMIN_PASS 時才觸發（那是「請自動初始化」的明確
@@ -597,7 +597,7 @@ publicRouter.get("/init_status", async (c) => {
 
   // ── 把「為什麼不能初始化」透給前端 ──
   //
-  // 安裝嚮導只能看到本介面，因此這裡必須給出可展示的原因，否則用戶只會拿到
+  // 安裝嚮導僅能看到本介面，因此這裡必須給出可展示的原因，否則用戶僅會拿到
   // 一個 500 或一句「未初始化」，無從判斷是綁定缺失、組合寫錯還是密鑰缺失。
   // 兩類原因都返回（已脫敏）：
   //   storage_error      一行短原因（界面直接展示，故取首行摘要）
@@ -648,11 +648,11 @@ publicRouter.post("/init/setup", async (c) => {
 
   const db = await getDb(c.env)
   if (!db.users) db.users = []
-  // 安全護欄：只在「讀取持久化後端**失敗**」時拒絕初始化。
+  // 安全護欄：僅在「讀取持久化後端**失敗**」時拒絕初始化。
   //
   // loadDb() 對兩種「db 不可信」給出了不同信號，必須分別對待：
   //   1. getDbLoadError() !== null —— 讀取拋錯（binding 未注入、後端不可達、
-  //      鑑權失敗等）。此時記憶體裡只是兜底空殼，繼續初始化會把空庫寫回儲存、
+  //      鑑權失敗等）。此時記憶體裡僅是兜底空殼，繼續初始化會把空庫寫回儲存、
   //      覆蓋真實配置（即「資料庫被清空」的根因）→ 必須拒絕。
   //   2. getDbLoadError() === null 且 !isDbTrusted() —— 讀取**成功但後端為空**，
   //      即全新部署 / 換到新庫後的首次初始化。這正是 setup 存在的意義。
@@ -679,7 +679,7 @@ publicRouter.post("/init/setup", async (c) => {
           summary: storageErrorSummary(loadError),
           reason: redact(loadError, reasonLines(code)),
           // 一句話修復建議：有配置原因時優先用它（如「改成 DB_DRIVER=d1」），
-          // 否則嚮導只能展示一段原因，用戶仍不知道下一步做什麼。
+          // 否則嚮導僅能展示一段原因，用戶仍不知道下一步做什麼。
           suggestion: detail.suggestion,
         },
       },
@@ -698,8 +698,8 @@ publicRouter.post("/init/setup", async (c) => {
 
   // 初始化階段：確保**共享密鑰**存在（JWT 簽名 + DB_CIPHER 啟用時的欄位加密）。
   //
-  // 只在 setup 中生成 —— 且僅當持久化鍵不存在時。一旦寫入永不覆蓋，
-  // 否則既有加密資料將無法解密。其他任何階段都只讀不生成。
+  // 僅在 setup 中生成 —— 且僅當持久化鍵不存在時。一旦寫入永不覆蓋，
+  // 否則既有加密資料將無法解密。其他任何階段都僅讀不生成。
   //
   // 注意：**與 DB_CIPHER 無關**。DB_CIPHER=none 僅表示「不加密資料庫欄位」，
   // JWT 令牌簽名仍然需要一把跨實例/跨冷啟動一致的密鑰：如果運維沒有通過環境

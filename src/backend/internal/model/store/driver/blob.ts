@@ -9,7 +9,7 @@ import type { Driver } from "../types"
 /**
  * 判斷對象是否具備 Blob binding 的介面形態。
  *
- * 與 KV 同理，必須做介面校驗：環境變量可能只是「綁定名」字符串，
+ * 與 KV 同理，必須做介面校驗：環境變量可能僅是「綁定名」字符串，
  * 而非綁定對象本身；直接當作 binding 使用會得到
  * "xxx.get is not a function"。
  */

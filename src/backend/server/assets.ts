@@ -40,13 +40,13 @@ assetsRouter.get("/favicon.ico", redirectToLogo)
  *
  *  A. 本地 index.html + CDN 資產（首選，等價 Go Release 版行為）
  *     僅當 CDN 上確實存在本地 HTML 引用的哈希資產時才採用。這條路徑【不要求
- *     CDN 能返回 HTML】—— npmmirror 等禁止訪問 .html 的 CDN 只能走這條。
+ *     CDN 能返回 HTML】—— npmmirror 等禁止訪問 .html 的 CDN 僅能走這條。
  *     官方文件明確：Release 版用內置 index.html，
  *     "Some NPM CDNs (like npmmirror) may prohibit access to HTML files,"
  *     "but Release versions dont depend on CDNs index.html, so they are unaffected"。
  *
  *  B. CDN 的 index.html（本地構建與 CDN 版本不一致時的兜底）
- *     前端產物是內容哈希文件名（/assets/index-XXXX.js），本地構建的 HTML 只與
+ *     前端產物是內容哈希文件名（/assets/index-XXXX.js），本地構建的 HTML 僅與
  *     本地構建的資產匹配。若本地 HTML 引用的哈希在 CDN 上不存在（$version 落到
  *     latest、或 dist 由 main 分支構建而版本戳仍是已發佈版本號），直接用本地
  *     HTML 會讓瀏覽器全量資產 404（白屏）。此時改用 CDN 自己的 index.html，
@@ -168,7 +168,7 @@ const resolvedCdnCache = new Map<string, string>()
  *
  * 對齊 Go 版 static.go：配置 cdn 後把 /assets/、/images/、/streamer/、/static/
  * 指向 CDN。Cloudflare 的資源優先路由下，資源存在時由靜態層直出、Worker 根本
- * 不會執行，所以這裡只在源站確實缺失時才觸發 —— 此時若不重定向，SPA 兜底會把
+ * 不會執行，所以這裡僅在源站確實缺失時才觸發 —— 此時若不重定向，SPA 兜底會把
  * index.html 當作 .js/.css 返回，瀏覽器按 text/html 解析後報錯。
  */
 export async function cdnAssetRedirect(
@@ -203,7 +203,7 @@ export function extractEntryAsset(html: string): string {
 /**
  * 探測 CDN 上是否存在該哈希資產。
  *
- * 用 HEAD 而非 GET：只關心存在性，不下載 1MB+ 的 bundle。哈希文件名是內容
+ * 用 HEAD 而非 GET：僅關心存在性，不下載 1MB+ 的 bundle。哈希文件名是內容
  * 尋址的，同一個文件在 CDN 與本地構建中的名字一致當且僅當內容一致，因此
  * 單個入口資產存在即可判定「本地 HTML 引用的整套哈希在 CDN 上都存在」。
  */

@@ -55,7 +55,7 @@ test("parseAutoIndexHTML extracts files, dirs, size and modified", () => {
 })
 
 test("parseAutoIndexHTML tolerates malformed Apache directory HTML", () => {
-  // archive.apache.org/dist/tomcat/ 實際返回過這種重複 html/body/pre、只關閉一層
+  // archive.apache.org/dist/tomcat/ 實際返回過這種重複 html/body/pre、僅關閉一層
   // pre 的頁面。瀏覽器與 Go htmlquery 都能解析，AutoIndex 也不能按嚴格 XML 拒絕。
   const html = `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <html><head><title>Index</title></head><body>

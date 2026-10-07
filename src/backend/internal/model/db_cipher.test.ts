@@ -404,7 +404,7 @@ test("saveDb 採用寫時複製：不修改調用方傳入的記憶體對象", a
   )
 })
 
-test("未變化欄位跳過重新加密：密文保持不變，且只重新加密改動過的欄位", async () => {
+test("未變化欄位跳過重新加密：密文保持不變，且僅重新加密改動過的欄位", async () => {
   const db = await import("./db")
   db.__resetDbCacheForTest()
   const env = envFor("aes-256-gcm")
@@ -424,7 +424,7 @@ test("未變化欄位跳過重新加密：密文保持不變，且只重新加�
   assert.equal(second.storages[0].addition, first.storages[0].addition)
   assert.equal(rawSetting(second, "token").value, rawSetting(first, "token").value)
 
-  // 只改一個欄位 → 只有它重新加密，其餘欄位的密文原樣保留
+  // 僅改一個欄位 → 僅有它重新加密，其餘欄位的密文原樣保留
   const changed = sampleDb()
   changed.users[0].password = "hash-xyz"
   assert.equal(await db.saveDb(changed, env), true)

@@ -1,4 +1,4 @@
-// openlist_share (掛載 OpenList 分享鏈接) - 只讀
+// openlist_share (掛載 OpenList 分享鏈接) - 僅讀
 // API reference: Go drivers/openlist_share
 
 export interface DriverOpenlistShareAddition {

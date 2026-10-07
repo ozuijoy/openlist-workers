@@ -16,7 +16,7 @@ let _blobStore: any = null
 /**
  * 探測次數上限。
  *
- * 只快取「成功」結果，失敗不快取：
+ * 僅快取「成功」結果，失敗不快取：
  * 冷啟動早期 SDK 可能尚未就緒，若把失敗也永久快取，會導致整個實例
  * 生命週期內再也不會嘗試，表現為「明明能用卻一直報無持久化後端」。
  * 同時設上限避免每個請求都重複探測。
@@ -78,13 +78,13 @@ let jsonEnvCtx: any = null
  *   - getKvBinding() 每次都會重新探測 env.KV / globalThis.KV、嘗試初始化
  *     Blob SDK，並打印 console.warn；
  *   - 登入失敗計數、註銷黑名單、審計日誌讀寫都會調用它，單次請求可能命中數次。
- * 綁定只取決於 env 對象的身份（`1 env = 1 請求`），因此按 env 身份用 WeakMap
+ * 綁定僅取決於 env 對象的身份（`1 env = 1 請求`），因此按 env 身份用 WeakMap
  * 記憶化既安全又足以消除重複探測與日誌噪聲。
  *
  * 快取語義（重要）：
  *   - 成功結果（binding / blob / api / proxy）永久快取：綁定在實例生命週期內
  *     不會變化；
- *   - `none`（探測不到任何 KV 風格綁定）只做短 TTL 快取：既消除同一請求內的
+ *   - `none`（探測不到任何 KV 風格綁定）僅做短 TTL 快取：既消除同一請求內的
  *     重複探測與重複告警，又保留「冷啟動早期 SDK 尚未就緒、稍後重試即可用」的
  *     既有語義（見 getBlobStore() 的探測次數上限）。
  * 鍵是 env 對象本身，條目隨 env 被 GC 回收，不會無限增長。
@@ -141,7 +141,7 @@ export function setJsonEnvCtx(env: any) {
  * 這一校驗必不可少：EdgeOne Node 雲函數也會注入一個名為 `KV` 的綁定，
  * 但它走 RESP/Redis 協議（TCP socket），調用 get/put 會拋出
  * "cannot find the collection by name"，而不是提供 Web KV API。
- * 只有具備 get() 且具備 put()/set() 的對象才算可用。
+ * 僅有具備 get() 且具備 put()/set() 的對象才算可用。
  *
  * 同時排除字符串等原始值 —— 環境變量 `KV` 可能是綁定名（字符串），
  * 直接當綁定使用會得到 "kv.get is not a function"。
@@ -167,7 +167,7 @@ export function isWebKv(b: any): boolean {
  *
  * 實現**直接委託給 kvDriver**（該代理協議的唯一實現），避免同一協議
  * 在本文件中重複一份、與 driver/kv.ts 的行為產生漂移。
- * 這裡只負責把 Driver 的 `string[]` 契約適配成 binding 的 `{name,key}[]`。
+ * 這裡僅負責把 Driver 的 `string[]` 契約適配成 binding 的 `{name,key}[]`。
  *
  * kvDriver 用動態 import 引入：driver/kv.ts 需要本模塊的
  * sanitizeProxyOrigin，靜態互相導入會形成循環依賴。
@@ -217,7 +217,7 @@ export async function getKvBinding(envCtx?: any): Promise<{
     envCtx || jsonEnvCtx || (typeof process !== "undefined" ? process.env : {})
   const g = typeof globalThis !== "undefined" ? (globalThis as any) : {}
 
-  // 結果快取：同一 env 對象只解析一次綁定（詳見 kvBindingCache 註釋）。
+  // 結果快取：同一 env 對象僅解析一次綁定（詳見 kvBindingCache 註釋）。
   const cached = readKvBindingCache(env)
   if (cached) return cached
 
@@ -230,7 +230,7 @@ export async function getKvBinding(envCtx?: any): Promise<{
    *  2. 必須做介面形態校驗 —— EdgeOne Node 雲函數也會注入名為 `KV` 的綁定，
    *     但它走 RESP/Redis 協議（TCP socket），調用 put/get 會拋
    *     "cannot find the collection by name"，而非提供 Web KV API。
-   *     只有具備 get/put(或 set) 的對象才算可用的 KV binding。
+   *     僅有具備 get/put(或 set) 的對象才算可用的 KV binding。
    *
    * 綁定名統一為 `KV`（KV namespace binding 的通用約定名）。
    */
@@ -346,9 +346,9 @@ export async function getKvBinding(envCtx?: any): Promise<{
     .trim()
     .toLowerCase()
   // 兩重條件缺一不可：
-  //   - expectsKvStyleBackend：只有「本該用 KV/Blob」的部署，缺綁定才是異常；
+  //   - expectsKvStyleBackend：僅有「本該用 KV/Blob」的部署，缺綁定才是異常；
   //     顯式配 d1/mysql/do 時 KV 缺失是設計使然，不該告警（否則誤導用戶）。
-  //   - !kvNoneWarnedOnce：每個進程只提示一次，避免日誌刷屏。
+  //   - !kvNoneWarnedOnce：每個進程僅提示一次，避免日誌刷屏。
   const expectsKvStyleBackend =
     !configuredDriver ||
     configuredDriver === "auto" ||
@@ -529,14 +529,14 @@ export async function getKvStatus(envCtx?: any) {
 // 密鑰（JWT 簽名密鑰、欄位加密密鑰）需要跨實例、跨冷啟動保持一致，
 // 因此必須持久化。設計原則：
 //
-//   1. 生成只發生在初始化（setup）階段，且僅當鍵不存在時。
+//   1. 生成僅發生在初始化（setup）階段，且僅當鍵不存在時。
 //   2. 一旦寫入，永不覆蓋 —— 覆蓋會導致已加密資料無法解密。
-//   3. 非初始化階段只讀；讀不到就是故障，絕不重新生成。
+//   3. 非初始化階段僅讀；讀不到就是故障，絕不重新生成。
 //   4. 判定依據是「鍵是否存在」，而不是「讀取是否成功」。
 //
 // 鍵名與資料庫中的實體隔離，避免被通用 list(prefix) 誤掃。
 //
-// 歷史實現只走 getKvBinding（僅探測 原生 KV / EdgeOne Blob / CF KV REST /
+// 歷史實現僅走 getKvBinding（僅探測 原生 KV / EdgeOne Blob / CF KV REST /
 // proxy），**沒有 D1/MySQL 分支**。於是當用戶按推薦配置 DB_DRIVER=d1 時，
 // 業務資料能正常落到 D1，密鑰卻讀不到也寫不進去（並打印誤導性的
 // "memory-only mode" 日誌），最終每次冷啟動都生成新的隨機 JWT_SECRET，

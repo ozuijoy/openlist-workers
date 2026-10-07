@@ -32,7 +32,7 @@ function scrub(s: string): string {
  *
  * 這些碼對應的是**我們自己**寫的多行提示（組合非法 / 驅動不可用 / 無儲存 /
  * 代理未配置），後續行才是「怎麼改」，必須展示出來；
- * 而運行期錯誤（HEALTH_ERROR 等）可能含內部主機名，只取首行。
+ * 而運行期錯誤（HEALTH_ERROR 等）可能含內部主機名，僅取首行。
  */
 const MULTILINE_ERROR_CODES = new Set([
   "INVALID_COMBINATION",
@@ -46,10 +46,10 @@ const MULTILINE_ERROR_CODES = new Set([
 /**
  * 取出用於展示的最大行數。
  *
- * ⚠️ 使用約束（改文案時務必遵守）：這裡只透傳前 N 行，因此**我們自己寫的多行
+ * ⚠️ 使用約束（改文案時務必遵守）：這裡僅透傳前 N 行，因此**我們自己寫的多行
  * 提示，前 3 行必須自包含** —— 結論、答案、下一步動作都要落在前 3 行內。
  * 曾經的教訓：把「Auto-detection would pick: DB_DRIVER=d1」放在第 7 行，結果被
- * 截掉，用戶在界面上只看到一段被砍斷的說明，根本不知道該改成什麼。
+ * 截掉，用戶在界面上僅看到一段被砍斷的說明，根本不知道該改成什麼。
  * 另外每行還會被 scrub() 截到 160 字符，單行不要寫太長。
  */
 export function reasonLines(code?: string | null): number {
@@ -59,7 +59,7 @@ export function reasonLines(code?: string | null): number {
 /**
  * 給界面用的一行短原因。
  *
- * 只取首行：我們自己的多行提示都按「首行 = 原因，後續行 = 排查與修復方向」
+ * 僅取首行：我們自己的多行提示都按「首行 = 原因，後續行 = 排查與修復方向」
  * 排列，所以首行天然是完整的一句 —— 界面不會出現被截斷的半句 + 省略號。
  * 完整說明仍在 message 欄位裡，供日誌與工具使用。
  */
@@ -75,7 +75,7 @@ export function storageErrorSummary(raw: any): string | null {
 /**
  * 對錯誤文本做脫敏，供免鑑權介面使用。
  *
- * 默認只保留首行（去掉多行堆棧）；`maxLines` 用於我們自己的、多行且
+ * 默認僅保留首行（去掉多行堆棧）；`maxLines` 用於我們自己的、多行且
  * 可操作的配置類錯誤（如「組合非法 + 該驅動支持哪些格式 + 怎麼改」）。
  */
 export function redact(raw: any, maxLines = 1): string {

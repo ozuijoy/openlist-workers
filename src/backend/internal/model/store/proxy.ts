@@ -1,7 +1,7 @@
 /**
  * KV HTTP 代理共享實現（EdgeOne Node 雲函數專用）。
  *
- * 背景：EdgeOne 的 KV 綁定只注入到 Edge Functions（V8 運行時），不會注入到
+ * 背景：EdgeOne 的 KV 綁定僅注入到 Edge Functions（V8 運行時），不會注入到
  * Node 雲函數（SCF）。因此 Node 側拿不到 binding，必須經同部署的 Edge Function
  * （functions/kv-get|kv-put|kv-delete|kv-list）代為訪問 KV。
  *

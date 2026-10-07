@@ -193,7 +193,7 @@ export async function authorize(request, env) {
     const secret = await getJwtSecret(env)
     // 使用**完整密鑰**比對（不做截斷）。
     //
-    // 歷史實現只比對前 16 個字符，導致熵從 256 bit 降到 64 bit，
+    // 歷史實現僅比對前 16 個字符，導致熵從 256 bit 降到 64 bit，
     // 且內部通道會繞過後續的管理員角色校驗 —— 一旦猜中即可任意讀寫 KV。
     // 現在要求提交完整密鑰，熵與 JWT_SECRET 一致。
     if (secret && timingSafeEqual(internal, secret)) {

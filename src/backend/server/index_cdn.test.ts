@@ -75,7 +75,7 @@ function cdnImpl(opts: { asset?: boolean; html?: string | null; log?: string[] }
 }
 
 test("集成[本地 HTML 路徑]: CDN 有本地哈希時用本地 HTML，不拉 CDN 的 index.html", async () => {
-  // npmmirror 等禁止訪問 .html 的 CDN 只能靠這條路徑（等價 Go Release 版行為）
+  // npmmirror 等禁止訪問 .html 的 CDN 僅能靠這條路徑（等價 Go Release 版行為）
   const log: string[] = []
   const env = {
     ASSETS: makeFakeAssets(),

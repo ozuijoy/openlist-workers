@@ -1,7 +1,7 @@
 /**
  * 持久化後端介面定義。
  *
- * 設計目標：業務層（server/*.ts、internal/op/*.ts）只依賴 db.ts 暴露的
+ * 設計目標：業務層（server/*.ts、internal/op/*.ts）僅依賴 db.ts 暴露的
  * getDb()/saveDb() 等「整對象」契約，契約之下由本介面抽象出不同的持久化
  * 目標（JSON/KV/Blob、Cloudflare D1、MySQL）。
  *
