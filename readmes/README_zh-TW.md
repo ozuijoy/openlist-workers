@@ -15,7 +15,7 @@
 
 <div align="center">
 
-[English](readmes/README_en.md) | 繁體中文 | [日本語](readmes/README_ja.md) | [한국어](readmes/README_ko.md)
+[English](readmes/README_en.md) | 正體中文 | [日本語](readmes/README_ja.md) | [한국어](readmes/README_ko.md)
 
 [上游專案](https://github.com/OpenListTeam/OpenList) · [貢獻指南](https://github.com/OpenListTeam/OpenList-Worker/blob/main/CONTRIBUTING.md) · [許可證](./LICENSE)
 
