@@ -23,7 +23,7 @@
 // 用戶填入的值會成為該 Worker 的 Secret，後續更新不會被覆蓋。
 // =============================================================================
 {
-  "name": "openlist-tsworkers",
+  "name": "openlist-workers",
   "main": "src/backend/worker.ts",
   "compatibility_date": "2026-08-04",
   "compatibility_flags": ["nodejs_compat"],
