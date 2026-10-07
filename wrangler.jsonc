@@ -27,8 +27,16 @@
   "main": "src/backend/worker.ts",
   "compatibility_date": "2026-08-04",
   "compatibility_flags": ["nodejs_compat"],
-  "workers_dev": false,
+  "workers_dev": true,
   "preview_urls": false,
+
+  "routes": [
+    {
+      "pattern": "cloud.itools.dpdns.org/*",
+      "zone_name": "dpdns.org",
+      "custom_domain": true
+    }
+  ],
 
   // ⚠️ run_worker_first 僅放行 HTML 入口，不能改成 true（全量放行）：
   //   默認「資源優先」時 / 與 /index.html 由靜態層直接返回，Worker 根本不會執行，
