@@ -1,1 +1,0 @@
-(function(){System.register([`./store-legacy-VsD9qsr3.js`],function(e,t){var n,r,i,a,o;return{setters:[function(e){n=e.$i,r=e.Ji,i=e.Qn,a=e.sa,o=e.ua}],execute:function(){e(`t`,e=>{let[t,s]=a(!1);return n(r,{get when(){return!t()},get fallback(){return e.fallbackErr},get children(){return n(i,o(e,{onError:()=>{s(!0)}}))}})})}}})})();

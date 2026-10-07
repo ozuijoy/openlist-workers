@@ -1,1 +1,0 @@
-var e=function(e){return e.String=`string`,e.Select=`select`,e.Bool=`bool`,e.Text=`text`,e.Number=`number`,e.Float=`float`,e.MultiPath=`multipath`,e}({});export{e as t};
