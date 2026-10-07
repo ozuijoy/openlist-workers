@@ -53,7 +53,7 @@
     //   map（默認）- 整對象序列化為單個 JSON 鍵值，適合 KV/Blob
     //   key        - 分 key 儲存，每實體一條記錄（如 users_1）
     //   sql        - 關係表格式，與 Go 後端一致（適用於 D1/MySQL）
-    "DB_FORMAT": "map",
+    "DB_FORMAT": "sql",
 
     // 資料庫驅動：
     //   auto（默認）- 自動檢測，順序 mysql → d1 → kv → cfkv → blob → do
@@ -64,7 +64,7 @@
     //   do         - Cloudflare Durable Objects（需下方 durable_objects）
     //   mysql      - 外部 MySQL（需 MYSQL_URLS 或 MYSQL_HOST 等，僅 Node 運行時）
     // 說明：mysql 僅在配置了連接信息時才參與 auto 探測，避免無謂的 TCP 建連。
-    "DB_DRIVER": "auto",
+    "DB_DRIVER": "d1",
 
     // 敏感欄位落盤算法（默認 none：不加密；與 DB_DRIVER/DB_FORMAT 正交）：
     //   none（默認）              - 不加密，敏感欄位明文落盤
@@ -85,10 +85,10 @@
     // ── 安全鑑權（推薦以 Secret 類型配置，見 .dev.vars.example）──────────
     //
     // JWT 簽名密鑰（>=16 字符，兼作可選的欄位加密密鑰與定時任務鑑權）
-    // "JWT_SECRET": "",
+    "JWT_SECRET": "iEEhBq7QwZ02BMQCrWyaPtJUBDjGmlZs",
     //
     // 跳過安裝嚮導，自動以該密碼初始化 admin
-    // "ADMIN_PASS": "",
+    "ADMIN_PASS": "19820202",
     //
     // CORS 白名單（逗號分隔，不設則僅同源）
     // "ALLOW_URLS": "https://yourdomain.com",
@@ -161,6 +161,14 @@
   //   控制檯：Workers & Pages → D1 → 創建資料庫 → 綁定到 Worker，變量名填 DB
   //   省略 database_id 時，wrangler >= 4.45.0 會自動創建同名庫並回寫
   //
+   "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "openlist-db",
+      "database_id": "5b99841e-e527-4b14-8b07-d748793ea82b"
+    }
+  ]
+}
   // "d1_databases": [
   //   { "binding": "DB", "database_name": "openlist", "database_id": "" }
   // ],
