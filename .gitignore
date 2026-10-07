@@ -1,6 +1,5 @@
 # runtime dir
 node_modules
-dist
 dist-server
 public_data
 
