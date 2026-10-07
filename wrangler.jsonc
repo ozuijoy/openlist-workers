@@ -161,16 +161,8 @@
   //   控制檯：Workers & Pages → D1 → 創建資料庫 → 綁定到 Worker，變量名填 DB
   //   省略 database_id 時，wrangler >= 4.45.0 會自動創建同名庫並回寫
   //
-   "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "openlist-db",
-      "database_id": "5b99841e-e527-4b14-8b07-d748793ea82b"
-    }
-  ]
-}
-  // "d1_databases": [
-  //   { "binding": "DB", "database_name": "openlist", "database_id": "" }
+"d1_databases": [
+  { "binding": "DB", "database_name": "openlist-db", "database_id": "5b99841e-e527-4b14-8b07-d748793ea82b" }
   // ],
   //
   // ▶ 方案 C：Durable Objects（內置 SQLite，強一致；DB_FORMAT 建議改為 "sql"）
