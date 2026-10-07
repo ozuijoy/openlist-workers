@@ -30,12 +30,8 @@
   "workers_dev": true,
   "preview_urls": false,
 
-  "routes": [
-    {
-      "pattern": "cloud.itools.dpdns.org/*",
-      "zone_name": "dpdns.org",
-      "custom_domain": true
-    }
+  "custom_domains": [
+    "cloud.itools.dpdns.org"
   ],
 
   // ⚠️ run_worker_first 僅放行 HTML 入口，不能改成 true（全量放行）：
