@@ -30,9 +30,9 @@
   "workers_dev": true,
   "preview_urls": false,
 
-  "custom_domains": [
-    "cloud.itools.dpdns.org"
-  ],
+  // "custom_domains": [
+  //   "cloud.itools.dpdns.org"
+  // ],
 
   // ⚠️ run_worker_first 僅放行 HTML 入口，不能改成 true（全量放行）：
   //   默認「資源優先」時 / 與 /index.html 由靜態層直接返回，Worker 根本不會執行，
@@ -89,10 +89,10 @@
     // ── 安全鑑權（推薦以 Secret 類型配置，見 .dev.vars.example）──────────
     //
     // JWT 簽名密鑰（>=16 字符，兼作可選的欄位加密密鑰與定時任務鑑權）
-    "JWT_SECRET": "iEEhBq7QwZ02BMQCrWyaPtJUBDjGmlZs",
+    // "JWT_SECRET": "",  // ⚠️ 請通過 wrangler secret put JWT_SECRET 設置
     //
     // 跳過安裝嚮導，自動以該密碼初始化 admin
-    "ADMIN_PASS": "19820202",
+    // "ADMIN_PASS": "",  // ⚠️ 請通過 wrangler secret put ADMIN_PASS 設置
     //
     // CORS 白名單（逗號分隔，不設則僅同源）
     // "ALLOW_URLS": "https://yourdomain.com",
@@ -166,7 +166,7 @@
   //   省略 database_id 時，wrangler >= 4.45.0 會自動創建同名庫並回寫
   //
   "d1_databases": [
-    { "binding": "DB", "database_name": "openlist-db", "database_id": "5b99841e-e527-4b14-8b07-d748793ea82b" }
+    { "binding": "DB", "database_name": "openlist-db" }
   ]
   //
   // ▶ 方案 C：Durable Objects（內置 SQLite，強一致；DB_FORMAT 建議改為 "sql"）
